@@ -1,0 +1,20 @@
+{
+  "seed": 42,
+  "paired_samples": 25250,
+  "same_membership": true,
+  "recreated_seed_assignment_matches": true,
+  "variants": {
+    "Mid32": {
+      "train": 25000,
+      "test": 250,
+      "archive_bytes": 12306156,
+      "archive_sha256": "8ef563c91a95da0f7bdc21b88a806f0bf59d6c677929bd4f0e22719eee189509"
+    },
+    "Mid224": {
+      "train": 25000,
+      "test": 250,
+      "archive_bytes": 24609568,
+      "archive_sha256": "376a85b94e1c5d36a7ca864b9b88dd87791efc198f2b6356c01760916f19794e"
+    }
+  }
+}

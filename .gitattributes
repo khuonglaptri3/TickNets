@@ -1,0 +1,2 @@
+# Preserve dataset bytes and recorded checksums on every platform.
+data/** -text

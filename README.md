@@ -1,5 +1,44 @@
 # TickNets: Efficient tick-shape networks of full-residual point-depth-point blocks for image classification
 
+## Dataset giữa kỳ: Mid32 / Mid224
+
+Dataset chuẩn hóa nằm trong `data/`, theo cấu trúc
+`data/<Mid32|Mid224>/<train|test>/<class>/*.jpeg`.
+Mỗi lớp có 5.000 ảnh train và 50 ảnh test; chia lại cả 5 lớp bằng seed 42.
+Hai độ phân giải dùng chung một manifest. Xem
+[mô tả cách chia và kết quả kiểm tra](docs/DATASET_SPLIT.md).
+
+```powershell
+conda activate fresher
+python train_mid.py --data-root data --variant Mid32 --seed 42 --check-data
+python train_mid.py --data-root data --variant Mid224 --seed 42 --check-data
+```
+
+Huấn luyện baseline TickNet-basic, với đầu ra 5 lớp:
+
+```powershell
+python train_mid.py --data-root data --variant Mid32 --seed 42 --output-dir runs/mid32_seed42
+python train_mid.py --data-root data --variant Mid224 --seed 42 --output-dir runs/mid224_seed42
+```
+
+Các lệnh train mặc định chạy 200 epoch; có thể cấu hình bằng `--help`.
+Mỗi run tạo `config.json`, `epochs.csv`, `last.pt`, `test_metrics.json`.
+Test được đánh giá ở cuối, không dùng để chọn checkpoint. Dùng thư mục output
+mới cho mỗi run. Có thể đánh giá lại checkpoint bằng `--evaluate <last.pt>`.
+Đây là pipeline cho backbone gốc, chưa phải kiến trúc L cải tiến của bài nộp.
+
+Tạo lại dataset từ nguồn vào một thư mục chưa tồn tại:
+
+```powershell
+python prepare_mid_dataset.py --source-root "C:\Users\lanph\Downloads\Final_Dataset_" --output-root data_recreated --seed 42 --archive-format tar.xz
+```
+
+Toàn bộ `data/` được lưu trong Git, gồm ảnh của cả hai độ phân giải, gói TAR.XZ,
+manifest, cấu hình và báo cáo kiểm tra. Clone repository sẽ tải kèm dữ liệu.
+Git giữ nguyên byte của các tệp dữ liệu để bảo toàn checksum đã ghi nhận.
+Kết quả huấn luyện trong `runs/` và cache được bỏ qua bởi Git.
+Kiểm thử: `python -m pytest -q`.
+
 **Abstract:**
 
 * Light-weight convolutional neural networks (CNNs) are crucial for deploying computer vision applications in mobile devices.
