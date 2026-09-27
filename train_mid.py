@@ -1,4 +1,4 @@
-"""Train an existing TickNet on Mid32/Mid224 and evaluate the held-out test once."""
+"""Train TickNet baselines or TickNet-L and evaluate the held-out Mid test once."""
 from __future__ import annotations
 
 import argparse
@@ -11,8 +11,9 @@ from pathlib import Path
 import torch
 import torchvision
 
-from models.TickNet import build_TickNet
+from models.mid_models import MODEL_NAMES, MODEL_REVISIONS, build_mid_model
 from models.mid_data import build_mid_loaders, seed_everything
+from models.model_profile import profile_model
 
 
 def run_epoch(model, loader, criterion, device, optimizer=None):
@@ -44,7 +45,7 @@ def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-root", type=Path, default=Path("data"))
     parser.add_argument("--variant", choices=("Mid32", "Mid224"), required=True)
-    parser.add_argument("--model", choices=("basic", "small", "large"), default="basic")
+    parser.add_argument("--model", choices=MODEL_NAMES, default="basic")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=0)
@@ -103,7 +104,14 @@ def main(argv=None):
         if not recorded_hash or recorded_hash != manifest_hash:
             raise ValueError("Checkpoint split manifest does not match this dataset; use its original prepared split")
         args.model = checkpoint["config"]["model"]
-    model = build_TickNet(num_classes=len(mapping), typesize=args.model, cifar=args.variant == "Mid32").to(device)
+        recorded_revision = checkpoint["config"].get("architecture_revision")
+        if args.model == "l" and recorded_revision != MODEL_REVISIONS["l"]:
+            raise ValueError("Checkpoint TickNet-L architecture revision does not match this implementation")
+    model = build_mid_model(args.model, num_classes=len(mapping), variant=args.variant)
+    complexity = profile_model(model, 32 if args.variant == "Mid32" else 224)
+    if args.model == "l" and not complexity["within_exam_limits"]:
+        raise ValueError("TickNet-L exceeds the exam parameter/FLOP limits")
+    model = model.to(device)
     if checkpoint is not None:
         model.load_state_dict(checkpoint["model_state_dict"])
     criterion = torch.nn.CrossEntropyLoss()
@@ -116,6 +124,8 @@ def main(argv=None):
                   test_policy="Evaluate final checkpoint only; never select checkpoints using test",
                   normalization="ToTensor [0,1]; model has data_bn", top1_unit="percent")
     config["split_manifest_sha256"] = manifest_hash
+    config["architecture_revision"] = MODEL_REVISIONS[args.model]
+    config["complexity"] = {key: value for key, value in complexity.items() if key != "layers"}
     if checkpoint is not None:
         config["checkpoint_training_config"] = checkpoint["config"]
     output.mkdir(parents=True)

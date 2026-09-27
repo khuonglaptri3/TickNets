@@ -68,13 +68,18 @@ def test_epoch_metrics_weight_partial_batches_by_sample_count():
     assert result["loss"] == pytest.approx(torch.nn.functional.cross_entropy(logits, labels).item())
 
 
-def test_training_writes_epoch_log_checkpoint_and_final_test_metrics(prepared, tmp_path):
+@pytest.mark.parametrize("model_name", ("basic", "l"))
+def test_training_writes_epoch_log_checkpoint_and_final_test_metrics(prepared, tmp_path, model_name):
     module = importlib.import_module("train_mid")
     output = tmp_path / "run"
-    module.main(["--data-root", str(prepared), "--variant", "Mid32", "--output-dir", str(output),
+    module.main(["--data-root", str(prepared), "--variant", "Mid32", "--model", model_name, "--output-dir", str(output),
                  "--epochs", "1", "--batch-size", "4", "--device", "cpu", "--threads", "2", "--no-augment"])
     config = json.loads((output / "config.json").read_text(encoding="utf-8"))
     assert config["seed"] == 42 and config["num_classes"] == 5
+    assert config["model"] == model_name
+    assert config["architecture_revision"] == module.MODEL_REVISIONS[model_name]
+    assert config["complexity"]["flops"] > 0
+    assert config["complexity"]["learnable_parameters"] == config["learnable_parameters"]
     with (output / "epochs.csv").open(encoding="utf-8", newline="") as handle:
         epochs = list(csv.DictReader(handle))
     assert len(epochs) == 1 and int(epochs[0]["train_samples"]) == 20
@@ -94,7 +99,7 @@ def test_training_writes_epoch_log_checkpoint_and_final_test_metrics(prepared, t
 @pytest.mark.parametrize("recorded_hash", ["another-split-hash", None])
 def test_evaluation_rejects_changed_or_missing_split_provenance(prepared, tmp_path, recorded_hash):
     module = importlib.import_module("train_mid")
-    model = module.build_TickNet(num_classes=5, typesize="basic", cifar=True)
+    model = module.build_mid_model("basic", num_classes=5, variant="Mid32")
     checkpoint = tmp_path / "from-another-split.pt"
     config = {"variant": "Mid32", "model": "basic", "split_manifest_sha256": recorded_hash}
     torch.save({"epoch": 1, "model_state_dict": model.state_dict(), "config": config,

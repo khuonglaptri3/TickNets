@@ -25,7 +25,20 @@ Các lệnh train mặc định chạy 200 epoch; có thể cấu hình bằng `
 Mỗi run tạo `config.json`, `epochs.csv`, `last.pt`, `test_metrics.json`.
 Test được đánh giá ở cuối, không dùng để chọn checkpoint. Dùng thư mục output
 mới cho mỗi run. Có thể đánh giá lại checkpoint bằng `--evaluate <last.pt>`.
-Đây là pipeline cho backbone gốc, chưa phải kiến trúc L cải tiến của bài nộp.
+Mặc định vẫn dùng baseline `--model basic`. Biến thể `--model l` sử dụng
+TickNet-L v1: backbone có 7 block PDP thu hẹp kênh, kết hợp depthwise 3x3/5x5
+ở các stage sau và giữ SE của bản gốc. Xem [thiết kế và số đo](docs/MODEL_L.md).
+
+```powershell
+python profile_mid.py --output docs/model_profiles.json
+python train_mid.py --data-root data --variant Mid32 --model l --seed 42 --output-dir runs/l_mid32_seed42
+python train_mid.py --data-root data --variant Mid224 --model l --seed 42 --output-dir runs/l_mid224_seed42
+```
+
+L có 1.096.260 tham số; chi phí mỗi ảnh là 0,157821 GFLOPs ở 32x32 và
+0,796760 GFLOPs ở 224x224, theo quy ước Conv/Linear: 1 MAC = 2 FLOPs.
+`config.json` lưu cả phiên bản kiến trúc và phép đếm này. Chưa có kết quả
+huấn luyện đầy đủ hoặc kết luận L chính xác hơn baseline.
 
 Tạo lại dataset từ nguồn vào một thư mục chưa tồn tại:
 
