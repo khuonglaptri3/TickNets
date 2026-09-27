@@ -61,8 +61,9 @@ def test_profiler_counts_grouped_convolution_and_linear_without_mutating_model()
         assert torch.equal(value, original_state[name]), name
 
 
-@pytest.mark.parametrize("revision", (None, "ticknet-l-obsolete"))
-def test_l_checkpoint_requires_matching_architecture_revision(tmp_path, monkeypatch, revision):
+@pytest.mark.parametrize("model_name", ("l", "c"))
+@pytest.mark.parametrize("revision", (None, "obsolete-revision"))
+def test_custom_checkpoint_requires_matching_architecture_revision(tmp_path, monkeypatch, revision, model_name):
     import train_mid
     from torch.utils.data import DataLoader, TensorDataset
 
@@ -73,8 +74,8 @@ def test_l_checkpoint_requires_matching_architecture_revision(tmp_path, monkeypa
     monkeypatch.setattr(train_mid, "build_mid_loaders", lambda *args, **kwargs: (loader, loader))
     manifest = tmp_path / "split_manifest.csv"
     manifest.write_text("fixture manifest\n", encoding="utf-8")
-    checkpoint = tmp_path / "l.pt"
-    torch.save({"config": {"model": "l", "variant": "Mid32", "architecture_revision": revision,
+    checkpoint = tmp_path / f"{model_name}.pt"
+    torch.save({"config": {"model": model_name, "variant": "Mid32", "architecture_revision": revision,
                            "split_manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest()},
                 "class_to_idx": dataset.class_to_idx}, checkpoint)
     output = tmp_path / "evaluation"

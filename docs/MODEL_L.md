@@ -10,6 +10,10 @@ mục tiêu thiết kế là khoảng **0,8 GFLOPs cho một ảnh 224x224**.
 Đây là ứng viên kiến trúc đã được kiểm tra tính toán và gradient. Chưa chạy
 thí nghiệm huấn luyện đầy đủ, chưa có kết quả accuracy để kết luận L tốt hơn Basic.
 
+Ứng viên [TickNet-C](MODEL_C.md) dùng trực tiếp lớp TickNet và block FR-PDP
+nguyên bản của thầy, với khoảng 5,16 triệu tham số. C được cung cấp như một
+lựa chọn riêng bên cạnh L trong tài liệu này.
+
 ## 2. Những gì kế thừa và những gì thay đổi
 
 Basic đã có SE attention, residual, depthwise convolution, data batch normalization
@@ -104,7 +108,7 @@ python profile_mid.py --output docs/model_profiles.json
 python -m pytest -q
 ```
 
-Kết quả kiểm tra ngày 2026-09-27: **24 tests passed**. Bao gồm forward/backward
+Kết quả tại mốc triển khai L v1 ngày 2026-09-27: **24 tests passed**. Bao gồm forward/backward
 ở cả 32x32 và 224x224 với gradient hữu hạn cho mọi tham số của L; phép đếm
 grouped convolution/Linear đối chiếu công thức; huấn luyện fixture một epoch
 và nạp lại checkpoint Basic/L; từ chối checkpoint L sai phiên bản kiến trúc.

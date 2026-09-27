@@ -1,4 +1,4 @@
-"""Reproduce the Basic/L inference-complexity comparison without training."""
+"""Reproduce the Basic/L/C inference-complexity comparison without training."""
 import argparse
 import json
 from pathlib import Path
@@ -11,7 +11,7 @@ from models.model_profile import COUNTING_CONVENTION, EXCLUDED_OPERATIONS, profi
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--models", nargs="+", choices=MODEL_NAMES, default=("basic", "l"))
+    parser.add_argument("--models", nargs="+", choices=MODEL_NAMES, default=("basic", "l", "c"))
     parser.add_argument("--sizes", nargs="+", type=int, choices=(32, 224), default=(32, 224))
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
@@ -35,6 +35,7 @@ def main(argv=None):
               "limits": {"learnable_parameters_max_inclusive": 6_000_000,
                          "flops_max_exclusive": 1_000_000_000},
               "l_design_target_flops": 800_000_000,
+              "c_design_target_flops": 850_000_000,
               "measurements": measurements}
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

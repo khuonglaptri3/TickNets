@@ -1,4 +1,4 @@
-"""Train TickNet baselines or TickNet-L and evaluate the held-out Mid test once."""
+"""Train TickNet baselines, L or C and evaluate the held-out Mid test once."""
 from __future__ import annotations
 
 import argparse
@@ -11,7 +11,7 @@ from pathlib import Path
 import torch
 import torchvision
 
-from models.mid_models import MODEL_NAMES, MODEL_REVISIONS, build_mid_model
+from models.mid_models import CUSTOM_MODEL_NAMES, MODEL_NAMES, MODEL_REVISIONS, build_mid_model
 from models.mid_data import build_mid_loaders, seed_everything
 from models.model_profile import profile_model
 
@@ -105,12 +105,12 @@ def main(argv=None):
             raise ValueError("Checkpoint split manifest does not match this dataset; use its original prepared split")
         args.model = checkpoint["config"]["model"]
         recorded_revision = checkpoint["config"].get("architecture_revision")
-        if args.model == "l" and recorded_revision != MODEL_REVISIONS["l"]:
-            raise ValueError("Checkpoint TickNet-L architecture revision does not match this implementation")
+        if args.model in CUSTOM_MODEL_NAMES and recorded_revision != MODEL_REVISIONS[args.model]:
+            raise ValueError(f"Checkpoint TickNet-{args.model.upper()} architecture revision does not match this implementation")
     model = build_mid_model(args.model, num_classes=len(mapping), variant=args.variant)
     complexity = profile_model(model, 32 if args.variant == "Mid32" else 224)
-    if args.model == "l" and not complexity["within_exam_limits"]:
-        raise ValueError("TickNet-L exceeds the exam parameter/FLOP limits")
+    if args.model in CUSTOM_MODEL_NAMES and not complexity["within_exam_limits"]:
+        raise ValueError(f"TickNet-{args.model.upper()} exceeds the exam parameter/FLOP limits")
     model = model.to(device)
     if checkpoint is not None:
         model.load_state_dict(checkpoint["model_state_dict"])

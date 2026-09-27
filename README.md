@@ -40,6 +40,22 @@ L có 1.096.260 tham số; chi phí mỗi ảnh là 0,157821 GFLOPs ở 32x32 v�
 `config.json` lưu cả phiên bản kiến trúc và phép đếm này. Chưa có kết quả
 huấn luyện đầy đủ hoặc kết luận L chính xác hơn baseline.
 
+Ứng viên **C** (`--model c`) được dựng trực tiếp bằng lớp `TickNet` và toàn bộ
+`FR_PDP_block` gốc của thầy. C dùng 9 block, điều chỉnh lịch kênh và chọn lịch
+stride có sẵn của TickNet; stem 32 kênh, head 1024 kênh và thứ tự PW-DW-PW-SE
+được giữ nguyên. Xem [thiết kế C và bằng chứng kế thừa backbone](docs/MODEL_C.md).
+C có **5.155.467 tham số**, **0,256830 GFLOPs ở 32x32** và **0,821054 GFLOPs
+ở 224x224**, theo cùng quy ước Conv/Linear ở trên.
+
+```powershell
+python profile_mid.py --models basic l c --output docs/model_profiles.json
+python train_mid.py --data-root data --variant Mid32 --model c --seed 42 --output-dir runs/c_mid32_seed42
+python train_mid.py --data-root data --variant Mid224 --model c --seed 42 --output-dir runs/c_mid224_seed42
+```
+
+Basic, L và C là các lựa chọn riêng. C chưa được huấn luyện đầy đủ; so sánh
+accuracy cần dùng validation tách từ train trước khi đánh giá test cuối cùng.
+
 Tạo lại dataset từ nguồn vào một thư mục chưa tồn tại:
 
 ```powershell
