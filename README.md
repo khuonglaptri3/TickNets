@@ -6,7 +6,8 @@ Dataset chuẩn hóa nằm trong `data/`, theo cấu trúc
 `data/<Mid32|Mid224>/<train|test>/<class>/*.jpeg`.
 Mỗi lớp có 5.000 ảnh train và 50 ảnh test; chia lại cả 5 lớp bằng seed 42.
 Hai độ phân giải dùng chung một manifest. Xem
-[mô tả cách chia và kết quả kiểm tra](docs/DATASET_SPLIT.md).
+[mô tả cách chia và kết quả kiểm tra](docs/DATASET_SPLIT.md) và
+[báo cáo kiểm định và làm sạch dữ liệu](docs/DATASET_CLEANING.md).
 
 ```powershell
 conda activate fresher

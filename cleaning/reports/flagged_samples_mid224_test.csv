@@ -1,0 +1,58 @@
+sample_id,class_name,split,flags,blur_score,mean_luminance,std_luminance,target_prob,top1_prediction,top1_prob,path
+test/bird/canon_dendragapus_obscurus_1241_2f60e46533.jpeg,bird,test,SUSPICIOUS_LABEL,548.83,105.38,59.44,0.0168,EntleBucher,0.54,data/Mid224/test/bird/canon_dendragapus_obscurus_1241_2f60e46533.jpeg
+test/bird/canon_phainopepla_nitens_117002_5283113ffb.jpeg,bird,test,SUSPICIOUS_LABEL,574.77,167.59,64.0,0.002,bassoon,0.2735,data/Mid224/test/bird/canon_phainopepla_nitens_117002_5283113ffb.jpeg
+test/bird/field_buteo_buteo_204472_936e6aaecf.jpeg,bird,test,SUSPICIOUS_LABEL,529.55,199.37,60.66,0.0078,letter opener,0.399,data/Mid224/test/bird/field_buteo_buteo_204472_936e6aaecf.jpeg
+test/bird/field_buteo_jamaicensis_5212_a5f10b3a54.jpeg,bird,test,LOW_CONTRAST,194.42,205.14,17.96,0.0086,corkscrew,0.1228,data/Mid224/test/bird/field_buteo_jamaicensis_5212_a5f10b3a54.jpeg
+test/bird/field_macronectes_giganteus_4198_9d3d099066.jpeg,bird,test,SUSPICIOUS_LABEL,641.38,136.43,58.47,0.0017,promontory,0.2989,data/Mid224/test/bird/field_macronectes_giganteus_4198_9d3d099066.jpeg
+test/bird/field_pandion_haliaetus_116999_e23a666514.jpeg,bird,test,OVEREXPOSED,225.38,242.51,29.03,0.7976,black stork,0.3613,data/Mid224/test/bird/field_pandion_haliaetus_116999_e23a666514.jpeg
+test/bird/field_pandion_haliaetus_116999_ee5d46a33b.jpeg,bird,test,SUSPICIOUS_LABEL,539.05,174.79,67.21,0.0116,ski,0.275,data/Mid224/test/bird/field_pandion_haliaetus_116999_ee5d46a33b.jpeg
+test/cat/cat_00543.jpeg,cat,test,SUSPICIOUS_LABEL,358.38,130.64,67.53,0.0011,Japanese spaniel,0.2301,data/Mid224/test/cat/cat_00543.jpeg
+test/cat/cat_00570.jpeg,cat,test,SUSPICIOUS_LABEL,416.99,115.45,66.34,0.0212,EntleBucher,0.262,data/Mid224/test/cat/cat_00570.jpeg
+test/cat/cat_00654.jpeg,cat,test,SUSPICIOUS_LABEL,474.81,122.95,47.51,0.0332,platypus,0.252,data/Mid224/test/cat/cat_00654.jpeg
+test/cat/cat_00828.jpeg,cat,test,SUSPICIOUS_LABEL,314.99,107.06,64.66,0.0008,Cardigan,0.2489,data/Mid224/test/cat/cat_00828.jpeg
+test/cat/cat_01333.jpeg,cat,test,SUSPICIOUS_LABEL,1807.73,104.32,73.76,0.0003,prison,0.6415,data/Mid224/test/cat/cat_01333.jpeg
+test/cat/cat_01742.jpeg,cat,test,SUSPICIOUS_LABEL,545.0,143.8,43.14,0.0006,prison,0.8738,data/Mid224/test/cat/cat_01742.jpeg
+test/cat/cat_01800.jpeg,cat,test,SUSPICIOUS_LABEL,169.77,103.52,40.67,0.002,space shuttle,0.2347,data/Mid224/test/cat/cat_01800.jpeg
+test/cat/cat_01877.jpeg,cat,test,SUSPICIOUS_LABEL,303.02,91.58,49.29,0.0013,half track,0.3435,data/Mid224/test/cat/cat_01877.jpeg
+test/cat/cat_01908.jpeg,cat,test,SUSPICIOUS_LABEL,1824.07,126.58,51.34,0.0052,bulletproof vest,0.3384,data/Mid224/test/cat/cat_01908.jpeg
+test/cat/cat_02021.jpeg,cat,test,SUSPICIOUS_LABEL,526.66,141.73,34.26,0.0003,can opener,0.2152,data/Mid224/test/cat/cat_02021.jpeg
+test/cat/cat_02170.jpeg,cat,test,SUSPICIOUS_LABEL,1045.76,133.86,35.51,0.0167,plate rack,0.3024,data/Mid224/test/cat/cat_02170.jpeg
+test/cat/cat_02188.jpeg,cat,test,SUSPICIOUS_LABEL,228.53,126.18,36.76,0.0305,Japanese spaniel,0.282,data/Mid224/test/cat/cat_02188.jpeg
+test/cat/cat_02371.jpeg,cat,test,SUSPICIOUS_LABEL,437.26,124.08,45.41,0.005,bulletproof vest,0.8366,data/Mid224/test/cat/cat_02371.jpeg
+test/cat/cat_02578.jpeg,cat,test,SUSPICIOUS_LABEL,307.54,110.45,49.31,0.0369,book jacket,0.2274,data/Mid224/test/cat/cat_02578.jpeg
+test/cat/cat_02989.jpeg,cat,test,SUSPICIOUS_LABEL,333.08,118.61,44.52,0.0386,toy terrier,0.2424,data/Mid224/test/cat/cat_02989.jpeg
+test/cat/cat_03287.jpeg,cat,test,SUSPICIOUS_LABEL,857.71,117.44,60.96,0.0203,Old English sheepdog,0.2142,data/Mid224/test/cat/cat_03287.jpeg
+test/cat/cat_03759.jpeg,cat,test,SUSPICIOUS_LABEL,459.05,103.46,66.3,0.0027,EntleBucher,0.4326,data/Mid224/test/cat/cat_03759.jpeg
+test/cat/cat_04090.jpeg,cat,test,SUSPICIOUS_LABEL,237.2,141.14,45.02,0.0109,bulletproof vest,0.8431,data/Mid224/test/cat/cat_04090.jpeg
+test/cat/cat_04730.jpeg,cat,test,SUSPICIOUS_LABEL,202.53,123.18,49.33,0.0005,wire-haired fox terrier,0.6992,data/Mid224/test/cat/cat_04730.jpeg
+test/dog/dog_00872.jpeg,dog,test,SUSPICIOUS_LABEL,442.72,144.53,56.13,0.0266,thresher,0.2991,data/Mid224/test/dog/dog_00872.jpeg
+test/dog/dog_01464.jpeg,dog,test,SUSPICIOUS_LABEL,515.17,96.58,51.23,0.0082,prison,0.7921,data/Mid224/test/dog/dog_01464.jpeg
+test/frog/canon_melanophryniscus_formosus_1595942_179021238.jpeg,frog,test,SUSPICIOUS_LABEL,583.68,65.85,38.84,0.0055,Gordon setter,0.3414,data/Mid224/test/frog/canon_melanophryniscus_formosus_1595942_179021238.jpeg
+test/frog/canon_physalaemus_ephippifer_23156_70799.jpeg,frog,test,SUSPICIOUS_LABEL,923.05,59.82,39.95,0.0049,banded gecko,0.5142,data/Mid224/test/frog/canon_physalaemus_ephippifer_23156_70799.jpeg
+test/frog/canon_rheobates_palmatus_67082_33372.jpeg,frog,test,SUSPICIOUS_LABEL,578.75,85.17,42.82,0.0045,curly-coated retriever,0.5962,data/Mid224/test/frog/canon_rheobates_palmatus_67082_33372.jpeg
+test/frog/canon_rhinella_bella_1541106_162178742.jpeg,frog,test,SUSPICIOUS_LABEL,2143.85,101.11,58.44,0.012,comic book,0.3491,data/Mid224/test/frog/canon_rhinella_bella_1541106_162178742.jpeg
+test/frog/field_anaxyrus_punctatus_64984_obs_38434842_61083251.jpeg,frog,test,SUSPICIOUS_LABEL,713.19,132.81,49.61,0.0002,scabbard,0.4763,data/Mid224/test/frog/field_anaxyrus_punctatus_64984_obs_38434842_61083251.jpeg
+test/frog/field_rana_temporaria_25591_obs_334478190_607420910.jpeg,frog,test,SUSPICIOUS_LABEL,437.8,116.79,36.6,0.0001,American coot,0.3376,data/Mid224/test/frog/field_rana_temporaria_25591_obs_334478190_607420910.jpeg
+test/frog/field_rhinella_horribilis_517119_obs_91648623_151631167.jpeg,frog,test,SUSPICIOUS_LABEL,198.76,41.9,47.28,0.0206,horned viper,0.2068,data/Mid224/test/frog/field_rhinella_horribilis_517119_obs_91648623_151631167.jpeg
+test/horse/horse_00121.jpeg,horse,test,SUSPICIOUS_LABEL,394.1,122.08,51.78,0.0012,English foxhound,0.2342,data/Mid224/test/horse/horse_00121.jpeg
+test/horse/horse_00415.jpeg,horse,test,SUSPICIOUS_LABEL,1075.84,110.35,51.03,0.0,dalmatian,0.595,data/Mid224/test/horse/horse_00415.jpeg
+test/horse/horse_00497.jpeg,horse,test,SUSPICIOUS_LABEL,321.59,149.19,64.19,0.0114,American Staffordshire terrier,0.3925,data/Mid224/test/horse/horse_00497.jpeg
+test/horse/horse_00581.jpeg,horse,test,SUSPICIOUS_LABEL,605.92,115.97,49.96,0.05,hartebeest,0.3351,data/Mid224/test/horse/horse_00581.jpeg
+test/horse/horse_00618.jpeg,horse,test,SUSPICIOUS_LABEL,1271.79,123.55,66.08,0.0001,German short-haired pointer,0.7363,data/Mid224/test/horse/horse_00618.jpeg
+test/horse/horse_00795.jpeg,horse,test,SUSPICIOUS_LABEL,744.68,114.79,48.85,0.0,kuvasz,0.2484,data/Mid224/test/horse/horse_00795.jpeg
+test/horse/horse_01084.jpeg,horse,test,SUSPICIOUS_LABEL,1396.78,108.85,48.29,0.0002,dalmatian,0.5789,data/Mid224/test/horse/horse_01084.jpeg
+test/horse/horse_01504.jpeg,horse,test,SUSPICIOUS_LABEL,926.14,157.78,71.42,0.0076,bison,0.7508,data/Mid224/test/horse/horse_01504.jpeg
+test/horse/horse_01560.jpeg,horse,test,SUSPICIOUS_LABEL,818.77,156.59,59.62,0.0123,Arabian camel,0.2993,data/Mid224/test/horse/horse_01560.jpeg
+test/horse/horse_01756.jpeg,horse,test,SUSPICIOUS_LABEL,460.34,117.91,50.12,0.0006,bighorn,0.4799,data/Mid224/test/horse/horse_01756.jpeg
+test/horse/horse_01937.jpeg,horse,test,SUSPICIOUS_LABEL,1456.94,121.98,46.17,0.0001,giant schnauzer,0.2632,data/Mid224/test/horse/horse_01937.jpeg
+test/horse/horse_02037.jpeg,horse,test,SUSPICIOUS_LABEL,425.24,194.07,42.21,0.0081,stretcher,0.2774,data/Mid224/test/horse/horse_02037.jpeg
+test/horse/horse_02047.jpeg,horse,test,SUSPICIOUS_LABEL,926.13,134.03,62.58,0.0,passenger car,0.4711,data/Mid224/test/horse/horse_02047.jpeg
+test/horse/horse_02282.jpeg,horse,test,SUSPICIOUS_LABEL,340.19,146.16,51.17,0.0004,Ibizan hound,0.3242,data/Mid224/test/horse/horse_02282.jpeg
+test/horse/horse_02780.jpeg,horse,test,SUSPICIOUS_LABEL,432.27,96.73,50.32,0.0,kuvasz,0.3208,data/Mid224/test/horse/horse_02780.jpeg
+test/horse/horse_02903.jpeg,horse,test,SUSPICIOUS_LABEL,916.36,122.0,52.86,0.0,dalmatian,0.6269,data/Mid224/test/horse/horse_02903.jpeg
+test/horse/horse_03368.jpeg,horse,test,SUSPICIOUS_LABEL,543.98,130.21,53.16,0.0002,bighorn,0.6915,data/Mid224/test/horse/horse_03368.jpeg
+test/horse/horse_03457.jpeg,horse,test,SUSPICIOUS_LABEL,1193.15,115.63,59.96,0.0061,impala,0.6339,data/Mid224/test/horse/horse_03457.jpeg
+test/horse/horse_03470.jpeg,horse,test,SUSPICIOUS_LABEL,1033.83,117.53,66.56,0.0,borzoi,0.3842,data/Mid224/test/horse/horse_03470.jpeg
+test/horse/horse_03826.jpeg,horse,test,SUSPICIOUS_LABEL,995.54,114.83,76.49,0.0,curly-coated retriever,0.3922,data/Mid224/test/horse/horse_03826.jpeg
+test/horse/horse_03977.jpeg,horse,test,SUSPICIOUS_LABEL,336.61,72.22,53.87,0.0,clumber,0.2156,data/Mid224/test/horse/horse_03977.jpeg
+test/horse/horse_04212.jpeg,horse,test,SUSPICIOUS_LABEL,508.49,68.34,75.11,0.0,kuvasz,0.3819,data/Mid224/test/horse/horse_04212.jpeg
