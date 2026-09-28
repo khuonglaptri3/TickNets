@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TickNet-L v1 Architecture (FLOP-Optimized & Mixed Depthwise)",
+    "output": "docs/architectures/ticknet_l.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "macro-flow",
+        "label": "End-to-End Pipeline",
+        "focus": ["input", "data_bn", "stem", "stage1", "stage2", "stage3", "stage4", "stage5", "head", "gap", "classifier"],
+        "note": "Complete 7-block architecture with pointwise bottleneck and mixed depthwise convolution."
+      },
+      {
+        "id": "mixed-dw",
+        "label": "Mixed Depthwise Stages",
+        "focus": ["stage3", "stage4", "stage5"],
+        "note": "Stages 3-5 split channels equally between 3x3 and 5x5 kernels to expand receptive field with zero extra FLOPs."
+      },
+      {
+        "id": "efficiency-gains",
+        "label": "Efficiency Optimizations",
+        "focus": ["stem", "stage2", "head"],
+        "note": "24-channel stem, 0.75x bottleneck in Stage 2, and 768-channel head bring FLOPs down to 0.796G."
+      }
+    ]
+  },
+  "components": [
+    { "id": "input", "type": "external", "label": "Input Image", "sublabel": "RGB 224x224 (3ch)", "pos": [40, 140], "size": [130, 60] },
+    { "id": "data_bn", "type": "cloud", "label": "Data BatchNorm", "sublabel": "nn.BatchNorm2d(3)", "tag": "Adaptive Norm", "pos": [220, 140], "size": [140, 60] },
+    { "id": "stem", "type": "backend", "label": "Stem Conv", "sublabel": "Conv 3x3, 24ch, s=2", "tag": "Narrowed 24ch", "pos": [410, 140], "size": [140, 60] },
+    { "id": "stage1", "type": "backend", "label": "Stage 1 (PDP)", "sublabel": "1 block, 112ch, s=1", "pos": [600, 140], "size": [140, 60] },
+    { "id": "stage2", "type": "backend", "label": "Stage 2 (PDP)", "sublabel": "1 block, 64ch, s=2", "tag": "0.75x Pw (0.33G)", "pos": [790, 140], "size": [140, 60] },
+    { "id": "stage3", "type": "backend", "label": "Stage 3 (PDP)", "sublabel": "2 blocks, 144ch, s=2", "tag": "Mixed DW 3x3+5x5", "pos": [980, 140], "size": [140, 60] },
+    { "id": "stage4", "type": "backend", "label": "Stage 4 (PDP)", "sublabel": "2 blocks, 288ch, s=2", "tag": "Mixed DW 3x3+5x5", "pos": [980, 290], "size": [140, 60] },
+    { "id": "stage5", "type": "backend", "label": "Stage 5 (PDP)", "sublabel": "1 block, 512ch, s=2", "tag": "Mixed DW 3x3+5x5", "pos": [790, 290], "size": [140, 60] },
+    { "id": "head", "type": "backend", "label": "Head Conv", "sublabel": "Conv 1x1, 768ch, ReLU", "tag": "Trimmed 768ch", "pos": [600, 290], "size": [140, 60] },
+    { "id": "gap", "type": "backend", "label": "Global AvgPool", "sublabel": "AdaptivePool2d (1x1)", "pos": [410, 290], "size": [140, 60] },
+    { "id": "classifier", "type": "external", "label": "Classifier", "sublabel": "Conv 1x1, 5 classes", "tag": "5 Class Logits", "pos": [220, 290], "size": [140, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Input Normalization & Optimized Stem", "wraps": ["input", "data_bn", "stem"] },
+    { "kind": "security-group", "label": "Enhanced Backbone (7 Blocks with Mixed DW)", "wraps": ["stage1", "stage2", "stage3", "stage4", "stage5"] },
+    { "kind": "region", "label": "Classification Head", "wraps": ["head", "gap", "classifier"] }
+  ],
+  "connections": [
+    { "from": "input", "to": "data_bn" },
+    { "from": "data_bn", "to": "stem" },
+    { "from": "stem", "to": "stage1" },
+    { "from": "stage1", "to": "stage2" },
+    { "from": "stage2", "to": "stage3" },
+    { "from": "stage3", "to": "stage4", "fromSide": "bottom", "toSide": "top" },
+    { "from": "stage4", "to": "stage5", "fromSide": "left", "toSide": "right" },
+    { "from": "stage5", "to": "head", "fromSide": "left", "toSide": "right" },
+    { "from": "head", "to": "gap", "fromSide": "left", "toSide": "right" },
+    { "from": "gap", "to": "classifier", "fromSide": "left", "toSide": "right" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Pointwise Bottleneck", "items": ["Pw1 compresses channels by 0.75x from Stage 2", "Cuts Stage 2 cost from 0.521 GFLOPs to 0.333 GFLOPs (-36%)"] },
+    { "dot": "violet", "title": "Mixed Depthwise (3x3 + 5x5)", "items": ["Stages 3, 4, 5 split channels 50/50 between 3x3 and 5x5 DW kernels", "Captures multi-scale receptive fields without inflating compute"] },
+    { "dot": "emerald", "title": "Complexity & Efficiency", "items": ["Total Parameters: 1,096,260 (~1.10M)", "Total FLOPs: 0.796 GFLOPs (-19.4% reduction vs Basic 0.988G)"] }
+  ]
+}

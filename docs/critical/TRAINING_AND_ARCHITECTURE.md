@@ -104,10 +104,21 @@ Nhằm khai thác tối đa giới hạn 6 triệu tham số mà vẫn tuân th�
 
 ---
 
-## 3. Liên kết tham chiếu trong dự án
+## 3. Sơ đồ Kiến trúc Trực quan Tương tác (Interactive Archify Diagrams)
+
+Dự án tích hợp các sơ đồ kiến trúc động chuẩn Showcase tại thư mục `docs/architectures/`, mở trực tiếp bằng trình duyệt web:
+- 📊 **[TickNet-Basic (Gốc)](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_basic.html)**: Mô tả 5 block kinh điển, thể hiện trực quan điểm nghẽn tính toán 52.7% FLOPs tại Stage 2.
+- 🚀 **[TickNet-L v1 (Tối ưu FLOPs)](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_l.html)**: Mô tả 7 block, trực quan hóa cơ chế Pointwise Bottleneck 0.75x và phân nhánh Mixed DW 3x3 + 5x5.
+- ⚡ **[TickNet-C v1 (Mở rộng Tham số)](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_c.html)**: Mô tả 9 block, trực quan hóa cấu trúc mở rộng 5.16M params, Stage 5 phình to 896ch và lịch stride `(2, 1, 2, 2, 2)`.
+- 🔄 **[So sánh Tổng quan Toàn diện (Comparison)](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_comparison.html)**: So sánh trực quan 3 phương án kiến trúc trên cùng một bức tranh vĩ mô.
+
+---
+
+## 4. Liên kết tham chiếu trong dự án
 - [train_mid.py](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py): Vòng lặp `run_epoch` chứa forward, loss, backward, step.
 - [models/TickNet.py](file:///home/intern-tdkhuong/Desktop/TickNets/models/TickNet.py): Kiến trúc gốc của thầy (TickNet-Basic).
 - [models/ticknet_l.py](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_l.py): Kiến trúc tối ưu FLOPs TickNet-L v1 (Mixed DW 3x3/5x5).
 - [models/ticknet_c.py](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_c.py): Kiến trúc mở rộng 5.16M tham số TickNet-C v1.
 - [docs/MODEL_L.md](file:///home/intern-tdkhuong/Desktop/TickNets/docs/MODEL_L.md) & [docs/MODEL_C.md](file:///home/intern-tdkhuong/Desktop/TickNets/docs/MODEL_C.md): Báo cáo thiết kế và phân tích chi phí FLOPs từng stage.
 - [docs/model_profiles.json](file:///home/intern-tdkhuong/Desktop/TickNets/docs/model_profiles.json): Số đo tham số và FLOPs chính thức đo bằng forward pass.
+- [docs/architectures/README.md](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/README.md): Hướng dẫn sử dụng và tương tác với các sơ đồ kiến trúc Archify.

@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TickNet-C v1 Architecture (Capacity-Maximized 5.16M & 9 Blocks)",
+    "output": "docs/architectures/ticknet_c.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "macro-flow",
+        "label": "End-to-End Pipeline",
+        "focus": ["input", "data_bn", "stem", "stage1", "stage2", "stage3", "stage4", "stage5", "head", "gap", "classifier"],
+        "note": "9-block deep backbone using 100% original teacher FR_PDP_block and TickNet class."
+      },
+      {
+        "id": "high-capacity",
+        "label": "High-Capacity Stage 5",
+        "focus": ["stage4", "stage5", "head"],
+        "note": "Stage 5 expands through 3 blocks to 896 channels, scaling learnable parameters to 5.16M."
+      },
+      {
+        "id": "stride-schedule",
+        "label": "Controlled Stride Schedule",
+        "focus": ["stem", "stage1", "stage2", "stage3"],
+        "note": "Stride preset (2, 1, 2, 2, 2) controls intermediate spatial dimensions to keep FLOPs under 0.822G."
+      }
+    ]
+  },
+  "components": [
+    { "id": "input", "type": "external", "label": "Input Image", "sublabel": "RGB 224x224 (3ch)", "pos": [40, 140], "size": [130, 60] },
+    { "id": "data_bn", "type": "cloud", "label": "Data BatchNorm", "sublabel": "nn.BatchNorm2d(3)", "tag": "Adaptive Norm", "pos": [220, 140], "size": [140, 60] },
+    { "id": "stem", "type": "backend", "label": "Stem Conv", "sublabel": "Conv 3x3, 32ch, s=2", "pos": [410, 140], "size": [140, 60] },
+    { "id": "stage1", "type": "backend", "label": "Stage 1 (PDP)", "sublabel": "1 block, 80ch, s=2", "pos": [600, 140], "size": [140, 60] },
+    { "id": "stage2", "type": "backend", "label": "Stage 2 (PDP)", "sublabel": "1 block, 48ch, s=1", "pos": [790, 140], "size": [140, 60] },
+    { "id": "stage3", "type": "backend", "label": "Stage 3 (PDP)", "sublabel": "2 blocks, 96-128ch, s=2", "pos": [980, 140], "size": [140, 60] },
+    { "id": "stage4", "type": "backend", "label": "Stage 4 (PDP)", "sublabel": "2 blocks, 192-224ch, s=2", "pos": [980, 290], "size": [140, 60] },
+    { "id": "stage5", "type": "backend", "label": "Stage 5 (PDP)", "sublabel": "3 blocks, up to 896ch, s=2", "tag": "Capacity Peak 896ch", "pos": [790, 290], "size": [140, 60] },
+    { "id": "head", "type": "backend", "label": "Head Conv", "sublabel": "Conv 1x1, 1024ch, ReLU", "pos": [600, 290], "size": [140, 60] },
+    { "id": "gap", "type": "backend", "label": "Global AvgPool", "sublabel": "AdaptivePool2d (1x1)", "pos": [410, 290], "size": [140, 60] },
+    { "id": "classifier", "type": "external", "label": "Classifier", "sublabel": "Conv 1x1, 5 classes", "tag": "5 Class Logits", "pos": [220, 290], "size": [140, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Input Normalization & Stem", "wraps": ["input", "data_bn", "stem"] },
+    { "kind": "security-group", "label": "Original FR_PDP Backbone (9 Blocks)", "wraps": ["stage1", "stage2", "stage3", "stage4", "stage5"] },
+    { "kind": "region", "label": "Classification Head", "wraps": ["head", "gap", "classifier"] }
+  ],
+  "connections": [
+    { "from": "input", "to": "data_bn" },
+    { "from": "data_bn", "to": "stem" },
+    { "from": "stem", "to": "stage1" },
+    { "from": "stage1", "to": "stage2" },
+    { "from": "stage2", "to": "stage3" },
+    { "from": "stage3", "to": "stage4", "fromSide": "bottom", "toSide": "top" },
+    { "from": "stage4", "to": "stage5", "fromSide": "left", "toSide": "right" },
+    { "from": "stage5", "to": "head", "fromSide": "left", "toSide": "right" },
+    { "from": "head", "to": "gap", "fromSide": "left", "toSide": "right" },
+    { "from": "gap", "to": "classifier", "fromSide": "left", "toSide": "right" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Teacher Backbone Fidelity", "items": ["100% reuse of TickNet and FR_PDP_block implementation without code modification", "Preserves Pw-DW(3x3)-Pw-SE-Residual pipeline and original class interfaces"] },
+    { "dot": "emerald", "title": "Capacity Maximization", "items": ["Scales parameters to 5,155,467 (~5.16M, 85.9% of the 6.0M budget)", "Stage 5 channels expand across 3 blocks: 640 -> 768 -> 896 channels"] },
+    { "dot": "rose", "title": "Controlled Compute", "items": ["Adopts TickNet-small/large stride preset (2, 1, 2, 2, 2)", "FLOPs remain strictly at 0.821 GFLOPs (< 1.0G limit)"] }
+  ]
+}
