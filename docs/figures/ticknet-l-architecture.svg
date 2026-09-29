@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="820" viewBox="0 0 1500 820" role="img" aria-labelledby="title desc">
+  <title id="title">TickNet-L v1 architecture for the midterm project</title>
+  <desc id="desc">A left-to-right architecture diagram showing TickNet-L v1 stages, seven compressed PDP blocks, mixed depthwise kernels, head, pooling and five-class classifier.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>
+      .t{font-family:Arial,sans-serif;fill:#172033}.h{font-size:28px;font-weight:700}.s{font-size:17px}.b{font-size:18px;font-weight:700}.small{font-size:14px}.box{stroke:#334155;stroke-width:2;rx:14}.line{stroke:#334155;stroke-width:2.4;marker-end:url(#arrow)}.note{fill:#f8fafc;stroke:#94a3b8;stroke-width:1.5;rx:12}
+    </style>
+  </defs>
+  <rect width="1500" height="820" fill="#ffffff"/>
+  <text x="60" y="58" class="t h">TickNet-L v1 — Model 4.2 của nhóm</text>
+  <text x="60" y="87" class="t s">5 classes • 1,096,260 parameters • 0.157821 GFLOPs (Mid32) / 0.796760 GFLOPs (Mid224)</text>
+
+  <g>
+    <rect x="55" y="170" width="130" height="94" class="box" fill="#e0f2fe"/><text x="120" y="208" text-anchor="middle" class="t b">Input RGB</text><text x="120" y="235" text-anchor="middle" class="t s">32×32 / 224×224</text>
+    <rect x="235" y="170" width="130" height="94" class="box" fill="#dbeafe"/><text x="300" y="208" text-anchor="middle" class="t b">Stem 3×3</text><text x="300" y="235" text-anchor="middle" class="t s">24 channels</text>
+    <rect x="415" y="150" width="150" height="134" class="box" fill="#dcfce7"/><text x="490" y="187" text-anchor="middle" class="t b">Stage 1</text><text x="490" y="213" text-anchor="middle" class="t s">1 PDP block</text><text x="490" y="239" text-anchor="middle" class="t s">24 → 112</text><text x="490" y="264" text-anchor="middle" class="t small">DW 3×3</text>
+    <rect x="615" y="150" width="150" height="134" class="box" fill="#dcfce7"/><text x="690" y="187" text-anchor="middle" class="t b">Stage 2</text><text x="690" y="213" text-anchor="middle" class="t s">1 PDP block</text><text x="690" y="239" text-anchor="middle" class="t s">112 → 64</text><text x="690" y="264" text-anchor="middle" class="t small">DW 3×3</text>
+    <rect x="815" y="150" width="150" height="134" class="box" fill="#fef3c7"/><text x="890" y="187" text-anchor="middle" class="t b">Stage 3</text><text x="890" y="213" text-anchor="middle" class="t s">2 PDP blocks</text><text x="890" y="239" text-anchor="middle" class="t s">64 → 144</text><text x="890" y="264" text-anchor="middle" class="t small">mixed DW 3×3 + 5×5</text>
+    <rect x="1015" y="150" width="150" height="134" class="box" fill="#fef3c7"/><text x="1090" y="187" text-anchor="middle" class="t b">Stage 4</text><text x="1090" y="213" text-anchor="middle" class="t s">2 PDP blocks</text><text x="1090" y="239" text-anchor="middle" class="t s">144 → 288</text><text x="1090" y="264" text-anchor="middle" class="t small">mixed DW 3×3 + 5×5</text>
+    <rect x="1215" y="150" width="150" height="134" class="box" fill="#fef3c7"/><text x="1290" y="187" text-anchor="middle" class="t b">Stage 5</text><text x="1290" y="213" text-anchor="middle" class="t s">1 PDP block</text><text x="1290" y="239" text-anchor="middle" class="t s">288 → 512</text><text x="1290" y="264" text-anchor="middle" class="t small">mixed DW 3×3 + 5×5</text>
+    <path d="M185 217H235 M365 217H415 M565 217H615 M765 217H815 M965 217H1015 M1165 217H1215" class="line" fill="none"/>
+  </g>
+
+  <g>
+    <rect x="450" y="365" width="210" height="100" class="box" fill="#ede9fe"/><text x="555" y="405" text-anchor="middle" class="t b">Head 1×1</text><text x="555" y="434" text-anchor="middle" class="t s">512 → 768 channels</text>
+    <rect x="730" y="365" width="210" height="100" class="box" fill="#ede9fe"/><text x="835" y="405" text-anchor="middle" class="t b">Global average pooling</text><text x="835" y="434" text-anchor="middle" class="t s">768 × 1 × 1</text>
+    <rect x="1010" y="365" width="210" height="100" class="box" fill="#fee2e2"/><text x="1115" y="405" text-anchor="middle" class="t b">Classifier 1×1</text><text x="1115" y="434" text-anchor="middle" class="t s">5 classes</text>
+    <path d="M1290 284 V330 H555 V365" class="line" fill="none"/><path d="M660 415H730 M940 415H1010" class="line" fill="none"/>
+  </g>
+
+  <rect x="70" y="555" width="1360" height="190" class="note"/>
+  <text x="100" y="592" class="t b">Compressed PDP block (7 blocks total)</text>
+  <rect x="100" y="625" width="170" height="64" class="box" fill="#dbeafe"/><text x="185" y="653" text-anchor="middle" class="t s">PW1 1×1, linear</text><text x="185" y="676" text-anchor="middle" class="t small">Cin → hidden</text>
+  <rect x="335" y="625" width="210" height="64" class="box" fill="#fef3c7"/><text x="440" y="653" text-anchor="middle" class="t s">Depthwise + BN + ReLU</text><text x="440" y="676" text-anchor="middle" class="t small">3×3 or channel-split 3×3 / 5×5</text>
+  <rect x="610" y="625" width="160" height="64" class="box" fill="#dcfce7"/><text x="690" y="653" text-anchor="middle" class="t s">PW2 1×1</text><text x="690" y="676" text-anchor="middle" class="t small">hidden → Cout</text>
+  <rect x="835" y="625" width="120" height="64" class="box" fill="#fce7f3"/><text x="895" y="663" text-anchor="middle" class="t b">SE gate</text>
+  <rect x="1020" y="625" width="170" height="64" class="box" fill="#e0f2fe"/><text x="1105" y="653" text-anchor="middle" class="t s">Residual add</text><text x="1105" y="676" text-anchor="middle" class="t small">identity or PW projection</text>
+  <path d="M270 657H335 M545 657H610 M770 657H835 M955 657H1020" class="line" fill="none"/>
+  <path d="M185 625 V598 H1105 V625" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <text x="630" y="585" text-anchor="middle" class="t small">shortcut path</text>
+</svg>
