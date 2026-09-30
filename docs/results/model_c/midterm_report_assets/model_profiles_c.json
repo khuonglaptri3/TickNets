@@ -1,0 +1,2017 @@
+{
+  "schema_version": 1,
+  "torch_version": "2.14.0+cpu",
+  "device": "cpu",
+  "dtype": "float32",
+  "num_classes": 5,
+  "counting_convention": "1 MAC = 2 FLOPs; Conv2d and Linear only; batch size 1; eval forward",
+  "excluded_operations": [
+    "bias additions",
+    "batch normalization",
+    "activations",
+    "pooling",
+    "residual additions",
+    "SE elementwise scaling",
+    "data movement"
+  ],
+  "limits": {
+    "learnable_parameters_max_inclusive": 6000000,
+    "flops_max_exclusive": 1000000000
+  },
+  "l_design_target_flops": 800000000,
+  "c_design_target_flops": 850000000,
+  "measurements": [
+    {
+      "input_shape": [
+        1,
+        3,
+        32,
+        32
+      ],
+      "output_shape": [
+        1,
+        5
+      ],
+      "learnable_parameters": 5155467,
+      "macs": 128415040,
+      "flops": 256830080,
+      "counting_convention": "1 MAC = 2 FLOPs; Conv2d and Linear only; batch size 1; eval forward",
+      "excluded_operations": [
+        "bias additions",
+        "batch normalization",
+        "activations",
+        "pooling",
+        "residual additions",
+        "SE elementwise scaling",
+        "data movement"
+      ],
+      "within_exam_limits": true,
+      "pytorch_cross_check_flops": 256830080,
+      "stage_flops": {
+        "backbone.init_conv": 1769472,
+        "backbone.stage1": 13174336,
+        "backbone.stage2": 30310976,
+        "backbone.stage3": 27408640,
+        "backbone.stage4": 30799104,
+        "backbone.stage5": 123997184,
+        "backbone.final_conv": 29360128,
+        "classifier.conv": 10240
+      },
+      "layers": [
+        {
+          "name": "backbone.init_conv.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            3,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            32,
+            32,
+            32
+          ],
+          "macs": 884736,
+          "flops": 1769472
+        },
+        {
+          "name": "backbone.stage1.unit1.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            32,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            32,
+            32,
+            32
+          ],
+          "macs": 1048576,
+          "flops": 2097152
+        },
+        {
+          "name": "backbone.stage1.unit1.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            32,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            32,
+            32,
+            32
+          ],
+          "macs": 294912,
+          "flops": 589824
+        },
+        {
+          "name": "backbone.stage1.unit1.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            32,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            80,
+            32,
+            32
+          ],
+          "macs": 2621440,
+          "flops": 5242880
+        },
+        {
+          "name": "backbone.stage1.unit1.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            80
+          ],
+          "output_shape": [
+            1,
+            5
+          ],
+          "macs": 400,
+          "flops": 800
+        },
+        {
+          "name": "backbone.stage1.unit1.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            5
+          ],
+          "output_shape": [
+            1,
+            80
+          ],
+          "macs": 400,
+          "flops": 800
+        },
+        {
+          "name": "backbone.stage1.unit1.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            32,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            80,
+            32,
+            32
+          ],
+          "macs": 2621440,
+          "flops": 5242880
+        },
+        {
+          "name": "backbone.stage2.unit1.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            80,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            80,
+            32,
+            32
+          ],
+          "macs": 6553600,
+          "flops": 13107200
+        },
+        {
+          "name": "backbone.stage2.unit1.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            80,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            80,
+            32,
+            32
+          ],
+          "macs": 737280,
+          "flops": 1474560
+        },
+        {
+          "name": "backbone.stage2.unit1.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            80,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            48,
+            32,
+            32
+          ],
+          "macs": 3932160,
+          "flops": 7864320
+        },
+        {
+          "name": "backbone.stage2.unit1.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            48
+          ],
+          "output_shape": [
+            1,
+            3
+          ],
+          "macs": 144,
+          "flops": 288
+        },
+        {
+          "name": "backbone.stage2.unit1.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            3
+          ],
+          "output_shape": [
+            1,
+            48
+          ],
+          "macs": 144,
+          "flops": 288
+        },
+        {
+          "name": "backbone.stage2.unit1.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            80,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            48,
+            32,
+            32
+          ],
+          "macs": 3932160,
+          "flops": 7864320
+        },
+        {
+          "name": "backbone.stage3.unit1.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            48,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            48,
+            32,
+            32
+          ],
+          "macs": 2359296,
+          "flops": 4718592
+        },
+        {
+          "name": "backbone.stage3.unit1.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            48,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            48,
+            16,
+            16
+          ],
+          "macs": 110592,
+          "flops": 221184
+        },
+        {
+          "name": "backbone.stage3.unit1.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            48,
+            16,
+            16
+          ],
+          "output_shape": [
+            1,
+            96,
+            16,
+            16
+          ],
+          "macs": 1179648,
+          "flops": 2359296
+        },
+        {
+          "name": "backbone.stage3.unit1.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            96
+          ],
+          "output_shape": [
+            1,
+            6
+          ],
+          "macs": 576,
+          "flops": 1152
+        },
+        {
+          "name": "backbone.stage3.unit1.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            6
+          ],
+          "output_shape": [
+            1,
+            96
+          ],
+          "macs": 576,
+          "flops": 1152
+        },
+        {
+          "name": "backbone.stage3.unit1.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            48,
+            32,
+            32
+          ],
+          "output_shape": [
+            1,
+            96,
+            16,
+            16
+          ],
+          "macs": 1179648,
+          "flops": 2359296
+        },
+        {
+          "name": "backbone.stage3.unit2.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            96,
+            16,
+            16
+          ],
+          "output_shape": [
+            1,
+            96,
+            16,
+            16
+          ],
+          "macs": 2359296,
+          "flops": 4718592
+        },
+        {
+          "name": "backbone.stage3.unit2.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            96,
+            16,
+            16
+          ],
+          "output_shape": [
+            1,
+            96,
+            16,
+            16
+          ],
+          "macs": 221184,
+          "flops": 442368
+        },
+        {
+          "name": "backbone.stage3.unit2.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            96,
+            16,
+            16
+          ],
+          "output_shape": [
+            1,
+            128,
+            16,
+            16
+          ],
+          "macs": 3145728,
+          "flops": 6291456
+        },
+        {
+          "name": "backbone.stage3.unit2.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            128
+          ],
+          "output_shape": [
+            1,
+            8
+          ],
+          "macs": 1024,
+          "flops": 2048
+        },
+        {
+          "name": "backbone.stage3.unit2.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            8
+          ],
+          "output_shape": [
+            1,
+            128
+          ],
+          "macs": 1024,
+          "flops": 2048
+        },
+        {
+          "name": "backbone.stage3.unit2.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            96,
+            16,
+            16
+          ],
+          "output_shape": [
+            1,
+            128,
+            16,
+            16
+          ],
+          "macs": 3145728,
+          "flops": 6291456
+        },
+        {
+          "name": "backbone.stage4.unit1.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            128,
+            16,
+            16
+          ],
+          "output_shape": [
+            1,
+            128,
+            16,
+            16
+          ],
+          "macs": 4194304,
+          "flops": 8388608
+        },
+        {
+          "name": "backbone.stage4.unit1.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            128,
+            16,
+            16
+          ],
+          "output_shape": [
+            1,
+            128,
+            8,
+            8
+          ],
+          "macs": 73728,
+          "flops": 147456
+        },
+        {
+          "name": "backbone.stage4.unit1.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            128,
+            8,
+            8
+          ],
+          "output_shape": [
+            1,
+            192,
+            8,
+            8
+          ],
+          "macs": 1572864,
+          "flops": 3145728
+        },
+        {
+          "name": "backbone.stage4.unit1.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            192
+          ],
+          "output_shape": [
+            1,
+            12
+          ],
+          "macs": 2304,
+          "flops": 4608
+        },
+        {
+          "name": "backbone.stage4.unit1.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            12
+          ],
+          "output_shape": [
+            1,
+            192
+          ],
+          "macs": 2304,
+          "flops": 4608
+        },
+        {
+          "name": "backbone.stage4.unit1.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            128,
+            16,
+            16
+          ],
+          "output_shape": [
+            1,
+            192,
+            8,
+            8
+          ],
+          "macs": 1572864,
+          "flops": 3145728
+        },
+        {
+          "name": "backbone.stage4.unit2.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            192,
+            8,
+            8
+          ],
+          "output_shape": [
+            1,
+            192,
+            8,
+            8
+          ],
+          "macs": 2359296,
+          "flops": 4718592
+        },
+        {
+          "name": "backbone.stage4.unit2.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            192,
+            8,
+            8
+          ],
+          "output_shape": [
+            1,
+            192,
+            8,
+            8
+          ],
+          "macs": 110592,
+          "flops": 221184
+        },
+        {
+          "name": "backbone.stage4.unit2.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            192,
+            8,
+            8
+          ],
+          "output_shape": [
+            1,
+            224,
+            8,
+            8
+          ],
+          "macs": 2752512,
+          "flops": 5505024
+        },
+        {
+          "name": "backbone.stage4.unit2.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            224
+          ],
+          "output_shape": [
+            1,
+            14
+          ],
+          "macs": 3136,
+          "flops": 6272
+        },
+        {
+          "name": "backbone.stage4.unit2.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            14
+          ],
+          "output_shape": [
+            1,
+            224
+          ],
+          "macs": 3136,
+          "flops": 6272
+        },
+        {
+          "name": "backbone.stage4.unit2.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            192,
+            8,
+            8
+          ],
+          "output_shape": [
+            1,
+            224,
+            8,
+            8
+          ],
+          "macs": 2752512,
+          "flops": 5505024
+        },
+        {
+          "name": "backbone.stage5.unit1.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            224,
+            8,
+            8
+          ],
+          "output_shape": [
+            1,
+            224,
+            8,
+            8
+          ],
+          "macs": 3211264,
+          "flops": 6422528
+        },
+        {
+          "name": "backbone.stage5.unit1.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            224,
+            8,
+            8
+          ],
+          "output_shape": [
+            1,
+            224,
+            4,
+            4
+          ],
+          "macs": 32256,
+          "flops": 64512
+        },
+        {
+          "name": "backbone.stage5.unit1.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            224,
+            4,
+            4
+          ],
+          "output_shape": [
+            1,
+            640,
+            4,
+            4
+          ],
+          "macs": 2293760,
+          "flops": 4587520
+        },
+        {
+          "name": "backbone.stage5.unit1.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            640
+          ],
+          "output_shape": [
+            1,
+            40
+          ],
+          "macs": 25600,
+          "flops": 51200
+        },
+        {
+          "name": "backbone.stage5.unit1.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            40
+          ],
+          "output_shape": [
+            1,
+            640
+          ],
+          "macs": 25600,
+          "flops": 51200
+        },
+        {
+          "name": "backbone.stage5.unit1.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            224,
+            8,
+            8
+          ],
+          "output_shape": [
+            1,
+            640,
+            4,
+            4
+          ],
+          "macs": 2293760,
+          "flops": 4587520
+        },
+        {
+          "name": "backbone.stage5.unit2.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            640,
+            4,
+            4
+          ],
+          "output_shape": [
+            1,
+            640,
+            4,
+            4
+          ],
+          "macs": 6553600,
+          "flops": 13107200
+        },
+        {
+          "name": "backbone.stage5.unit2.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            640,
+            4,
+            4
+          ],
+          "output_shape": [
+            1,
+            640,
+            4,
+            4
+          ],
+          "macs": 92160,
+          "flops": 184320
+        },
+        {
+          "name": "backbone.stage5.unit2.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            640,
+            4,
+            4
+          ],
+          "output_shape": [
+            1,
+            768,
+            4,
+            4
+          ],
+          "macs": 7864320,
+          "flops": 15728640
+        },
+        {
+          "name": "backbone.stage5.unit2.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            768
+          ],
+          "output_shape": [
+            1,
+            48
+          ],
+          "macs": 36864,
+          "flops": 73728
+        },
+        {
+          "name": "backbone.stage5.unit2.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            48
+          ],
+          "output_shape": [
+            1,
+            768
+          ],
+          "macs": 36864,
+          "flops": 73728
+        },
+        {
+          "name": "backbone.stage5.unit2.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            640,
+            4,
+            4
+          ],
+          "output_shape": [
+            1,
+            768,
+            4,
+            4
+          ],
+          "macs": 7864320,
+          "flops": 15728640
+        },
+        {
+          "name": "backbone.stage5.unit3.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            768,
+            4,
+            4
+          ],
+          "output_shape": [
+            1,
+            768,
+            4,
+            4
+          ],
+          "macs": 9437184,
+          "flops": 18874368
+        },
+        {
+          "name": "backbone.stage5.unit3.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            768,
+            4,
+            4
+          ],
+          "output_shape": [
+            1,
+            768,
+            4,
+            4
+          ],
+          "macs": 110592,
+          "flops": 221184
+        },
+        {
+          "name": "backbone.stage5.unit3.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            768,
+            4,
+            4
+          ],
+          "output_shape": [
+            1,
+            896,
+            4,
+            4
+          ],
+          "macs": 11010048,
+          "flops": 22020096
+        },
+        {
+          "name": "backbone.stage5.unit3.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            896
+          ],
+          "output_shape": [
+            1,
+            56
+          ],
+          "macs": 50176,
+          "flops": 100352
+        },
+        {
+          "name": "backbone.stage5.unit3.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            56
+          ],
+          "output_shape": [
+            1,
+            896
+          ],
+          "macs": 50176,
+          "flops": 100352
+        },
+        {
+          "name": "backbone.stage5.unit3.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            768,
+            4,
+            4
+          ],
+          "output_shape": [
+            1,
+            896,
+            4,
+            4
+          ],
+          "macs": 11010048,
+          "flops": 22020096
+        },
+        {
+          "name": "backbone.final_conv.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            896,
+            4,
+            4
+          ],
+          "output_shape": [
+            1,
+            1024,
+            4,
+            4
+          ],
+          "macs": 14680064,
+          "flops": 29360128
+        },
+        {
+          "name": "classifier.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            1024,
+            1,
+            1
+          ],
+          "output_shape": [
+            1,
+            5,
+            1,
+            1
+          ],
+          "macs": 5120,
+          "flops": 10240
+        }
+      ],
+      "model": "c",
+      "variant": "Mid32",
+      "architecture_revision": "ticknet-c-v1"
+    },
+    {
+      "input_shape": [
+        1,
+        3,
+        224,
+        224
+      ],
+      "output_shape": [
+        1,
+        5
+      ],
+      "learnable_parameters": 5155467,
+      "macs": 410526880,
+      "flops": 821053760,
+      "counting_convention": "1 MAC = 2 FLOPs; Conv2d and Linear only; batch size 1; eval forward",
+      "excluded_operations": [
+        "bias additions",
+        "batch normalization",
+        "activations",
+        "pooling",
+        "residual additions",
+        "SE elementwise scaling",
+        "data movement"
+      ],
+      "within_exam_limits": true,
+      "pytorch_cross_check_flops": 821053760,
+      "stage_flops": {
+        "backbone.init_conv": 21676032,
+        "backbone.stage1": 59610688,
+        "backbone.stage2": 92826176,
+        "backbone.stage3": 83925760,
+        "backbone.stage4": 94277376,
+        "backbone.stage5": 378812096,
+        "backbone.final_conv": 89915392,
+        "classifier.conv": 10240
+      },
+      "layers": [
+        {
+          "name": "backbone.init_conv.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "output_shape": [
+            1,
+            32,
+            112,
+            112
+          ],
+          "macs": 10838016,
+          "flops": 21676032
+        },
+        {
+          "name": "backbone.stage1.unit1.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            32,
+            112,
+            112
+          ],
+          "output_shape": [
+            1,
+            32,
+            112,
+            112
+          ],
+          "macs": 12845056,
+          "flops": 25690112
+        },
+        {
+          "name": "backbone.stage1.unit1.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            32,
+            112,
+            112
+          ],
+          "output_shape": [
+            1,
+            32,
+            56,
+            56
+          ],
+          "macs": 903168,
+          "flops": 1806336
+        },
+        {
+          "name": "backbone.stage1.unit1.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            32,
+            56,
+            56
+          ],
+          "output_shape": [
+            1,
+            80,
+            56,
+            56
+          ],
+          "macs": 8028160,
+          "flops": 16056320
+        },
+        {
+          "name": "backbone.stage1.unit1.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            80
+          ],
+          "output_shape": [
+            1,
+            5
+          ],
+          "macs": 400,
+          "flops": 800
+        },
+        {
+          "name": "backbone.stage1.unit1.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            5
+          ],
+          "output_shape": [
+            1,
+            80
+          ],
+          "macs": 400,
+          "flops": 800
+        },
+        {
+          "name": "backbone.stage1.unit1.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            32,
+            112,
+            112
+          ],
+          "output_shape": [
+            1,
+            80,
+            56,
+            56
+          ],
+          "macs": 8028160,
+          "flops": 16056320
+        },
+        {
+          "name": "backbone.stage2.unit1.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            80,
+            56,
+            56
+          ],
+          "output_shape": [
+            1,
+            80,
+            56,
+            56
+          ],
+          "macs": 20070400,
+          "flops": 40140800
+        },
+        {
+          "name": "backbone.stage2.unit1.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            80,
+            56,
+            56
+          ],
+          "output_shape": [
+            1,
+            80,
+            56,
+            56
+          ],
+          "macs": 2257920,
+          "flops": 4515840
+        },
+        {
+          "name": "backbone.stage2.unit1.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            80,
+            56,
+            56
+          ],
+          "output_shape": [
+            1,
+            48,
+            56,
+            56
+          ],
+          "macs": 12042240,
+          "flops": 24084480
+        },
+        {
+          "name": "backbone.stage2.unit1.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            48
+          ],
+          "output_shape": [
+            1,
+            3
+          ],
+          "macs": 144,
+          "flops": 288
+        },
+        {
+          "name": "backbone.stage2.unit1.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            3
+          ],
+          "output_shape": [
+            1,
+            48
+          ],
+          "macs": 144,
+          "flops": 288
+        },
+        {
+          "name": "backbone.stage2.unit1.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            80,
+            56,
+            56
+          ],
+          "output_shape": [
+            1,
+            48,
+            56,
+            56
+          ],
+          "macs": 12042240,
+          "flops": 24084480
+        },
+        {
+          "name": "backbone.stage3.unit1.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            48,
+            56,
+            56
+          ],
+          "output_shape": [
+            1,
+            48,
+            56,
+            56
+          ],
+          "macs": 7225344,
+          "flops": 14450688
+        },
+        {
+          "name": "backbone.stage3.unit1.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            48,
+            56,
+            56
+          ],
+          "output_shape": [
+            1,
+            48,
+            28,
+            28
+          ],
+          "macs": 338688,
+          "flops": 677376
+        },
+        {
+          "name": "backbone.stage3.unit1.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            48,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            96,
+            28,
+            28
+          ],
+          "macs": 3612672,
+          "flops": 7225344
+        },
+        {
+          "name": "backbone.stage3.unit1.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            96
+          ],
+          "output_shape": [
+            1,
+            6
+          ],
+          "macs": 576,
+          "flops": 1152
+        },
+        {
+          "name": "backbone.stage3.unit1.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            6
+          ],
+          "output_shape": [
+            1,
+            96
+          ],
+          "macs": 576,
+          "flops": 1152
+        },
+        {
+          "name": "backbone.stage3.unit1.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            48,
+            56,
+            56
+          ],
+          "output_shape": [
+            1,
+            96,
+            28,
+            28
+          ],
+          "macs": 3612672,
+          "flops": 7225344
+        },
+        {
+          "name": "backbone.stage3.unit2.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            96,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            96,
+            28,
+            28
+          ],
+          "macs": 7225344,
+          "flops": 14450688
+        },
+        {
+          "name": "backbone.stage3.unit2.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            96,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            96,
+            28,
+            28
+          ],
+          "macs": 677376,
+          "flops": 1354752
+        },
+        {
+          "name": "backbone.stage3.unit2.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            96,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            128,
+            28,
+            28
+          ],
+          "macs": 9633792,
+          "flops": 19267584
+        },
+        {
+          "name": "backbone.stage3.unit2.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            128
+          ],
+          "output_shape": [
+            1,
+            8
+          ],
+          "macs": 1024,
+          "flops": 2048
+        },
+        {
+          "name": "backbone.stage3.unit2.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            8
+          ],
+          "output_shape": [
+            1,
+            128
+          ],
+          "macs": 1024,
+          "flops": 2048
+        },
+        {
+          "name": "backbone.stage3.unit2.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            96,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            128,
+            28,
+            28
+          ],
+          "macs": 9633792,
+          "flops": 19267584
+        },
+        {
+          "name": "backbone.stage4.unit1.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            128,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            128,
+            28,
+            28
+          ],
+          "macs": 12845056,
+          "flops": 25690112
+        },
+        {
+          "name": "backbone.stage4.unit1.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            128,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            128,
+            14,
+            14
+          ],
+          "macs": 225792,
+          "flops": 451584
+        },
+        {
+          "name": "backbone.stage4.unit1.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            128,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            192,
+            14,
+            14
+          ],
+          "macs": 4816896,
+          "flops": 9633792
+        },
+        {
+          "name": "backbone.stage4.unit1.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            192
+          ],
+          "output_shape": [
+            1,
+            12
+          ],
+          "macs": 2304,
+          "flops": 4608
+        },
+        {
+          "name": "backbone.stage4.unit1.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            12
+          ],
+          "output_shape": [
+            1,
+            192
+          ],
+          "macs": 2304,
+          "flops": 4608
+        },
+        {
+          "name": "backbone.stage4.unit1.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            128,
+            28,
+            28
+          ],
+          "output_shape": [
+            1,
+            192,
+            14,
+            14
+          ],
+          "macs": 4816896,
+          "flops": 9633792
+        },
+        {
+          "name": "backbone.stage4.unit2.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            192,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            192,
+            14,
+            14
+          ],
+          "macs": 7225344,
+          "flops": 14450688
+        },
+        {
+          "name": "backbone.stage4.unit2.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            192,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            192,
+            14,
+            14
+          ],
+          "macs": 338688,
+          "flops": 677376
+        },
+        {
+          "name": "backbone.stage4.unit2.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            192,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            224,
+            14,
+            14
+          ],
+          "macs": 8429568,
+          "flops": 16859136
+        },
+        {
+          "name": "backbone.stage4.unit2.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            224
+          ],
+          "output_shape": [
+            1,
+            14
+          ],
+          "macs": 3136,
+          "flops": 6272
+        },
+        {
+          "name": "backbone.stage4.unit2.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            14
+          ],
+          "output_shape": [
+            1,
+            224
+          ],
+          "macs": 3136,
+          "flops": 6272
+        },
+        {
+          "name": "backbone.stage4.unit2.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            192,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            224,
+            14,
+            14
+          ],
+          "macs": 8429568,
+          "flops": 16859136
+        },
+        {
+          "name": "backbone.stage5.unit1.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            224,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            224,
+            14,
+            14
+          ],
+          "macs": 9834496,
+          "flops": 19668992
+        },
+        {
+          "name": "backbone.stage5.unit1.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            224,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            224,
+            7,
+            7
+          ],
+          "macs": 98784,
+          "flops": 197568
+        },
+        {
+          "name": "backbone.stage5.unit1.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            224,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            640,
+            7,
+            7
+          ],
+          "macs": 7024640,
+          "flops": 14049280
+        },
+        {
+          "name": "backbone.stage5.unit1.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            640
+          ],
+          "output_shape": [
+            1,
+            40
+          ],
+          "macs": 25600,
+          "flops": 51200
+        },
+        {
+          "name": "backbone.stage5.unit1.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            40
+          ],
+          "output_shape": [
+            1,
+            640
+          ],
+          "macs": 25600,
+          "flops": 51200
+        },
+        {
+          "name": "backbone.stage5.unit1.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            224,
+            14,
+            14
+          ],
+          "output_shape": [
+            1,
+            640,
+            7,
+            7
+          ],
+          "macs": 7024640,
+          "flops": 14049280
+        },
+        {
+          "name": "backbone.stage5.unit2.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            640,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            640,
+            7,
+            7
+          ],
+          "macs": 20070400,
+          "flops": 40140800
+        },
+        {
+          "name": "backbone.stage5.unit2.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            640,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            640,
+            7,
+            7
+          ],
+          "macs": 282240,
+          "flops": 564480
+        },
+        {
+          "name": "backbone.stage5.unit2.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            640,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            768,
+            7,
+            7
+          ],
+          "macs": 24084480,
+          "flops": 48168960
+        },
+        {
+          "name": "backbone.stage5.unit2.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            768
+          ],
+          "output_shape": [
+            1,
+            48
+          ],
+          "macs": 36864,
+          "flops": 73728
+        },
+        {
+          "name": "backbone.stage5.unit2.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            48
+          ],
+          "output_shape": [
+            1,
+            768
+          ],
+          "macs": 36864,
+          "flops": 73728
+        },
+        {
+          "name": "backbone.stage5.unit2.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            640,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            768,
+            7,
+            7
+          ],
+          "macs": 24084480,
+          "flops": 48168960
+        },
+        {
+          "name": "backbone.stage5.unit3.Pw1.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            768,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            768,
+            7,
+            7
+          ],
+          "macs": 28901376,
+          "flops": 57802752
+        },
+        {
+          "name": "backbone.stage5.unit3.Dw.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            768,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            768,
+            7,
+            7
+          ],
+          "macs": 338688,
+          "flops": 677376
+        },
+        {
+          "name": "backbone.stage5.unit3.Pw2.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            768,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            896,
+            7,
+            7
+          ],
+          "macs": 33718272,
+          "flops": 67436544
+        },
+        {
+          "name": "backbone.stage5.unit3.SE.ChannelGate.mlp.1",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            896
+          ],
+          "output_shape": [
+            1,
+            56
+          ],
+          "macs": 50176,
+          "flops": 100352
+        },
+        {
+          "name": "backbone.stage5.unit3.SE.ChannelGate.mlp.3",
+          "type": "Linear",
+          "input_shape": [
+            1,
+            56
+          ],
+          "output_shape": [
+            1,
+            896
+          ],
+          "macs": 50176,
+          "flops": 100352
+        },
+        {
+          "name": "backbone.stage5.unit3.PwR.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            768,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            896,
+            7,
+            7
+          ],
+          "macs": 33718272,
+          "flops": 67436544
+        },
+        {
+          "name": "backbone.final_conv.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            896,
+            7,
+            7
+          ],
+          "output_shape": [
+            1,
+            1024,
+            7,
+            7
+          ],
+          "macs": 44957696,
+          "flops": 89915392
+        },
+        {
+          "name": "classifier.conv",
+          "type": "Conv2d",
+          "input_shape": [
+            1,
+            1024,
+            1,
+            1
+          ],
+          "output_shape": [
+            1,
+            5,
+            1,
+            1
+          ],
+          "macs": 5120,
+          "flops": 10240
+        }
+      ],
+      "model": "c",
+      "variant": "Mid224",
+      "architecture_revision": "ticknet-c-v1"
+    }
+  ]
+}
