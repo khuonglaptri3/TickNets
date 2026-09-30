@@ -13,16 +13,17 @@ architecture or a separate training implementation.
 Both variants have five classes (`bird`, `cat`, `dog`, `frog`, `horse`), with
 5,000 training images and 50 test images per class.  The runs use seed 42,
 SGD (learning rate 0.1, momentum 0.9, weight decay 1e-4) and cosine annealing.
-See each `runs/*/config.json` for the complete settings and `epochs.csv` for
-the 200 per-epoch records.
+See the L directories under [`../training_logs/`](../training_logs/) for the
+complete settings and `epochs.csv` for the 200 per-epoch records.
 
 ## Contents
 
 - `midterm_report_assets/`: dataset-count evidence, model profile, learning
   curves, confusion matrices, classification reports, and a summary CSV.
-- `runs/*/`: run configuration, all epoch logs, and final held-out test
-  metrics for each resolution.
+- `../training_logs/l_mid*_seed42_20260928_103209/`: run configuration, all
+  epoch logs, final checkpoints and held-out test metrics for each resolution.
 
-The binary `last.pt` checkpoints are deliberately not tracked in Git to keep
-the repository lightweight.  They remain in the original Kaggle artifact
-export and can be supplied when checkpoint-based reproduction is required.
+The binary `last.pt` checkpoints are now stored under `../training_logs/` and
+indexed by [`../checkpoints/checkpoint_manifest.csv`](../checkpoints/checkpoint_manifest.csv).
+See the [2026-10-01 audit](../AUDIT_TICKNET_2026-10-01.md) for architecture,
+split-membership verification and limitations of the experimental comparison.

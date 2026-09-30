@@ -3,8 +3,9 @@
 This folder compares the three completed seed-42 architecture runs on Mid32
 and Mid224. It is a **descriptive architecture comparison**, not a strict
 three-way one-variable ablation: Basic and C have directly matching recorded
-training settings and split provenance, while the imported L run has protocol
-differences described below.
+training settings, while L has protocol differences described below. The
+2026-10-01 audit verified matching filename/split membership for all three.
+See the [detailed audit](../AUDIT_TICKNET_2026-10-01.md).
 
 ## Reported results
 
@@ -37,6 +38,13 @@ three models is one evaluation forward pass at batch size 1, with
 Those statements describe these completed runs; they do not prove that one
 architectural change alone caused every difference.
 
+The 2026-10-01 audit re-evaluated all six checkpoints on the canonical local
+test data and reproduced every reported confusion matrix and Top-1 score.
+Exact two-sided paired McNemar tests for L versus Basic gave p=0.3323 on
+Mid32 and p=0.1153 on Mid224. These runs do not establish superiority at the
+0.05 threshold, nor do they establish equivalence. Per-image predictions and
+full results are in [`../audit_20261001/`](../audit_20261001/).
+
 ## Comparability and split provenance
 
 Basic and C are the most directly controlled pair:
@@ -54,10 +62,18 @@ TickNet-L differs in at least these recorded ways:
   stores paired paths and checksums for both resolutions.
 
 The L raw manifest hash therefore cannot be compared directly with the
-Basic/C hash. The exact L test-filename manifest is not present in the local
-export, so filename equivalence is marked **unverified**, rather than treating
-the unequal hashes as proof of different samples. See
+Basic/C hash. On 2026-10-01, reconstructing the canonical membership using
+the L notebook's exact CSV schema, iteration order and line endings produced
+`35bcc76fde54e97d54f7825cdb34376a3732fd79aa829624ea4fc982b4590bdf`, exactly
+matching both L runs. **Filename/class/split membership is verified for both
+resolutions.** The historical Kaggle image bytes remain unverified because
+the L manifest did not contain image-content checksums. See
 [`split_provenance.csv`](split_provenance.csv) for the six per-run records.
+
+The Basic/C Mid224 notebooks require `--resume` and `--stop-after-epoch`,
+which are absent from the current repository trainer. Their original Kaggle
+trainer must be archived to reproduce the two-session training procedure;
+matching final checkpoints/logs alone cannot verify exact RNG restoration.
 
 ## Figures and source reports
 
