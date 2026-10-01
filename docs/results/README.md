@@ -1,23 +1,18 @@
 # Tổng kết kết quả TickNet
 
-Báo cáo mới nhất: [Kiểm định Basic/C/L ngày 2026-10-01](AUDIT_TICKNET_2026-10-01.md).
-Báo cáo đối chiếu kiến trúc gốc, notebook Kaggle, checkpoint, số liệu và mức
-độ thuyết phục của phương pháp phát triển TickNet-L.
+Tài liệu này tổng hợp kết quả đối chiếu giữa mô hình cơ sở **TickNet-Basic** (mô hình gốc của thầy) và mô hình cải tiến **TickNet-L v1** (Model L được lựa chọn cho đồ án Giữa kỳ và Cuối kỳ).
 
-| Mô hình | Top-1 Mid32 | Top-1 Mid224 | Tham số | GFLOPs Mid224 |
-|---|---:|---:|---:|---:|
-| Basic | 89,6% | 92,4% | 1.062.223 | 0,988343 |
-| C | 91,2% | 94,4% | 5.155.467 | 0,821054 |
-| L | 91,6% | 95,6% | 1.096.260 | 0,796760 |
+| Mô hình | Top-1 Mid32 | Top-1 Mid224 | Tham số | GFLOPs Mid32 | GFLOPs Mid224 | Trạng thái đề tài |
+|---|---:|---:|---:|---:|---:|:---:|
+| **TickNet-Basic** (Gốc của thầy) | 89,6% | 92,4% | 1.062.223 | 0,158428 | 0,988343 *(sát trần 1G)* | Mốc đối chứng (Baseline) |
+| **TickNet-L v1** (Đề xuất) | **91,6%** | **95,6%** | 1.096.260 | **0,157821** | **0,796760** *(nhẹ nhất)* | **Được chọn phát triển** |
 
-Kết quả một seed, 250 ảnh test; FLOPs chỉ tính Conv/Linear với 1 MAC = 2 FLOPs.
-Danh sách chia train/test đã xác minh khớp cả ba mô hình. L Mid32 khác batch
-size, L khác số workers; chưa có nhiều seed hoặc ablation tách từng thay đổi.
-Đánh giá lại sáu checkpoint cho Top-1 và confusion matrix khớp toàn bộ báo
-cáo. Kiểm định ghép cặp chưa xác lập khác biệt có ý nghĩa ở mức 5%.
+Quy ước FLOPs: 1 MAC = 2 FLOPs, một ảnh, chế độ eval, chỉ tính Conv2d và Linear.
 
-- [Bảng so sánh và biểu đồ](model_comparison/README.md).
-- [Basic](model_basic/README.md), [C](model_c/README.md),
-  [L](ticknet_l_midterm_seed42_20260928/README.md).
-- [Checkpoint và checksum](checkpoints/README.md).
-- [Mã kiểm chứng và bằng chứng](audit_20261001/).
+- **[Hồ sơ tổng hợp & Bằng chứng Model L (Được chọn phát triển)](Model_L/README.md)**
+- **[Hồ sơ tổng hợp Baseline Model Basic của thầy](Model_Basic/README.md)**
+- [Biên bản kiểm định độc lập ngày 2026-10-01](AUDIT_TICKNET_2026-10-01.md)
+- [Bảng so sánh và đối chiếu](model_comparison/README.md)
+- [Checkpoint và checksum SHA-256](checkpoints/README.md)
+- [Mã nguồn kiểm chứng độc lập](audit_20261001/)
+

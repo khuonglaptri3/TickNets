@@ -1,0 +1,39 @@
+{
+  "upstream_commit": "e71679978f861a599192ece7613dc7ad3768e55b",
+  "original_source_files": {
+    "models/TickNet.py": {
+      "identical_to_upstream": true,
+      "sha256": "e68bf944f43834d821c79e56bf27a996a1d96bbfe44b1477315c1f3acbfa737c"
+    },
+    "models/common.py": {
+      "identical_to_upstream": true,
+      "sha256": "32167c61dd55f9b75a644766e093ddb765412ade646006236843203ebc5655e7"
+    },
+    "models/SE_Attention.py": {
+      "identical_to_upstream": true,
+      "sha256": "ad846e099c82ea91892ed27b5ac08ccdb07b77f3ca9aaab7c418b0a6eeeaf7a0"
+    }
+  },
+  "train_mid_cli_flags": [
+    "--data-root",
+    "--variant",
+    "--model",
+    "--seed",
+    "--batch-size",
+    "--num-workers",
+    "--epochs",
+    "--learning-rate",
+    "--momentum",
+    "--weight-decay",
+    "--device",
+    "--threads",
+    "--no-augment",
+    "--output-dir",
+    "--check-data",
+    "--evaluate"
+  ],
+  "resume_supported": false,
+  "stop_after_epoch_supported": false,
+  "relevant_pytest_result": "32 passed in 18.15s",
+  "full_pytest_limitation": "test_cleaning.py collection blocked by missing scipy in fresher environment"
+}

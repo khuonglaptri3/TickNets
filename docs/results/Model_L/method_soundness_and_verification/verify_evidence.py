@@ -11,7 +11,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[4]
 OUT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 

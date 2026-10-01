@@ -1,0 +1,76 @@
+{
+  "data_root": "/kaggle/input/datasets/khngtrnnh/dl-train-model-c-material/TickNets/data",
+  "variant": "Mid32",
+  "model": "basic",
+  "seed": 42,
+  "batch_size": 64,
+  "num_workers": 0,
+  "epochs": 200,
+  "learning_rate": 0.1,
+  "momentum": 0.9,
+  "weight_decay": 0.0001,
+  "device": "cuda:0",
+  "threads": 2,
+  "no_augment": false,
+  "output_dir": "/kaggle/working/runs/basic_mid32_seed42",
+  "check_data": false,
+  "evaluate": null,
+  "num_classes": 5,
+  "class_to_idx": {
+    "bird": 0,
+    "cat": 1,
+    "dog": 2,
+    "frog": 3,
+    "horse": 4
+  },
+  "learnable_parameters": 1062223,
+  "python_version": "3.12.13",
+  "torch_version": "2.10.0+cu128",
+  "torchvision_version": "0.25.0+cu128",
+  "optimizer": "SGD",
+  "scheduler": "CosineAnnealingLR",
+  "train_samples": 25000,
+  "test_samples": 250,
+  "test_policy": "Evaluate final checkpoint only; never select checkpoints using test",
+  "normalization": "ToTensor [0,1]; model has data_bn",
+  "top1_unit": "percent",
+  "split_manifest_sha256": "9939a6ee404c6fbbdbe1b07a50763dc6d606497709385708512e1e98d71f2780",
+  "architecture_revision": "ticknet-basic-upstream",
+  "complexity": {
+    "input_shape": [
+      1,
+      3,
+      32,
+      32
+    ],
+    "output_shape": [
+      1,
+      5
+    ],
+    "learnable_parameters": 1062223,
+    "macs": 79214080,
+    "flops": 158428160,
+    "counting_convention": "1 MAC = 2 FLOPs; Conv2d and Linear only; batch size 1; eval forward",
+    "excluded_operations": [
+      "bias additions",
+      "batch normalization",
+      "activations",
+      "pooling",
+      "residual additions",
+      "SE elementwise scaling",
+      "data movement"
+    ],
+    "within_exam_limits": true,
+    "pytorch_cross_check_flops": null,
+    "stage_flops": {
+      "backbone.init_conv": 1769472,
+      "backbone.stage1": 19468288,
+      "backbone.stage2": 69469184,
+      "backbone.stage3": 17076224,
+      "backbone.stage4": 16941056,
+      "backbone.stage5": 16916480,
+      "backbone.final_conv": 16777216,
+      "classifier.conv": 10240
+    }
+  }
+}

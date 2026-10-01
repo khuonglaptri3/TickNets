@@ -20,4 +20,4 @@ and exports final metrics, learning curves, confusion matrices and per-class
 Precision/Recall/F1.
 
 The completed evidence from the seed-42 run is in
-[`../results/ticknet_l_midterm_seed42_20260928`](../results/ticknet_l_midterm_seed42_20260928/).
+[`../results/Model_L/`](../results/Model_L/).
