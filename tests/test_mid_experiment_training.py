@@ -7,6 +7,7 @@ import torch
 
 from test_mid_pipeline import prepared
 from test_mid_dataset import source_dataset
+from test_mid_experiment_data import paired_data
 
 
 def trainer():
@@ -37,6 +38,11 @@ def test_training_selects_validation_checkpoint_without_evaluating_test(prepared
     assert evaluation["samples"] == 10
     assert (tmp_path / "eval" / "test_predictions.csv").is_file()
     assert (tmp_path / "eval" / "confusion_matrix.csv").is_file()
+    provenance = json.loads((tmp_path / "eval" / "config.json").read_text())["evaluation_checkpoint"]
+    assert provenance["training_config"] == checkpoint["config"]
+    assert provenance["epoch"] == checkpoint["epoch"] and provenance["role"] == "best_val"
+    import hashlib
+    assert provenance["sha256"] == hashlib.sha256((output / "best_val.pt").read_bytes()).hexdigest()
 
 
 def test_epoch_boundary_resume_matches_uninterrupted_training(prepared, tmp_path):
@@ -82,3 +88,19 @@ def test_config_unknown_keys_and_cli_overrides(tmp_path):
     config.write_text(json.dumps({"learning_rait": 0.15}))
     with pytest.raises(SystemExit):
         module.parse_args(["--config", str(config), "--variant", "Mid32", "--output-dir", "runs/x"])
+
+
+def test_resume_restores_worker_augmented_training(paired_data, tmp_path):
+    module = trainer()
+    full, resumed = tmp_path / "workers_full", tmp_path / "workers_resumed"
+    def flags(output, *extra):
+        return ["--data-root", str(paired_data), "--variant", "Mid32", "--output-dir", str(output),
+                "--epochs", "2", "--batch-size", "8", "--device", "cpu", "--threads", "2",
+                "--num-workers", "2", *extra]
+    module.main(flags(full))
+    module.main(flags(resumed, "--stop-after-epoch", "1"))
+    module.main(flags(resumed, "--resume", str(resumed / "last.pt")))
+    a, b = (torch.load(path / "last.pt", weights_only=True) for path in (full, resumed))
+    for name in a["model_state_dict"]:
+        assert torch.equal(a["model_state_dict"][name], b["model_state_dict"][name]), name
+    assert (full / "epochs.csv").read_bytes() == (resumed / "epochs.csv").read_bytes()

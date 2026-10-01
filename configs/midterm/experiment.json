@@ -1,0 +1,15 @@
+{
+  "model": "l",
+  "seed": 42,
+  "split_seed": 123,
+  "val_fraction": 0.1,
+  "batch_size": 64,
+  "num_workers": 0,
+  "epochs": 200,
+  "learning_rate": 0.1,
+  "momentum": 0.9,
+  "weight_decay": 0.0001,
+  "mixing": "mixup",
+  "mixing_alpha": 0.2,
+  "mixing_probability": 1
+}

@@ -19,10 +19,11 @@ from models.mid_data import seed_everything
 from models.mid_experiment_data import build_experiment_loaders
 from models.mid_models import MODEL_REVISIONS, build_mid_model
 from models.model_profile import profile_model
+from models.mid_mixup import mix_batch
 
-MIXING_METHODS = {}
+MIXING_METHODS = {"mixup": mix_batch}
 EXPERIMENT_MODELS = {}
-TRAINER_REVISION = "mid-experiment-v1"
+TRAINER_REVISION = "mid-experiment-v2"
 
 
 def add_branch_arguments(parser):
@@ -64,21 +65,35 @@ def parse_args(argv=None):
     parser.add_argument("--evaluate", type=Path)
     add_branch_arguments(parser)
     if selected.config:
-        defaults = json.loads(selected.config.read_text(encoding="utf-8"))
+        try:
+            defaults = json.loads(selected.config.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, ValueError) as error:
+            parser.error(f"Cannot read JSON config: {error}")
         if not isinstance(defaults, dict):
             parser.error("config must be a JSON object")
-        actions = {a.dest: a for a in parser._actions}
+        actions = {a.dest: a for a in parser._actions if a.dest != "help"}
         unknown = set(defaults) - set(actions)
         if unknown:
             parser.error(f"Unknown config keys: {sorted(unknown)}")
         for key, value in defaults.items():
             action = actions[key]
+            optional = {"config", "output_dir", "resume", "evaluate", "stop_after_epoch", "variant"}
+            if value is None:
+                if key not in optional:
+                    parser.error(f"config {key} cannot be null")
+                continue
             if isinstance(action, argparse._StoreTrueAction) and not isinstance(value, bool):
                 parser.error(f"config {key} must be boolean")
+            if action.type is int and (isinstance(value, bool) or not isinstance(value, int)):
+                parser.error(f"config {key} must be an integer")
+            if action.type is float and (isinstance(value, bool) or not isinstance(value, (int, float))):
+                parser.error(f"config {key} must be numeric")
+            if (action.type is Path or (action.type is None and not isinstance(action, argparse._StoreTrueAction))) and not isinstance(value, str):
+                parser.error(f"config {key} must be a string")
             if action.type and value is not None:
                 try:
                     defaults[key] = action.type(value)
-                except (TypeError, ValueError):
+                except (TypeError, ValueError, OverflowError):
                     parser.error(f"Invalid config value for {key}")
         parser.set_defaults(**defaults)
     args = parser.parse_args(argv)
@@ -224,25 +239,32 @@ def main(argv=None):
                   test_policy="Explicit --evaluate only; never choose settings/checkpoints using test",
                   train_top1_definition="lambda-weighted accuracy against paired labels when mixing; hard-label otherwise",
                   complexity={k: v for k, v in complexity.items() if k != "layers"})
+    source_root = Path(__file__).resolve().parent
+    config["source_hashes"] = {
+        str(path.relative_to(source_root)).replace("\\", "/"): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in [Path(__file__).resolve(), *sorted((source_root / "models").glob("*.py"))]
+    }
     try:
-        config["git_revision"] = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL).strip()
+        config["git_revision"] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=source_root, text=True, stderr=subprocess.DEVNULL).strip()
+        config["git_dirty"] = bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=source_root, text=True, stderr=subprocess.DEVNULL).strip())
     except (OSError, subprocess.CalledProcessError):
         config["git_revision"] = None
+        config["git_dirty"] = None
     manifest = args.data_root / "split_manifest.csv"
     config["source_manifest_sha256"] = hashlib.sha256(manifest.read_bytes()).hexdigest() if manifest.is_file() else None
     if checkpoint:
-        for key in ("architecture_revision", "membership_sha256", "validation_sha256", "class_to_idx"):
+        for key in ("architecture_revision", "membership_sha256", "validation_sha256", "class_to_idx", "source_manifest_sha256"):
             if checkpoint["config"].get(key) != config[key]:
                 raise ValueError(f"Checkpoint {key} does not match current model/data")
         model.load_state_dict(checkpoint["model_state_dict"], strict=True)
     if args.resume:
-        ignored = {"output_dir", "data_root", "device", "threads", "git_revision", "source_manifest_sha256"}
+        ignored = {"output_dir", "data_root", "device", "threads", "git_revision", "git_dirty"}
         old = {k: v for k, v in checkpoint["config"].items() if k not in ignored}
         new = {k: v for k, v in config.items() if k not in ignored}
         if old != new:
             raise ValueError("Resume config/recipe differs from checkpoint")
-        if args.resume.resolve().parent != output or not (output / "epochs.csv").is_file():
-            raise ValueError("Resume in the original run directory with its epochs.csv")
+        if args.resume.resolve().parent != output:
+            raise ValueError("Resume in the original run directory")
         if checkpoint["role"] != "last":
             raise ValueError("Resume requires last.pt, not a validation-selected checkpoint")
     elif output.exists():
@@ -250,25 +272,43 @@ def main(argv=None):
     model.to(device)
     if not args.resume:
         output.mkdir(parents=True)
+        if args.evaluate:
+            config["evaluation_checkpoint"] = {
+                "path": str(args.evaluate.resolve()),
+                "sha256": hashlib.sha256(args.evaluate.read_bytes()).hexdigest(),
+                "epoch": checkpoint["epoch"], "role": checkpoint["role"],
+                "training_config": checkpoint["config"],
+            }
         (output / "config.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
         (output / "validation_split.json").write_text(json.dumps(split, indent=2) + "\n", encoding="utf-8")
     if args.evaluate:
         return evaluate(model, test, device, output)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
-    start, best = 1, None
+    fields = ("epoch", "learning_rate", "train_loss", "train_top1", "train_samples", "val_loss", "val_top1", "val_samples")
+    start, best, best_checkpoint, history = 1, None, None, []
     if args.resume:
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
         start, best = checkpoint["epoch"] + 1, checkpoint["best_validation"]
-        with (output / "epochs.csv").open(encoding="utf-8", newline="") as handle:
-            records = list(csv.DictReader(handle))
-        if len(records) != checkpoint["epoch"] or int(records[-1]["epoch"]) != checkpoint["epoch"]:
-            raise ValueError("Epoch log does not match resume checkpoint")
+        history, best_checkpoint = checkpoint["epoch_history"], checkpoint["best_checkpoint"]
+        if len(history) != checkpoint["epoch"] or [row["epoch"] for row in history] != list(range(1, checkpoint["epoch"] + 1)):
+            raise ValueError("Checkpoint epoch history is inconsistent")
+        if val is not None and (best_checkpoint is None or best_checkpoint["epoch"] != best["epoch"]):
+            raise ValueError("Checkpoint validation-selected model is inconsistent")
+        # last.pt is authoritative after any interrupted CSV/best artifact write.
+        with (output / "epochs.csv").open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(history)
+        if best_checkpoint is not None:
+            save_checkpoint(output / "best_val.pt", best_checkpoint)
+        (output / "config.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
         restore_rng(checkpoint["rng_state"], (train, val, test))
-    fields = ("epoch", "learning_rate", "train_loss", "train_top1", "train_samples", "val_loss", "val_top1", "val_samples")
     stop = args.stop_after_epoch or args.epochs
     if stop < start:
+        if args.resume and checkpoint["epoch"] == args.epochs and stop == args.epochs:
+            return {"epoch": stop, "best_validation": best, "output_dir": str(output), "recovered_completed_run": True}
         raise ValueError("No remaining epochs under the selected stop/total schedule")
     with (output / "epochs.csv").open("a" if args.resume else "w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
@@ -282,18 +322,24 @@ def main(argv=None):
             improved = validation is not None and (best is None or (validation["top1"], -validation["loss"]) > (best["top1"], -best["loss"]))
             if improved:
                 best = {**validation, "epoch": epoch}
+                best_checkpoint = {
+                    "epoch": epoch, "config": config, "role": "best_val", "best_validation": best,
+                    "model_state_dict": {name: value.detach().cpu().clone() for name, value in model.state_dict().items()},
+                }
             row = {"epoch": epoch, "learning_rate": lr, "train_loss": training["loss"], "train_top1": training["top1"],
                    "train_samples": training["samples"], "val_loss": validation["loss"] if validation else "",
                    "val_top1": validation["top1"] if validation else "", "val_samples": validation["samples"] if validation else 0}
             scheduler.step()
+            history.append(row)
             state = {"epoch": epoch, "config": config, "role": "last", "best_validation": best,
                      "model_state_dict": model.state_dict(), "optimizer_state_dict": optimizer.state_dict(),
-                     "scheduler_state_dict": scheduler.state_dict(), "rng_state": rng_state((train, val, test))}
-            writer.writerow(row)
-            handle.flush()
+                     "scheduler_state_dict": scheduler.state_dict(), "rng_state": rng_state((train, val, test)),
+                     "best_checkpoint": best_checkpoint, "epoch_history": history}
             save_checkpoint(output / "last.pt", state)
             if improved:
-                save_checkpoint(output / "best_val.pt", {**state, "role": "best_val"})
+                save_checkpoint(output / "best_val.pt", best_checkpoint)
+            writer.writerow(row)
+            handle.flush()
             print(json.dumps(row), flush=True)
     return {"epoch": stop, "best_validation": best, "output_dir": str(output)}
 
