@@ -46,5 +46,13 @@
     "Full 200-epoch dataset experiments have not been run.",
     "No accuracy improvement is established by these implementation tests.",
     "CUDA execution and CUDA resume were not verified."
-  ]
+  ],
+  "notebook_verification": {
+    "all_code_cells_compile": true,
+    "pinned_technique_commit": "a313bb79a743e29113b3fe19cf62496e061be9da",
+    "real_data_preflight_names": 50500,
+    "paired_membership_and_manifest_resume_passed": true,
+    "linux_symlink_operation": "mocked on Windows",
+    "gpu_training_cells": "not executed"
+  }
 }
