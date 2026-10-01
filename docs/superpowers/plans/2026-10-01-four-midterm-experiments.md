@@ -38,7 +38,7 @@
 
 ## Task 5 — delivery
 
-- [ ] Add reproducible branch configs, local/Kaggle commands and experiment comparison output. Run the complete applicable suite on all four worktrees and smoke each default recipe.
+- [x] Add reproducible branch configs, local/Kaggle commands and experiment comparison output. Run the complete applicable suite on all four worktrees and smoke each default recipe.
 - [ ] Review changes, verify common ancestor/clean worktrees/branch-specific diffs, and publish the four branches to origin for teammates if repository credentials permit. Never merge into the source branch or force-push.
 
 ## Execution record
@@ -50,4 +50,4 @@
 
 Independent read-only review identified four issues: manifest enforcement, interrupted artifact writes, strict JSON recipe types, and source checkout provenance. Each was reproduced in tests before fixing. Added regressions for completed-run recovery, checkpoint evaluation provenance and augmented resume with two workers. Trainer revision is now mid-experiment-v2; original L v1 and historical trainer source remain byte-identical. Final suite results are recorded in docs/experiments/VERIFICATION.json. CPU checks do not establish accuracy improvements or CUDA resume behavior.
 
-Full applicable suite passed on this branch; see VERIFICATION.json for counts and limits. Notebook packaging and remote delivery are the remaining steps.
+Full applicable suite passed on this branch; see VERIFICATION.json for counts and limits. Notebook packaging and real-data preflight are complete. Remote delivery remains pending.
