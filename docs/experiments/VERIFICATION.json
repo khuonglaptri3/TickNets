@@ -52,5 +52,13 @@
     "flops_mid32": 174236864,
     "flops_mid224": 846991472,
     "constraint_passed": true
+  },
+  "notebook_verification": {
+    "all_code_cells_compile": true,
+    "pinned_technique_commit": "a9fb3877520aa5c28473071bec031ce9d731e52c",
+    "real_data_preflight_names": 50500,
+    "paired_membership_and_manifest_resume_passed": true,
+    "linux_symlink_operation": "mocked on Windows",
+    "gpu_training_cells": "not executed"
   }
 }
