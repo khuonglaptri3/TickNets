@@ -71,3 +71,7 @@ Ghi branch, commit, dataset, seed, config, train/val/test count, validation Top-
 Chạy test trước khi train GPU: `python -m pytest tests -q`. Nếu hệ điều hành hạn chế thư mục tạm, dùng `--basetemp` trỏ tới một thư mục thử nghiệm mới trong workspace.
 
 Chưa có kết quả train 200 epoch cho bốn nhánh này. Kiểm thử/smoke xác minh kỹ thuật hoạt động, không chứng minh tăng accuracy.
+
+**Kh?i ph?c artifact khi phi?n b? ng?t**
+
+Trainer revision `mid-experiment-v2` d?ng `last.pt` l?m tr?ng th?i ?? commit c?a m?t epoch. N? ch?a l?ch s? log v? b?n sao tr?ng s? best validation ?? d?ng l?i `epochs.csv`/`best_val.pt` n?u l?n ghi ph? b? ng?t. Resume t? `last.pt` c? th? ch?y l?i epoch ch?a commit; kh?ng h? tr? ti?p t?c gi?a batch. File config ghi Git revision c?a checkout ch?a trainer, tr?ng th?i dirty v? hash c?c ngu?n Python; ??i m? ngu?n hu?n luy?n s? b? t? ch?i khi resume. JSON d?ng integer cho epoch/seed/workers v? s? h?u h?n cho LR; boolean/null/fraction sai ki?u b? t? ch?i.
