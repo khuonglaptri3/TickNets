@@ -1,0 +1,11 @@
+run_name,variant,recipe,selection_status,test_loss,test_top1,test_macro_f1,test_samples
+l_mid32_baseline,Mid32,baseline,post_selection_diagnostic,0.40545401406288145,90.4,0.9038170318832603,250
+l_mid32_smoothing005,Mid32,smoothing005,post_selection_diagnostic,0.3753962777853012,89.6,0.8955102671361361,250
+l_mid32_smoothing010,Mid32,smoothing010,post_selection_diagnostic,0.34774779176712034,91.2,0.9116255492525831,250
+l_mid32_lr005,Mid32,lr005,post_selection_diagnostic,0.34011832749843596,92.0,0.919466309799226,250
+l_mid32_lr015,Mid32,lr015,validation_winner,0.30548414850234984,92.4,0.9239330520250011,250
+l_mid224_baseline,Mid224,baseline,validation_winner,0.2243839588165283,95.2,0.951955595559556,250
+l_mid224_smoothing005,Mid224,smoothing005,post_selection_diagnostic,0.16988394927978515,96.0,0.960132058090821,250
+l_mid224_smoothing010,Mid224,smoothing010,post_selection_diagnostic,0.17757423281669615,97.2,0.9719987998799879,250
+l_mid224_lr005,Mid224,lr005,post_selection_diagnostic,0.21744025182724,94.0,0.9402212624117288,250
+l_mid224_lr015,Mid224,lr015,post_selection_diagnostic,0.1857779165506363,94.8,0.947905986757139,250
