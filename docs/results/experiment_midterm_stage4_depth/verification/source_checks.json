@@ -1,0 +1,182 @@
+{
+  "generated_on": "2026-10-03",
+  "runs": {
+    "mid32_baseline_seed42": {
+      "recorded_git_revision": "8077f26b439547e97d0e95aff5e4f38d4469b609",
+      "recorded_git_dirty": true,
+      "all_recorded_source_hashes_match_current_checkout": true,
+      "mismatches": [],
+      "recorded_source_hashes": {
+        "train_mid_experiment.py": "81b8db6ae6eb91d9674bfdd6fcaf0092aff115e3d52928d38ae52b8e2593a600",
+        "models/SE_Attention.py": "fe2845bf57bfea5d4801eb5f09ccac881942efc688106c8e4a6f66c32022b096",
+        "models/TickNet.py": "fb45dd75c376723cc7dc16f671b3a7d0a8e9511281457f89b80d8e8aec593230",
+        "models/common.py": "db7132584ac6f2811563e62a3f7a2a025e66514f806ce593446824c51f173d61",
+        "models/datasets.py": "26c7c3d9cbe12dae61fae864fa39c2f5c8e33754e75926ec5816f7de7c907ec3",
+        "models/mid_data.py": "e9834b4f50efc34546bea8259cea1445712960d6cf8e5d98d2f64698995c4deb",
+        "models/mid_experiment_data.py": "6d06e509b5fa5e5e4a3124e337b7fb8aa0f94ca907b4db8743e26fdd223298a1",
+        "models/mid_models.py": "842168ed9acbf3a1177915343e450276805b1ecb900bc5e2c398e009f39eda0a",
+        "models/model_profile.py": "c707e1f536ac9c572f224fe6e675291ef308f5cea907988c146fabf2b93fbd9d",
+        "models/ticknet_c.py": "3b888aab0e940d6f9077aeb969b0c6e0db6dcf3b1f910e28c522f4ce68a47647",
+        "models/ticknet_l.py": "b8ba41a56b25b1baa24ddc7058db851983ef143c0d3e3bfb58e8ce31a91579e6",
+        "models/ticknet_l_stage4.py": "f47a44528c2ede48ac7c0576e218629432cf98386b2138d1175dce183cfad1e3"
+      },
+      "current_source_hashes": {
+        "train_mid_experiment.py": "81b8db6ae6eb91d9674bfdd6fcaf0092aff115e3d52928d38ae52b8e2593a600",
+        "models/SE_Attention.py": "fe2845bf57bfea5d4801eb5f09ccac881942efc688106c8e4a6f66c32022b096",
+        "models/TickNet.py": "fb45dd75c376723cc7dc16f671b3a7d0a8e9511281457f89b80d8e8aec593230",
+        "models/common.py": "db7132584ac6f2811563e62a3f7a2a025e66514f806ce593446824c51f173d61",
+        "models/datasets.py": "26c7c3d9cbe12dae61fae864fa39c2f5c8e33754e75926ec5816f7de7c907ec3",
+        "models/mid_data.py": "e9834b4f50efc34546bea8259cea1445712960d6cf8e5d98d2f64698995c4deb",
+        "models/mid_experiment_data.py": "6d06e509b5fa5e5e4a3124e337b7fb8aa0f94ca907b4db8743e26fdd223298a1",
+        "models/mid_models.py": "842168ed9acbf3a1177915343e450276805b1ecb900bc5e2c398e009f39eda0a",
+        "models/model_profile.py": "c707e1f536ac9c572f224fe6e675291ef308f5cea907988c146fabf2b93fbd9d",
+        "models/ticknet_c.py": "3b888aab0e940d6f9077aeb969b0c6e0db6dcf3b1f910e28c522f4ce68a47647",
+        "models/ticknet_l.py": "b8ba41a56b25b1baa24ddc7058db851983ef143c0d3e3bfb58e8ce31a91579e6",
+        "models/ticknet_l_stage4.py": "f47a44528c2ede48ac7c0576e218629432cf98386b2138d1175dce183cfad1e3"
+      },
+      "training_environment": {
+        "python": "3.12.13",
+        "torch": "2.10.0+cu128",
+        "torchvision": "0.25.0+cu128"
+      },
+      "evaluation_environment": {
+        "python": "3.12.13",
+        "torch": "2.10.0+cpu",
+        "torchvision": "0.25.0+cpu"
+      }
+    },
+    "mid32_experiment_seed42": {
+      "recorded_git_revision": "8077f26b439547e97d0e95aff5e4f38d4469b609",
+      "recorded_git_dirty": true,
+      "all_recorded_source_hashes_match_current_checkout": true,
+      "mismatches": [],
+      "recorded_source_hashes": {
+        "train_mid_experiment.py": "81b8db6ae6eb91d9674bfdd6fcaf0092aff115e3d52928d38ae52b8e2593a600",
+        "models/SE_Attention.py": "fe2845bf57bfea5d4801eb5f09ccac881942efc688106c8e4a6f66c32022b096",
+        "models/TickNet.py": "fb45dd75c376723cc7dc16f671b3a7d0a8e9511281457f89b80d8e8aec593230",
+        "models/common.py": "db7132584ac6f2811563e62a3f7a2a025e66514f806ce593446824c51f173d61",
+        "models/datasets.py": "26c7c3d9cbe12dae61fae864fa39c2f5c8e33754e75926ec5816f7de7c907ec3",
+        "models/mid_data.py": "e9834b4f50efc34546bea8259cea1445712960d6cf8e5d98d2f64698995c4deb",
+        "models/mid_experiment_data.py": "6d06e509b5fa5e5e4a3124e337b7fb8aa0f94ca907b4db8743e26fdd223298a1",
+        "models/mid_models.py": "842168ed9acbf3a1177915343e450276805b1ecb900bc5e2c398e009f39eda0a",
+        "models/model_profile.py": "c707e1f536ac9c572f224fe6e675291ef308f5cea907988c146fabf2b93fbd9d",
+        "models/ticknet_c.py": "3b888aab0e940d6f9077aeb969b0c6e0db6dcf3b1f910e28c522f4ce68a47647",
+        "models/ticknet_l.py": "b8ba41a56b25b1baa24ddc7058db851983ef143c0d3e3bfb58e8ce31a91579e6",
+        "models/ticknet_l_stage4.py": "f47a44528c2ede48ac7c0576e218629432cf98386b2138d1175dce183cfad1e3"
+      },
+      "current_source_hashes": {
+        "train_mid_experiment.py": "81b8db6ae6eb91d9674bfdd6fcaf0092aff115e3d52928d38ae52b8e2593a600",
+        "models/SE_Attention.py": "fe2845bf57bfea5d4801eb5f09ccac881942efc688106c8e4a6f66c32022b096",
+        "models/TickNet.py": "fb45dd75c376723cc7dc16f671b3a7d0a8e9511281457f89b80d8e8aec593230",
+        "models/common.py": "db7132584ac6f2811563e62a3f7a2a025e66514f806ce593446824c51f173d61",
+        "models/datasets.py": "26c7c3d9cbe12dae61fae864fa39c2f5c8e33754e75926ec5816f7de7c907ec3",
+        "models/mid_data.py": "e9834b4f50efc34546bea8259cea1445712960d6cf8e5d98d2f64698995c4deb",
+        "models/mid_experiment_data.py": "6d06e509b5fa5e5e4a3124e337b7fb8aa0f94ca907b4db8743e26fdd223298a1",
+        "models/mid_models.py": "842168ed9acbf3a1177915343e450276805b1ecb900bc5e2c398e009f39eda0a",
+        "models/model_profile.py": "c707e1f536ac9c572f224fe6e675291ef308f5cea907988c146fabf2b93fbd9d",
+        "models/ticknet_c.py": "3b888aab0e940d6f9077aeb969b0c6e0db6dcf3b1f910e28c522f4ce68a47647",
+        "models/ticknet_l.py": "b8ba41a56b25b1baa24ddc7058db851983ef143c0d3e3bfb58e8ce31a91579e6",
+        "models/ticknet_l_stage4.py": "f47a44528c2ede48ac7c0576e218629432cf98386b2138d1175dce183cfad1e3"
+      },
+      "training_environment": {
+        "python": "3.12.13",
+        "torch": "2.10.0+cu128",
+        "torchvision": "0.25.0+cu128"
+      },
+      "evaluation_environment": {
+        "python": "3.12.13",
+        "torch": "2.10.0+cpu",
+        "torchvision": "0.25.0+cpu"
+      }
+    },
+    "mid224_baseline_seed42": {
+      "recorded_git_revision": "8077f26b439547e97d0e95aff5e4f38d4469b609",
+      "recorded_git_dirty": true,
+      "all_recorded_source_hashes_match_current_checkout": true,
+      "mismatches": [],
+      "recorded_source_hashes": {
+        "train_mid_experiment.py": "81b8db6ae6eb91d9674bfdd6fcaf0092aff115e3d52928d38ae52b8e2593a600",
+        "models/SE_Attention.py": "fe2845bf57bfea5d4801eb5f09ccac881942efc688106c8e4a6f66c32022b096",
+        "models/TickNet.py": "fb45dd75c376723cc7dc16f671b3a7d0a8e9511281457f89b80d8e8aec593230",
+        "models/common.py": "db7132584ac6f2811563e62a3f7a2a025e66514f806ce593446824c51f173d61",
+        "models/datasets.py": "26c7c3d9cbe12dae61fae864fa39c2f5c8e33754e75926ec5816f7de7c907ec3",
+        "models/mid_data.py": "e9834b4f50efc34546bea8259cea1445712960d6cf8e5d98d2f64698995c4deb",
+        "models/mid_experiment_data.py": "6d06e509b5fa5e5e4a3124e337b7fb8aa0f94ca907b4db8743e26fdd223298a1",
+        "models/mid_models.py": "842168ed9acbf3a1177915343e450276805b1ecb900bc5e2c398e009f39eda0a",
+        "models/model_profile.py": "c707e1f536ac9c572f224fe6e675291ef308f5cea907988c146fabf2b93fbd9d",
+        "models/ticknet_c.py": "3b888aab0e940d6f9077aeb969b0c6e0db6dcf3b1f910e28c522f4ce68a47647",
+        "models/ticknet_l.py": "b8ba41a56b25b1baa24ddc7058db851983ef143c0d3e3bfb58e8ce31a91579e6",
+        "models/ticknet_l_stage4.py": "f47a44528c2ede48ac7c0576e218629432cf98386b2138d1175dce183cfad1e3"
+      },
+      "current_source_hashes": {
+        "train_mid_experiment.py": "81b8db6ae6eb91d9674bfdd6fcaf0092aff115e3d52928d38ae52b8e2593a600",
+        "models/SE_Attention.py": "fe2845bf57bfea5d4801eb5f09ccac881942efc688106c8e4a6f66c32022b096",
+        "models/TickNet.py": "fb45dd75c376723cc7dc16f671b3a7d0a8e9511281457f89b80d8e8aec593230",
+        "models/common.py": "db7132584ac6f2811563e62a3f7a2a025e66514f806ce593446824c51f173d61",
+        "models/datasets.py": "26c7c3d9cbe12dae61fae864fa39c2f5c8e33754e75926ec5816f7de7c907ec3",
+        "models/mid_data.py": "e9834b4f50efc34546bea8259cea1445712960d6cf8e5d98d2f64698995c4deb",
+        "models/mid_experiment_data.py": "6d06e509b5fa5e5e4a3124e337b7fb8aa0f94ca907b4db8743e26fdd223298a1",
+        "models/mid_models.py": "842168ed9acbf3a1177915343e450276805b1ecb900bc5e2c398e009f39eda0a",
+        "models/model_profile.py": "c707e1f536ac9c572f224fe6e675291ef308f5cea907988c146fabf2b93fbd9d",
+        "models/ticknet_c.py": "3b888aab0e940d6f9077aeb969b0c6e0db6dcf3b1f910e28c522f4ce68a47647",
+        "models/ticknet_l.py": "b8ba41a56b25b1baa24ddc7058db851983ef143c0d3e3bfb58e8ce31a91579e6",
+        "models/ticknet_l_stage4.py": "f47a44528c2ede48ac7c0576e218629432cf98386b2138d1175dce183cfad1e3"
+      },
+      "training_environment": {
+        "python": "3.13.15",
+        "torch": "2.11.0+cu128",
+        "torchvision": "0.26.0+cu128"
+      },
+      "evaluation_environment": {
+        "python": "3.12.13",
+        "torch": "2.10.0+cpu",
+        "torchvision": "0.25.0+cpu"
+      }
+    },
+    "mid224_experiment_seed42": {
+      "recorded_git_revision": "8077f26b439547e97d0e95aff5e4f38d4469b609",
+      "recorded_git_dirty": true,
+      "all_recorded_source_hashes_match_current_checkout": true,
+      "mismatches": [],
+      "recorded_source_hashes": {
+        "train_mid_experiment.py": "81b8db6ae6eb91d9674bfdd6fcaf0092aff115e3d52928d38ae52b8e2593a600",
+        "models/SE_Attention.py": "fe2845bf57bfea5d4801eb5f09ccac881942efc688106c8e4a6f66c32022b096",
+        "models/TickNet.py": "fb45dd75c376723cc7dc16f671b3a7d0a8e9511281457f89b80d8e8aec593230",
+        "models/common.py": "db7132584ac6f2811563e62a3f7a2a025e66514f806ce593446824c51f173d61",
+        "models/datasets.py": "26c7c3d9cbe12dae61fae864fa39c2f5c8e33754e75926ec5816f7de7c907ec3",
+        "models/mid_data.py": "e9834b4f50efc34546bea8259cea1445712960d6cf8e5d98d2f64698995c4deb",
+        "models/mid_experiment_data.py": "6d06e509b5fa5e5e4a3124e337b7fb8aa0f94ca907b4db8743e26fdd223298a1",
+        "models/mid_models.py": "842168ed9acbf3a1177915343e450276805b1ecb900bc5e2c398e009f39eda0a",
+        "models/model_profile.py": "c707e1f536ac9c572f224fe6e675291ef308f5cea907988c146fabf2b93fbd9d",
+        "models/ticknet_c.py": "3b888aab0e940d6f9077aeb969b0c6e0db6dcf3b1f910e28c522f4ce68a47647",
+        "models/ticknet_l.py": "b8ba41a56b25b1baa24ddc7058db851983ef143c0d3e3bfb58e8ce31a91579e6",
+        "models/ticknet_l_stage4.py": "f47a44528c2ede48ac7c0576e218629432cf98386b2138d1175dce183cfad1e3"
+      },
+      "current_source_hashes": {
+        "train_mid_experiment.py": "81b8db6ae6eb91d9674bfdd6fcaf0092aff115e3d52928d38ae52b8e2593a600",
+        "models/SE_Attention.py": "fe2845bf57bfea5d4801eb5f09ccac881942efc688106c8e4a6f66c32022b096",
+        "models/TickNet.py": "fb45dd75c376723cc7dc16f671b3a7d0a8e9511281457f89b80d8e8aec593230",
+        "models/common.py": "db7132584ac6f2811563e62a3f7a2a025e66514f806ce593446824c51f173d61",
+        "models/datasets.py": "26c7c3d9cbe12dae61fae864fa39c2f5c8e33754e75926ec5816f7de7c907ec3",
+        "models/mid_data.py": "e9834b4f50efc34546bea8259cea1445712960d6cf8e5d98d2f64698995c4deb",
+        "models/mid_experiment_data.py": "6d06e509b5fa5e5e4a3124e337b7fb8aa0f94ca907b4db8743e26fdd223298a1",
+        "models/mid_models.py": "842168ed9acbf3a1177915343e450276805b1ecb900bc5e2c398e009f39eda0a",
+        "models/model_profile.py": "c707e1f536ac9c572f224fe6e675291ef308f5cea907988c146fabf2b93fbd9d",
+        "models/ticknet_c.py": "3b888aab0e940d6f9077aeb969b0c6e0db6dcf3b1f910e28c522f4ce68a47647",
+        "models/ticknet_l.py": "b8ba41a56b25b1baa24ddc7058db851983ef143c0d3e3bfb58e8ce31a91579e6",
+        "models/ticknet_l_stage4.py": "f47a44528c2ede48ac7c0576e218629432cf98386b2138d1175dce183cfad1e3"
+      },
+      "training_environment": {
+        "python": "3.13.15",
+        "torch": "2.11.0+cu128",
+        "torchvision": "0.26.0+cu128"
+      },
+      "evaluation_environment": {
+        "python": "3.12.13",
+        "torch": "2.10.0+cpu",
+        "torchvision": "0.25.0+cpu"
+      }
+    }
+  },
+  "interpretation": "git_dirty=true is disclosed; exact recorded source hashes match the current checkout."
+}

@@ -1,0 +1,91 @@
+{
+  "generated_on": "2026-10-03",
+  "policy": "Evaluate each best-validation checkpoint once on the historical test split.",
+  "test_split_disclosure": "Previously observed project test split; not a new independent holdout.",
+  "classes": [
+    "bird",
+    "cat",
+    "dog",
+    "frog",
+    "horse"
+  ],
+  "runs": {
+    "mid32_baseline_seed42": {
+      "checkpoint": "best_val.pt",
+      "checkpoint_sha256": "a5408274298d1933623bec107bce04ecdfa177a9c13079dc78c4ef20c488e556",
+      "checkpoint_epoch": 173,
+      "role": "best_val",
+      "samples": 250,
+      "correct": 226,
+      "top1": 90.4,
+      "loss": 0.40545401406288145,
+      "macro_f1": 0.9038170318832603,
+      "checks": {
+        "prediction_rows_equal_samples": true,
+        "confusion_sum_equal_samples": true,
+        "prediction_correct_equal_confusion_diagonal": true,
+        "top1_recomputed_exactly": true,
+        "macro_f1_recomputed_exactly": true,
+        "checkpoint_sha256_matches_evaluation_config": true
+      }
+    },
+    "mid32_experiment_seed42": {
+      "checkpoint": "best_val.pt",
+      "checkpoint_sha256": "2d3856acc223329522617e747e45e1eb2f169ed57c8a2bbb491b4ca214896e8a",
+      "checkpoint_epoch": 200,
+      "role": "best_val",
+      "samples": 250,
+      "correct": 228,
+      "top1": 91.2,
+      "loss": 0.4652833936214447,
+      "macro_f1": 0.9112529500248945,
+      "checks": {
+        "prediction_rows_equal_samples": true,
+        "confusion_sum_equal_samples": true,
+        "prediction_correct_equal_confusion_diagonal": true,
+        "top1_recomputed_exactly": true,
+        "macro_f1_recomputed_exactly": true,
+        "checkpoint_sha256_matches_evaluation_config": true
+      }
+    },
+    "mid224_baseline_seed42": {
+      "checkpoint": "best_val.pt",
+      "checkpoint_sha256": "94da1ac986143a3a1b47979d32d05550be38e5ffc4b77a495e076cbd4aef618c",
+      "checkpoint_epoch": 177,
+      "role": "best_val",
+      "samples": 250,
+      "correct": 238,
+      "top1": 95.2,
+      "loss": 0.2243839588165283,
+      "macro_f1": 0.9519555955595559,
+      "checks": {
+        "prediction_rows_equal_samples": true,
+        "confusion_sum_equal_samples": true,
+        "prediction_correct_equal_confusion_diagonal": true,
+        "top1_recomputed_exactly": true,
+        "macro_f1_recomputed_exactly": true,
+        "checkpoint_sha256_matches_evaluation_config": true
+      }
+    },
+    "mid224_experiment_seed42": {
+      "checkpoint": "best_val.pt",
+      "checkpoint_sha256": "a892ea40fdf947a0a74ae12e3e4f76bc03a3492ba364e8a74ebd687cfe3d1bee",
+      "checkpoint_epoch": 154,
+      "role": "best_val",
+      "samples": 250,
+      "correct": 235,
+      "top1": 94.0,
+      "loss": 0.20567652070522308,
+      "macro_f1": 0.9399027854766269,
+      "checks": {
+        "prediction_rows_equal_samples": true,
+        "confusion_sum_equal_samples": true,
+        "prediction_correct_equal_confusion_diagonal": true,
+        "top1_recomputed_exactly": true,
+        "macro_f1_recomputed_exactly": true,
+        "checkpoint_sha256_matches_evaluation_config": true
+      }
+    }
+  },
+  "checkpoint_manifest_entries": 20
+}

@@ -1,0 +1,6 @@
+true_class,bird,cat,dog,frog,horse
+bird,47,0,0,2,1
+cat,0,48,2,0,0
+dog,0,10,39,1,0
+frog,4,0,0,45,1
+horse,1,0,0,0,49
