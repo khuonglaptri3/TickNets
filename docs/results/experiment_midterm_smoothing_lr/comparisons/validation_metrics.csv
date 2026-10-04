@@ -1,0 +1,11 @@
+run_name,variant,recipe,best_epoch,validation_top1,validation_loss,selected_by_validation
+l_mid32_baseline,Mid32,baseline,173,90.4,0.500444689655304,False
+l_mid32_smoothing005,Mid32,smoothing005,167,90.64,0.3353641463279724,False
+l_mid32_smoothing010,Mid32,smoothing010,191,90.72,0.35884732117652896,False
+l_mid32_lr005,Mid32,lr005,197,90.56,0.4916291002988815,False
+l_mid32_lr015,Mid32,lr015,186,91.04,0.4418038331210613,True
+l_mid224_baseline,Mid224,baseline,177,93.88,0.2763168884038925,True
+l_mid224_smoothing005,Mid224,smoothing005,160,93.44,0.2367592604637146,False
+l_mid224_smoothing010,Mid224,smoothing010,176,93.64,0.2633008383989334,False
+l_mid224_lr005,Mid224,lr005,188,93.32,0.2965208834171295,False
+l_mid224_lr015,Mid224,lr015,198,93.84,0.254891860127449,False

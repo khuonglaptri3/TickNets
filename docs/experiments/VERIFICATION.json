@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-01",
+  "branch": "experiment/lv1-midterm-smoothing-lr",
+  "source_branch": "feature/model-l-midterm-final",
+  "source_revision": "2bcbdb4105c5c8576829af568d6c31bb89a52c8f",
+  "trainer_revision": "mid-experiment-v2",
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.14.1+cpu",
+    "torchvision": "0.29.1+cpu",
+    "pytest": "9.1.1",
+    "device": "cpu",
+    "os": "Windows"
+  },
+  "suite": {
+    "command": "python -m pytest tests -q --tb=short -p no:cacheprovider --basetemp=<isolated-temp>",
+    "exit_code": 0,
+    "passed": 127,
+    "skipped": 0,
+    "subtests_passed": 0,
+    "duration_seconds": 250.47,
+    "skip_reason": null
+  },
+  "checks": [
+    "Paired class/filename stratified validation splits and leakage prevention",
+    "Default recipe train/validation/evaluation smoke runs on fixture data",
+    "Hard-label unsmoothed validation and explicit held-out evaluation",
+    "Continuous versus resumed optimizer/scheduler/RNG/augmented loader state, including two workers",
+    "Modified, removed or added source manifest rejection in resume and evaluation",
+    "Interrupted checkpoint and log recovery, including completed final epoch",
+    "Strict JSON types and finite recipe values",
+    "Checkpoint evaluation provenance and source directory provenance",
+    "Historical models/ticknet_l.py and train_mid.py are unchanged",
+    "Existing repository tests"
+  ],
+  "protocol": {
+    "validation_fraction": 0.1,
+    "split_seed": 123,
+    "default_training_seed": 42,
+    "default_epochs": 200,
+    "batch_size": 64,
+    "selection": "validation Top-1, then validation loss",
+    "automatic_test_evaluation": false
+  },
+  "limitations": [
+    "Full 200-epoch dataset experiments have not been run.",
+    "No accuracy improvement is established by these implementation tests.",
+    "CUDA execution and CUDA resume were not verified."
+  ],
+  "notebook_verification": {
+    "all_code_cells_compile": true,
+    "pinned_technique_commit": "a313bb79a743e29113b3fe19cf62496e061be9da",
+    "real_data_preflight_names": 50500,
+    "paired_membership_and_manifest_resume_passed": true,
+    "linux_symlink_operation": "mocked on Windows",
+    "gpu_training_cells": "not executed"
+  }
+}
