@@ -9,6 +9,8 @@
   "learning_rate": 0.1,
   "momentum": 0.9,
   "weight_decay": 0.0001,
-  "mixing": "none",
-  "label_smoothing": 0.05
+  "mixing": "mixup",
+  "mixing_alpha": 0.2,
+  "mixing_probability": 1.0,
+  "label_smoothing": 0.0
 }

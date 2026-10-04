@@ -100,7 +100,9 @@ def test_candidate_all_parameters_receive_finite_gradients(size):
 
 
 def test_experiment_config_changes_only_model_and_registers_builder():
-    path = ROOT / "configs/midterm/experiment.json"
+    path = ROOT / "configs/midterm/experiment_stage4.json"
+    if not path.is_file():
+        path = ROOT / "configs/midterm/experiment.json"
     assert path.is_file(), "Stage4 experiment config is missing"
     baseline = json.loads((ROOT / "configs/midterm/baseline.json").read_text(encoding="utf-8"))
     assert json.loads(path.read_text(encoding="utf-8")) == {**baseline, "model": "l_stage4"}
@@ -129,7 +131,9 @@ def test_wrong_checkpoint_revision_fails_before_outputs(prepared, tmp_path, mode
 
 @pytest.mark.parametrize(("variant", "flops"), (("Mid32", 174_236_864), ("Mid224", 846_991_472)))
 def test_config_one_epoch_cli_training_and_explicit_evaluation(prepared, tmp_path, variant, flops):
-    config = ROOT / "configs/midterm/experiment.json"
+    config = ROOT / "configs/midterm/experiment_stage4.json"
+    if not config.is_file():
+        config = ROOT / "configs/midterm/experiment.json"
     assert config.is_file(), "Stage4 experiment config is missing"
     output, evaluation = tmp_path / "run", tmp_path / "evaluation"
     command = [sys.executable, str(ROOT / "train_mid_experiment.py"), "--config", str(config),

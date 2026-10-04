@@ -90,6 +90,14 @@ def tiny_mid_data(tmp_path: Path) -> Path:
 @pytest.fixture
 def complete_runs_with_tampered_source_hash(tmp_path: Path) -> Path:
     source_root = REPO_ROOT / "runs"
+    if not (source_root / expected_run_names()[0]).is_dir():
+        source_root = (
+            REPO_ROOT
+            / "docs"
+            / "results"
+            / "experiment_midterm_smoothing_lr"
+            / "checkpoints"
+        )
     target_root = tmp_path / "runs"
     target_root.mkdir()
     for run_name in expected_run_names():
@@ -300,11 +308,18 @@ def test_audit_rejects_source_hash_mismatch(
 
 
 def test_audit_rejects_missing_recorded_source_hash() -> None:
-    config = json.loads(
-        (REPO_ROOT / "runs" / "l_mid32_baseline" / "config.json").read_text(
-            encoding="utf-8"
+    source = REPO_ROOT / "runs" / "l_mid32_baseline" / "config.json"
+    if not source.is_file():
+        source = (
+            REPO_ROOT
+            / "docs"
+            / "results"
+            / "experiment_midterm_smoothing_lr"
+            / "checkpoints"
+            / "l_mid32_baseline"
+            / "config.json"
         )
-    )
+    config = json.loads(source.read_text(encoding="utf-8"))
     config["source_hashes"].pop("models/common.py")
     with pytest.raises(EvidenceError, match="source hash set"):
         builder._validate_config("l_mid32_baseline", config, REPO_ROOT)
