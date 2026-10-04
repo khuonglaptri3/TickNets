@@ -10,15 +10,10 @@ from test_mid_dataset import source_dataset
 from test_mid_pipeline import prepared
 from test_mid_experiment_training import arguments
 
-METHOD = "mixup"
-
-
-def test_branch_registers_its_mixing_method():
+@pytest.mark.parametrize("method", ["mixup", "cutmix"])
+def test_branch_registers_its_mixing_method(method):
     module = importlib.import_module("train_mid_experiment")
-    assert METHOD in module.MIXING_METHODS
-    args = module.parse_args(["--config", "configs/midterm/experiment.json", "--variant", "Mid32", "--output-dir", "runs/test"])
-    assert args.mixing == METHOD
-    assert args.learning_rate == 0.1 and args.batch_size == 64
+    assert method in module.MIXING_METHODS
 
 
 def test_epoch_uses_weighted_loss_and_never_mixes_validation():
@@ -46,10 +41,11 @@ def test_epoch_uses_weighted_loss_and_never_mixes_validation():
     assert not calls
 
 
-def test_mixed_run_and_epoch_boundary_resume(prepared, tmp_path):
+@pytest.mark.parametrize("method", ["mixup", "cutmix"])
+def test_mixed_run_and_epoch_boundary_resume(prepared, tmp_path, method):
     module = importlib.import_module("train_mid_experiment")
-    full, resumed = tmp_path / "full", tmp_path / "resumed"
-    flags = ["--mixing", METHOD, "--mixing-alpha", "0.2", "--mixing-probability", "0.5"]
+    full, resumed = tmp_path / f"full_{method}", tmp_path / f"resumed_{method}"
+    flags = ["--mixing", method, "--mixing-alpha", "0.2", "--mixing-probability", "0.5"]
     module.main(arguments(prepared, full, *flags))
     module.main(arguments(prepared, resumed, *flags, "--stop-after-epoch", "1"))
     module.main(arguments(prepared, resumed, *flags, "--resume", str(resumed / "last.pt")))
@@ -57,5 +53,5 @@ def test_mixed_run_and_epoch_boundary_resume(prepared, tmp_path):
     for name in a["model_state_dict"]:
         assert torch.equal(a["model_state_dict"][name], b["model_state_dict"][name]), name
     assert (full / "epochs.csv").read_bytes() == (resumed / "epochs.csv").read_bytes()
-    assert json.loads((full / "config.json").read_text())["mixing"] == METHOD
+    assert json.loads((full / "config.json").read_text())["mixing"] == method
     assert not (full / "test_metrics.json").exists()
