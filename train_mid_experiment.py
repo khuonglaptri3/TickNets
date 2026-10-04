@@ -20,8 +20,9 @@ from models.mid_experiment_data import build_experiment_loaders
 from models.mid_models import MODEL_REVISIONS, build_mid_model
 from models.model_profile import profile_model
 from models.ticknet_l_stage4 import ARCHITECTURE_REVISION as STAGE4_REVISION, build_ticknet_l_stage4
+from models.mid_mixup import mix_batch as mixup_batch
 
-MIXING_METHODS = {}
+MIXING_METHODS = {"mixup": mixup_batch}
 EXPERIMENT_MODELS = {"l_stage4": (build_ticknet_l_stage4, STAGE4_REVISION)}
 TRAINER_REVISION = "mid-experiment-v2"
 

@@ -10,5 +10,7 @@
   "momentum": 0.9,
   "weight_decay": 0.0001,
   "mixing": "none",
+  "mixing_alpha": 0.2,
+  "mixing_probability": 1.0,
   "label_smoothing": 0.0
 }
