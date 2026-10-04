@@ -1,0 +1,2 @@
+run,variant,seed,revision,model,best_epoch,val_top1,val_loss,parameters,gflops,validation_sha256
+mid224_experiment_seed42,Mid224,42,70def90a1d9dcb0e4e43477ded0f7b4d6566f594,l,188,94.8,0.1794757049560547,1096260,0.79676024,55d56a207a40c4ad97e24cf2fd55f8620fe674f6727e47b63cb65c1290ddd062
