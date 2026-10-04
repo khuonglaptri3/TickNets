@@ -19,9 +19,10 @@ from models.mid_data import seed_everything
 from models.mid_experiment_data import build_experiment_loaders
 from models.mid_models import MODEL_REVISIONS, build_mid_model
 from models.model_profile import profile_model
+from models.ticknet_l_stage4 import ARCHITECTURE_REVISION as STAGE4_REVISION, build_ticknet_l_stage4
 
 MIXING_METHODS = {}
-EXPERIMENT_MODELS = {}
+EXPERIMENT_MODELS = {"l_stage4": (build_ticknet_l_stage4, STAGE4_REVISION)}
 TRAINER_REVISION = "mid-experiment-v2"
 
 

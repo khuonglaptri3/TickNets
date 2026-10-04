@@ -1,6 +1,6 @@
 {
   "date": "2026-10-01",
-  "branch": "experiment/lv1-midterm-smoothing-lr",
+  "branch": "feature/model-l-midterm-final",
   "source_branch": "feature/model-l-midterm-final",
   "source_revision": "2bcbdb4105c5c8576829af568d6c31bb89a52c8f",
   "trainer_revision": "mid-experiment-v2",
@@ -47,9 +47,14 @@
     "No accuracy improvement is established by these implementation tests.",
     "CUDA execution and CUDA resume were not verified."
   ],
+  "profile_stage4": {
+    "learnable_parameters": 1236030,
+    "flops_mid32": 174236864,
+    "flops_mid224": 846991472,
+    "constraint_passed": true
+  },
   "notebook_verification": {
     "all_code_cells_compile": true,
-    "pinned_technique_commit": "a313bb79a743e29113b3fe19cf62496e061be9da",
     "real_data_preflight_names": 50500,
     "paired_membership_and_manifest_resume_passed": true,
     "linux_symlink_operation": "mocked on Windows",
