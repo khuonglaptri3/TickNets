@@ -4,7 +4,12 @@
 [![TorchVision](https://img.shields.io/badge/TorchVision-0.15%2B-red.svg)](https://pytorch.org/)
 [![Tests](https://img.shields.io/badge/Tests-47%2F47%20Passed%20(100%25)-brightgreen.svg)](tests/)
 [![Branch](https://img.shields.io/badge/Branch-feature%2Ffinal--exam--model--l-blue.svg)](https://github.com/khuonglaptri3/TickNets/tree/feature/final-exam-model-l)
+[![DOI](https://img.shields.io/badge/DOI-10.1016%2Fj.neucom.2024.127942-blue.svg)](https://doi.org/10.1016/j.neucom.2024.127942)
 [![License](https://img.shields.io/badge/License-Academic%20Final%20Exam-green.svg)](LICENSE)
+
+> **Original Research Paper:** *Efficient tick-shape networks of full-residual point-depth-point blocks for image classification*  
+> **Authors:** Thanh Tuan Nguyen and Thanh Phuong Nguyen (*Neurocomputing*, Volume 596, 2024, Article 127942)  
+> **Paper DOI:** [https://doi.org/10.1016/j.neucom.2024.127942](https://doi.org/10.1016/j.neucom.2024.127942) — See [BibTeX Citation](#8-original-paper-abstract--citation)
 
 ---
 
@@ -199,9 +204,44 @@ For in-depth mathematical derivations and design rationale, consult the dedicate
 
 ---
 
-## 8. Author & Academic Context
+## 8. Original Paper, Abstract & Citation
 
-* **Project:** Deep Learning Final Examination.
-* **Target Architectures:** `TickNet-L v1` (Proposed) & `TickNet-Basic` (Author Baseline).
+This repository and its experimental final exam extensions build directly upon the foundational architecture and theory introduced by **Thanh Tuan Nguyen** and **Thanh Phuong Nguyen** in *Neurocomputing (2024)*. If you use this codebase, models, or any related materials, please cite the original author's seminal publication:
+
+### 8.1. Publication Information
+* **Title:** *Efficient tick-shape networks of full-residual point-depth-point blocks for image classification*
+* **Authors:** Thanh Tuan Nguyen and Thanh Phuong Nguyen
+* **Journal:** *Neurocomputing*, Volume 596, Article 127942, 2024
+* **DOI / URL:** [https://doi.org/10.1016/j.neucom.2024.127942](https://doi.org/10.1016/j.neucom.2024.127942)
+
+### 8.2. Original Paper Abstract
+> Light-weight convolutional neural networks (CNNs) are crucial for deploying computer vision applications in mobile devices.
+> However, such models ordinarily have steady-increased channels in their backbone leading to a sharp increase in the model size; while the deficiency of identity mappings in their residual mechanism can lead to modest performance in feature extraction.
+> To mitigate those issues, we propose light-weight networks based on three novel concepts as follows.
+> Firstly, an efficient perceptron is presented to encapsulate point-depth-point (PDP) features extracted by light-weight convolutions along with a full-residual (FR) mechanism through the architecture of a network.
+> This full-residual connection is proposed to deal with the shortcoming of the existing light-weight models whose architecture has incompletely exploited identity mappings. It is due to the variability of spatial dimension caused by several strides of their convolutional operations.
+> Secondly, a tick-shape backbone is then introduced by designing its structure in accordance with the channel elasticity of the FR-PDP perceptron subject to the shape of a check mark.
+> Thirdly, taking advantage of the channel elasticity concept, three tick-shape networks (TickNets) are constructed in a light-weight architecture by hooking one or more tick-shape backbones.
+> Experimental results for image classification on benchmark datasets have clearly corroborated the prominence of the proposed methods.
+
+### 8.3. BibTeX Citation
+
+```bibtex
+@article{neucoTickNetNguyen23,
+  author       = {Thanh Tuan Nguyen and Thanh Phuong Nguyen},
+  title        = {Efficient tick-shape networks of full-residual point-depth-point blocks for image classification},
+  journal      = {Neurocomputing},
+  volume       = {596},
+  pages        = {127942},
+  year         = {2024},
+  url          = {https://doi.org/10.1016/j.neucom.2024.127942}
+}
+```
+
+### 8.4. Academic & Project Context
+* **Examination Project:** Deep Learning Final Examination.
+* **Original Foundation:** Baseline `TickNet-Basic` architecture and the `FR_PDP_block` core block are authored by Nguyen & Nguyen (2024).
+* **Final Exam Contributions:** `TickNet-L v1` variant with refined channel elasticity, pointwise bottlenecking, multi-scale mixed depthwise convolutions ($3\times3$ and $5\times5$), Cutout data augmentation ($16\times16$), and systematic SGD Nesterov vs. Adam grid search on CIFAR-10 and CIFAR-100 under the $\le 6$M parameter and $< 1$G FLOP constraint.
 * **Framework:** PyTorch 2.0+, TorchVision, NumPy, Pandas.
 * **Tested Platforms:** Linux Ubuntu (x86_64), Kaggle GPU (Tesla T4 / P100).
+
