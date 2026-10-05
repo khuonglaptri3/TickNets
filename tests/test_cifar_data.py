@@ -50,6 +50,16 @@ def test_get_cifar_transforms_shape_and_type(dataset_name):
     assert tensor_eval.min() < 0.0 or tensor_eval.max() > 1.0
 
 
+def test_cutout_transform():
+    from models.cifar_data import Cutout
+    cutout = Cutout(n_holes=1, length=16)
+    tensor = torch.ones((3, 32, 32), dtype=torch.float32)
+    masked = cutout(tensor)
+    assert masked.shape == (3, 32, 32)
+    assert (masked == 0.0).any()
+    assert (masked == 1.0).any()
+
+
 def test_stratified_split_indices_proportions_and_disjoint():
     num_classes = 10
     samples_per_class = 50

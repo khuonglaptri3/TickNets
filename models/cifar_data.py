@@ -38,18 +38,58 @@ def normalize_dataset_name(name: str) -> str:
     raise ValueError(f"Unknown CIFAR dataset {name!r}; choose 'cifar10' or 'cifar100'")
 
 
-def get_cifar_transforms(dataset_name: str, *, augment: bool = True) -> transforms.Compose:
-    """Standard CIFAR preprocessing: RandomCrop(32, padding=4), RandomHorizontalFlip, Normalize."""
+class Cutout(object):
+    """Randomly mask out one or more square patches from an image tensor (DeVries & Taylor, 2017).
+
+    Args:
+        n_holes (int): Number of patches to cut out of each image.
+        length (int): The size (in pixels) of each square patch.
+    """
+
+    def __init__(self, n_holes: int = 1, length: int = 16):
+        self.n_holes = n_holes
+        self.length = length
+
+    def __call__(self, img: torch.Tensor) -> torch.Tensor:
+        h, w = img.shape[-2], img.shape[-1]
+        mask = np.ones((h, w), np.float32)
+
+        for _ in range(self.n_holes):
+            y = np.random.randint(h)
+            x = np.random.randint(w)
+
+            y1 = np.clip(y - self.length // 2, 0, h)
+            y2 = np.clip(y + self.length // 2, 0, h)
+            x1 = np.clip(x - self.length // 2, 0, w)
+            x2 = np.clip(x + self.length // 2, 0, w)
+
+            mask[y1:y2, x1:x2] = 0.0
+
+        mask_tensor = torch.from_numpy(mask).to(dtype=img.dtype, device=img.device).expand_as(img)
+        return img * mask_tensor
+
+
+def get_cifar_transforms(
+    dataset_name: str,
+    *,
+    augment: bool = True,
+    cutout: bool = True,
+    cutout_length: int = 16,
+) -> transforms.Compose:
+    """Standard CIFAR preprocessing: RandomCrop(32, padding=4), RandomHorizontalFlip, Normalize, Cutout."""
     canon_name = normalize_dataset_name(dataset_name)
     mean, std = CIFAR_STATS[canon_name]
 
     if augment:
-        return transforms.Compose([
+        tf_list = [
             transforms.RandomCrop(32, padding=4, padding_mode="reflect"),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=mean, std=std),
-        ])
+        ]
+        if cutout and cutout_length > 0:
+            tf_list.append(Cutout(n_holes=1, length=cutout_length))
+        return transforms.Compose(tf_list)
     return transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=mean, std=std),
@@ -117,6 +157,8 @@ def build_cifar_datasets(
     seed: int = 42,
     download: bool = True,
     augment: bool = True,
+    cutout: bool = True,
+    cutout_length: int = 16,
 ) -> Tuple[Dataset, Optional[Dataset], Dataset]:
     """Download and return train, validation (optional), and test datasets."""
     canon_name = normalize_dataset_name(dataset_name)
@@ -126,7 +168,7 @@ def build_cifar_datasets(
     dataset_cls = datasets.CIFAR10 if canon_name == "cifar10" else datasets.CIFAR100
     num_classes = NUM_CLASSES[canon_name]
 
-    train_transform = get_cifar_transforms(canon_name, augment=augment)
+    train_transform = get_cifar_transforms(canon_name, augment=augment, cutout=cutout, cutout_length=cutout_length)
     eval_transform = get_cifar_transforms(canon_name, augment=False)
 
     test_set = dataset_cls(root=str(data_path), train=False, download=download, transform=eval_transform)
@@ -155,6 +197,8 @@ def build_cifar_loaders(
     pin_memory: bool = True,
     download: bool = True,
     augment: bool = True,
+    cutout: bool = True,
+    cutout_length: int = 16,
 ) -> Tuple[DataLoader, Optional[DataLoader], DataLoader]:
     """Build reproducible DataLoaders for CIFAR-10 or CIFAR-100."""
     if batch_size < 1 or num_workers < 0:
@@ -167,6 +211,8 @@ def build_cifar_loaders(
         seed=seed,
         download=download,
         augment=augment,
+        cutout=cutout,
+        cutout_length=cutout_length,
     )
 
     generator = torch.Generator()

@@ -52,6 +52,7 @@ def test_build_optimizer_and_scheduler():
     assert isinstance(opt_sgd, torch.optim.SGD)
     assert opt_sgd.param_groups[0]["lr"] == 0.1
     assert opt_sgd.param_groups[0]["momentum"] == 0.9
+    assert opt_sgd.param_groups[0]["nesterov"] is True
     assert opt_sgd.param_groups[0]["weight_decay"] == 1e-4
     assert isinstance(sched_sgd, torch.optim.lr_scheduler.CosineAnnealingLR)
 

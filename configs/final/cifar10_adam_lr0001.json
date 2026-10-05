@@ -8,5 +8,7 @@
   "epochs": 200,
   "batch_size": 128,
   "val_fraction": 0.1,
-  "seed": 42
+  "seed": 42,
+  "cutout": true,
+  "cutout_length": 16
 }

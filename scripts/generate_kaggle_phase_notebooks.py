@@ -11,8 +11,8 @@ phases = [
         "dataset_name": "CIFAR-10",
         "optimizer_name": "SGD",
         "runs": [
-            ("configs/final/cifar10_sgd_lr010.json", "cifar10_sgd_lr010", "SGD lr=0.10 (Momentum 0.9, Weight Decay 1e-4)"),
-            ("configs/final/cifar10_sgd_lr015.json", "cifar10_sgd_lr015", "SGD lr=0.15 (Momentum 0.9, Weight Decay 1e-4)"),
+            ("configs/final/cifar10_sgd_lr010.json", "cifar10_sgd_lr010", "SGD lr=0.10 + Nesterov 0.9, Cutout 16x16 (Weight Decay 1e-4)"),
+            ("configs/final/cifar10_sgd_lr015.json", "cifar10_sgd_lr015", "SGD lr=0.15 + Nesterov 0.9, Cutout 16x16 (Weight Decay 1e-4)"),
         ],
         "zip_name": "phase1_cifar10_sgd_results.zip",
     },
@@ -23,8 +23,8 @@ phases = [
         "dataset_name": "CIFAR-10",
         "optimizer_name": "Adam",
         "runs": [
-            ("configs/final/cifar10_adam_lr0001.json", "cifar10_adam_lr0001", "Adam lr=0.001 (Betas 0.9/0.999, Weight Decay 1e-4)"),
-            ("configs/final/cifar10_adam_lr00003.json", "cifar10_adam_lr00003", "Adam lr=0.0003 (Betas 0.9/0.999, Weight Decay 1e-4)"),
+            ("configs/final/cifar10_adam_lr0001.json", "cifar10_adam_lr0001", "Adam lr=0.001, Cutout 16x16 (Betas 0.9/0.999, Weight Decay 1e-4)"),
+            ("configs/final/cifar10_adam_lr00003.json", "cifar10_adam_lr00003", "Adam lr=0.0003, Cutout 16x16 (Betas 0.9/0.999, Weight Decay 1e-4)"),
         ],
         "zip_name": "phase2_cifar10_adam_results.zip",
     },
@@ -35,8 +35,8 @@ phases = [
         "dataset_name": "CIFAR-100",
         "optimizer_name": "SGD",
         "runs": [
-            ("configs/final/cifar100_sgd_lr010.json", "cifar100_sgd_lr010", "SGD lr=0.10 (Momentum 0.9, Weight Decay 1e-4)"),
-            ("configs/final/cifar100_sgd_lr015.json", "cifar100_sgd_lr015", "SGD lr=0.15 (Momentum 0.9, Weight Decay 1e-4)"),
+            ("configs/final/cifar100_sgd_lr010.json", "cifar100_sgd_lr010", "SGD lr=0.10 + Nesterov 0.9, Cutout 16x16 (Weight Decay 1e-4)"),
+            ("configs/final/cifar100_sgd_lr015.json", "cifar100_sgd_lr015", "SGD lr=0.15 + Nesterov 0.9, Cutout 16x16 (Weight Decay 1e-4)"),
         ],
         "zip_name": "phase3_cifar100_sgd_results.zip",
     },
@@ -47,8 +47,8 @@ phases = [
         "dataset_name": "CIFAR-100",
         "optimizer_name": "Adam",
         "runs": [
-            ("configs/final/cifar100_adam_lr0001.json", "cifar100_adam_lr0001", "Adam lr=0.001 (Betas 0.9/0.999, Weight Decay 1e-4)"),
-            ("configs/final/cifar100_adam_lr00003.json", "cifar100_adam_lr00003", "Adam lr=0.0003 (Betas 0.9/0.999, Weight Decay 1e-4)"),
+            ("configs/final/cifar100_adam_lr0001.json", "cifar100_adam_lr0001", "Adam lr=0.001, Cutout 16x16 (Betas 0.9/0.999, Weight Decay 1e-4)"),
+            ("configs/final/cifar100_adam_lr00003.json", "cifar100_adam_lr00003", "Adam lr=0.0003, Cutout 16x16 (Betas 0.9/0.999, Weight Decay 1e-4)"),
         ],
         "zip_name": "phase4_cifar100_adam_results.zip",
     },

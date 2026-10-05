@@ -148,6 +148,11 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--optimizer", choices=("sgd", "adam"), default="sgd")
     parser.add_argument("--learning-rate", type=float, default=0.1)
     parser.add_argument("--momentum", type=float, default=0.9, help="Momentum for SGD")
+    parser.add_argument("--nesterov", action="store_true", default=True, help="Enable Nesterov momentum for SGD")
+    parser.add_argument("--no-nesterov", dest="nesterov", action="store_false", help="Disable Nesterov momentum for SGD")
+    parser.add_argument("--cutout", action="store_true", default=True, help="Enable Cutout data augmentation")
+    parser.add_argument("--no-cutout", dest="cutout", action="store_false", help="Disable Cutout data augmentation")
+    parser.add_argument("--cutout-length", type=int, default=16, help="Cutout length in pixels")
     parser.add_argument("--adam-beta1", type=float, default=0.9, help="Beta1 for Adam")
     parser.add_argument("--adam-beta2", type=float, default=0.999, help="Beta2 for Adam")
     parser.add_argument("--weight-decay", type=float, default=1e-4)
@@ -188,11 +193,13 @@ def build_optimizer_and_scheduler(
     args: argparse.Namespace,
 ) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler._LRScheduler]:
     if args.optimizer == "sgd":
+        use_nesterov = bool(getattr(args, "nesterov", True)) and args.momentum > 0
         optimizer = torch.optim.SGD(
             model.parameters(),
             lr=args.learning_rate,
             momentum=args.momentum,
             weight_decay=args.weight_decay,
+            nesterov=use_nesterov,
         )
     elif args.optimizer == "adam":
         optimizer = torch.optim.Adam(
@@ -237,7 +244,7 @@ def main(argv: Optional[List[str]] = None) -> Dict[str, Any]:
         _, _, test_loader = build_cifar_loaders(
             args.data_root, dataset_name, batch_size=args.batch_size,
             val_fraction=0.0, seed=args.seed, num_workers=args.num_workers,
-            pin_memory=device.type == "cuda"
+            pin_memory=device.type == "cuda", cutout=False,
         )
         result = evaluate(model, test_loader, device, out_dir, num_classes)
         print(f"[✓] Evaluated checkpoint {ckpt_path.name}: Top-1={result['top1']:.2f}%, Loss={result['loss']:.4f}, Macro-F1={result['macro_f1']:.4f}")
@@ -253,7 +260,9 @@ def main(argv: Optional[List[str]] = None) -> Dict[str, Any]:
     train_loader, val_loader, test_loader = build_cifar_loaders(
         args.data_root, dataset_name, batch_size=args.batch_size,
         val_fraction=args.val_fraction, seed=args.seed,
-        num_workers=args.num_workers, pin_memory=device.type == "cuda"
+        num_workers=args.num_workers, pin_memory=device.type == "cuda",
+        cutout=getattr(args, "cutout", True),
+        cutout_length=getattr(args, "cutout_length", 16),
     )
 
     # Initialize model
