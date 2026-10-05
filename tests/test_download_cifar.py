@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import tarfile
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -37,10 +38,12 @@ def test_compute_md5(tmp_path: Path):
     assert len(md5_hash) == 32
 
 
-def test_ensure_cifar_dataset_already_present(tmp_path: Path):
+def test_ensure_cifar_dataset_already_present(tmp_path: Path, monkeypatch):
     fake_extracted = tmp_path / "cifar-10-batches-py"
     fake_extracted.mkdir(parents=True)
     (fake_extracted / "batches.meta").write_text("meta", encoding="utf-8")
+    monkeypatch.setitem(__import__("scripts.download_cifar", fromlist=["EXTRACTED_CHECKSUMS"]).EXTRACTED_CHECKSUMS,
+                        "cifar10", {"batches.meta": hashlib.md5(b"meta").hexdigest()})
 
     result = ensure_cifar_dataset("cifar10", data_root=tmp_path, force=False)
     assert result["status"] == "already_present"

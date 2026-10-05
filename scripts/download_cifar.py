@@ -30,6 +30,28 @@ DATASET_METADATA: Dict[str, Dict[str, str]] = {
     },
 }
 
+# Official extracted-file checksums, matching torchvision.datasets.CIFAR10/100.
+EXTRACTED_CHECKSUMS = {
+    "cifar10": {
+        "data_batch_1": "c99cafc152244af753f735de768cd75f",
+        "data_batch_2": "d4bba439e000b95fd0a9bffe97cbabec",
+        "data_batch_3": "54ebc095f3ab1f0389bbae665268c751",
+        "data_batch_4": "634d18415352ddfa80567beed471001a",
+        "data_batch_5": "482c414d41f54cd18b22e5b47cb7c3cb",
+        "test_batch": "40351d587109b95175f43aff81a1287e",
+        "batches.meta": "5ff9c542aee3614f3951f8cda6e48888",
+    },
+    "cifar100": {"train": "16019d7e3df5f24257cddd939b257f8d",
+                 "test": "f0ef6b0ae62326f3e7ffdfab6717acfc",
+                 "meta": "7973b15100ade9c7d40fb424638fde48"},
+}
+
+
+def extracted_dataset_valid(name: str, data_root: Path) -> bool:
+    folder = data_root / DATASET_METADATA[name]["extracted_dir"]
+    return all((folder / filename).is_file() and compute_md5(folder / filename) == expected
+               for filename, expected in EXTRACTED_CHECKSUMS[name].items())
+
 
 def compute_md5(file_path: Path, chunk_size: int = 1024 * 1024) -> str:
     hasher = hashlib.md5()
@@ -104,7 +126,13 @@ def download_file_with_fallback(urls: List[str], target_path: Path, expected_md5
 def extract_tar_gz(archive_path: Path, extract_dir: Path) -> Path:
     print(f"[*] Extracting {archive_path.name} to {extract_dir}...")
     with tarfile.open(archive_path, "r:gz") as tar:
-        tar.extractall(path=extract_dir)
+        destination = extract_dir.resolve()
+        members = tar.getmembers()
+        for member in members:
+            target = (destination / member.name).resolve()
+            if not target.is_relative_to(destination) or not (member.isfile() or member.isdir()):
+                raise ValueError(f"Unsafe archive member: {member.name}")
+        tar.extractall(path=destination, members=members, filter="data")
     print(f"[+] Extracted: {archive_path.name}")
     return extract_dir
 
@@ -118,7 +146,7 @@ def ensure_cifar_dataset(name: str, data_root: Path, force: bool = False) -> Dic
     extracted_path = data_root / meta["extracted_dir"]
 
     # Check if already present and valid
-    if not force and extracted_path.is_dir() and any(extracted_path.iterdir()):
+    if not force and extracted_dataset_valid(name, data_root):
         print(f"[✓] {name.upper()} already extracted and present at: {extracted_path}")
         return {"dataset": name, "status": "already_present", "path": str(extracted_path)}
 
@@ -130,6 +158,8 @@ def ensure_cifar_dataset(name: str, data_root: Path, force: bool = False) -> Dic
 
     # Extract archive
     extract_tar_gz(archive_file, data_root)
+    if not extracted_dataset_valid(name, data_root):
+        raise ValueError(f"Extracted {name} files failed official MD5 verification")
 
     return {"dataset": name, "status": "downloaded_and_extracted", "path": str(extracted_path)}
 

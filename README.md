@@ -2,7 +2,7 @@
 
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 [![TorchVision](https://img.shields.io/badge/TorchVision-0.15%2B-red.svg)](https://pytorch.org/)
-[![Tests](https://img.shields.io/badge/Tests-47%2F47%20Passed%20(100%25)-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-CIFAR%20recovery%20%26%20metrics-blue.svg)](tests/)
 [![Branch](https://img.shields.io/badge/Branch-feature%2Ffinal--exam--model--l-blue.svg)](https://github.com/khuonglaptri3/TickNets/tree/feature/final-exam-model-l)
 [![DOI](https://img.shields.io/badge/DOI-10.1016%2Fj.neucom.2024.127942-blue.svg)](https://doi.org/10.1016/j.neucom.2024.127942)
 [![License](https://img.shields.io/badge/License-Academic%20Final%20Exam-green.svg)](LICENSE)
@@ -152,13 +152,13 @@ git clone -b feature/final-exam-model-l https://github.com/khuonglaptri3/TickNet
 cd TickNets
 
 # Install dependencies
-pip install torch torchvision numpy pandas pytest
+pip install torch torchvision numpy pillow pandas scipy pytest
 ```
 
 ### 5.2. Run Full Unit Test Suite (Verification)
-Run the 47 automated tests verifying loaders, transforms, Cutout, Nesterov momentum, complexity, and smoke training:
+Run the automated tests for loaders, transforms, numerical metrics, SGD/Adam, CPU/CUDA recovery, interrupted writes, and verified result exports. CUDA and official-data tests report skips when their required resources are absent:
 ```bash
-PYTHONPATH=. pytest -v
+python -m pytest tests -v
 ```
 
 ### 5.3. Automated Dataset Download
@@ -193,7 +193,7 @@ python train_cifar.py --dataset cifar10 --evaluate runs/cifar10_sgd_lr010/best_v
 2. Upload the notebook to [Kaggle](https://www.kaggle.com/code) $\to$ **New Notebook** $\to$ **Import Notebook**.
 3. In Kaggle Notebook Settings: Set **Accelerator = GPU T4 x2 (or P100)** and **Internet = Always On**.
 4. Click **Save Version** $\to$ **Save & Run All (Commit)**.
-5. The notebook will automatically clone the branch, download data, train 200 epochs, and export a ready-to-download `.zip` archive (e.g. `phase1_cifar10_sgd_results.zip`) containing all checkpoints, logs, and metrics.
+5. Phase 1?4 contain an embedded, verified source snapshot and run preflight tests before training. They export results only after checking both complete runs; segmented sessions export recovery checkpoints. See [Kaggle execution and recovery](docs/kaggle/README.md). The older baseline notebook still clones the GitHub branch.
 
 ### 5.6. Aggregate Results for Final Report
 Once all runs are placed in the `runs/` directory, aggregate all metrics into summary Markdown and CSV tables:
@@ -205,14 +205,16 @@ python scripts/aggregate_grid_search.py --runs-dir runs --output-csv docs/result
 
 ## 6. Output Artifacts & Metrics
 
-Each training run outputs 6 standard artifacts in its output directory:
+Each training run writes the following evidence; final test artifacts appear after the configured final epoch:
 * `config.json`: Full training configuration, hardware info, parameter count, and FLOP count.
 * `epochs.csv`: Per-epoch log tracking `train_loss`, `train_top1`, `val_loss`, `val_top1`, and learning rate.
 * `best_val.pt`: Model weights from the epoch with highest validation accuracy.
-* `last.pt`: Resumable checkpoint containing model, optimizer, scheduler, and epoch states.
+* `last.pt`: Atomic resumable checkpoint containing model, optimizer, scheduler, RNG/generator states, epoch history and validation-selected best weights.
 * `test_metrics.json`: Unbiased test performance: Top-1 Accuracy (%), Average Loss, and Macro F1 Score.
 * `confusion_matrix.csv`: Class confusion matrix ($10 \times 10$ for CIFAR-10, $100 \times 100$ for CIFAR-100).
-* `test_predictions.csv`: Per-sample prediction record for in-depth error analysis.
+* `test_predictions.csv`: Per-sample targets, predictions and negative log-likelihood for numerical verification.
+* `completion.json`: SHA-256 manifest for completed run artifacts.
+* `progress.json`: Explicit paused/trained/complete status.
 
 ---
 

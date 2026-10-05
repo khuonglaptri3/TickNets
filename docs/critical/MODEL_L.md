@@ -51,15 +51,15 @@ $$\text{hidden} = \max\left(16, \left\lfloor \frac{0.75 \times C_{in} + 4}{8} \r
 
 ## 4. Bằng chứng Định lượng Tuân thủ Ngân sách (Complexity Proof)
 
-Đo lường bằng công cụ độc lập [`models/model_profile.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/model_profile.py) với quy ước chuẩn quốc tế: $1\text{ MAC} = 2\text{ FLOPs}$, batch size = 1, tensor đầu vào $(1, 3, 32, 32)$:
+Đo lường bằng [`models/model_profile.py`](../../models/model_profile.py), phạm vi Conv2d/Linear (không tính BN, activation, pooling và phép toán phần tử), quy ước $1\text{ MAC} = 2\text{ FLOPs}$, batch size = 1, tensor đầu vào $(1, 3, 32, 32)$:
 
 ### 4.1. Kết quả trên CIFAR-10 (10 lớp)
 - **Số lượng Tham số học được:** **1.100.105 tham số** ($\approx 1.10\text{M} \le 6.000.000$ $\to$ **ĐẠT, chỉ chiếm 18.3% trần cho phép**).
-- **Chi phí Tính toán (FLOPs forward):** **157.804.800 FLOPs** ($\approx 0.1578\text{ GFLOPs} < 1.000.000.000$ $\to$ **ĐẠT, chỉ chiếm 15.8% trần cho phép**).
+- **Chi phí Tính toán (FLOPs forward):** **157.828.544 FLOPs** ($\approx 0.1578\text{ GFLOPs} < 1.000.000.000$ $\to$ **ĐẠT, chỉ chiếm 15.8% trần cho phép**).
 
 ### 4.2. Kết quả trên CIFAR-100 (100 lớp)
 - **Số lượng Tham số học được:** **1.169.315 tham số** ($\approx 1.17\text{M} \le 6.000.000$ $\to$ **ĐẠT, chỉ chiếm 19.5% trần cho phép**).
-- **Chi phí Tính toán (FLOPs forward):** **158.009.600 FLOPs** ($\approx 0.1580\text{ GFLOPs} < 1.000.000.000$ $\to$ **ĐẠT, chỉ chiếm 15.8% trần cho phép**).
+- **Chi phí Tính toán (FLOPs forward):** **157.966.784 FLOPs** ($\approx 0.1580\text{ GFLOPs} < 1.000.000.000$ $\to$ **ĐẠT, chỉ chiếm 15.8% trần cho phép**).
 
 ### 4.3. Bảng Tổng Hợp So Sánh Độ Phức Tạp
 | Mô hình | Dataset | Tham số (Params) | Tỷ lệ trần Params (6M) | Chi phí FLOPs | Tỷ lệ trần FLOPs (1G) | Trạng thái Tuân thủ |

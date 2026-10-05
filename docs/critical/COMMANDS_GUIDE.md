@@ -6,9 +6,9 @@ Tài liệu này tổng hợp toàn bộ các câu lệnh CLI đã được chu�
 
 ## 1. Kiểm tra Môi trường & Bộ Kiểm thử Tự động (PyTest)
 
-Chạy toàn bộ 47 unit tests kiểm tra tính toàn vẹn của mô hình `TickNet-L`, mô hình tác giả `TickNet-Basic`, DataLoaders, Data Augmentation Cutout, Nesterov Momentum và pipeline huấn luyện:
+Chạy toàn bộ test kiểm tra mô hình, SGD/Adam, dữ liệu, metric, resume, ghi checkpoint và kết quả Kaggle:
 ```bash
-PYTHONPATH=. pytest -v
+python -m pytest tests -v
 ```
 *(Yêu cầu: 100% tests PASSED trước khi triển khai huấn luyện).*
 
@@ -112,7 +112,9 @@ python train_cifar.py --dataset cifar10 --evaluate runs/cifar10_sgd_lr010/best_v
 4. **Phase 3 (CIFAR-100 SGD):** Upload [`docs/kaggle/Phase3_CIFAR100_SGD.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase3_CIFAR100_SGD.ipynb) $\to$ Chạy SGD lr=0.10 & lr=0.15.
 5. **Phase 4 (CIFAR-100 Adam):** Upload [`docs/kaggle/Phase4_CIFAR100_Adam.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase4_CIFAR100_Adam.ipynb) $\to$ Chạy Adam lr=0.001 & lr=0.0003.
 
-*(Mỗi notebook tự động tạo file `.zip` kết quả ở `/kaggle/working/` để tải về).*
+Phase 1–4 dùng snapshot mã nguồn nhúng, preflight tests, recovery và kiểm chứng artifact.
+Xem [hướng dẫn hiện hành](../kaggle/README.md). ZIP `results` chỉ xuất sau khi đủ 200 epochs;
+chặng chưa xong xuất ZIP `recovery`.
 
 ---
 
@@ -123,6 +125,6 @@ Sau khi giải nén các thư mục thực nghiệm vào thư mục `runs/`, ch�
 python scripts/aggregate_grid_search.py --runs-dir runs --output-csv docs/results/grid_search_summary.csv --output-md docs/results/grid_search_summary.md
 ```
 Script sẽ tự động:
-- Đọc tất cả 8 folder grid search + 2 folder baseline.
+- Đọc đủ 8 folder grid search; thiếu run hoặc artifact sai sẽ báo lỗi. Baseline tổng hợp riêng.
 - Tìm điểm `Best Val Epoch`, `Best Val Acc`, `Test Top-1 Accuracy`, `Test Loss`, `Macro F1`.
 - Xuất bảng Markdown và CSV để đưa thẳng vào báo cáo cuối kỳ.

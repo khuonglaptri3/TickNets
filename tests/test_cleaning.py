@@ -84,7 +84,15 @@ def test_quality_filter_exposure_and_contrast():
     assert "LOW_CONTRAST" in flat_report.flags
 
 
-def test_object_verifier():
+def test_object_verifier(monkeypatch):
+    import torch
+    import cleaning.object_filter as module
+    class FixedClassifier(torch.nn.Module):
+        def forward(self, images):
+            logits = torch.full((images.shape[0], 1000), -10.0, device=images.device)
+            logits[:, 281] = 10.0  # known ImageNet cat class; no pretrained download
+            return logits
+    monkeypatch.setattr(module.models, "mobilenet_v3_small", lambda **kwargs: FixedClassifier())
     verifier = ObjectVerifier(device="cpu")
     assert verifier is not None
 
@@ -97,6 +105,8 @@ def test_object_verifier():
     test_imgs = [Image.new("RGB", (224, 224), color=(i * 40, i * 40, i * 40)) for i in range(2)]
     res = verifier.verify_batch(test_imgs, ["cat", "dog"])
     assert len(res) == 2
+    assert res[0]["target_prob"] == 1.0 and not res[0]["is_suspicious"]
+    assert res[1]["target_prob"] == 0.0 and res[1]["is_suspicious"]
     for r in res:
         assert "target_class" in r
         assert "target_prob" in r

@@ -3,19 +3,13 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
-import platform
-import random
-import subprocess
-import sys
+import math
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
 import torch
 import torch.nn as nn
-import torchvision
 from torch.utils.data import DataLoader
 
 from models.cifar_data import NUM_CLASSES, build_cifar_loaders, normalize_dataset_name, seed_everything
@@ -23,7 +17,7 @@ from models.model_profile import profile_model
 from models.ticknet_l import ARCHITECTURE_REVISION, build_ticknet_l
 from models.TickNet import build_TickNet
 
-TRAINER_REVISION = "cifar-trainer-v1"
+TRAINER_REVISION = "cifar-trainer-v2"
 
 
 def run_epoch(
@@ -50,6 +44,8 @@ def run_epoch(
                 optimizer.zero_grad(set_to_none=True)
 
             logits = model(images)
+            if logits.ndim != 2 or not torch.isfinite(logits).all():
+                raise FloatingPointError("Invalid or non-finite logits")
             loss = criterion(logits, labels)
 
             if not torch.isfinite(loss):
@@ -88,24 +84,32 @@ def evaluate(
     loss_sum = 0.0
     correct = 0
     total = 0
-    predictions_rows: List[Dict[str, int]] = []
+    predictions_rows: List[Dict[str, Any]] = []
 
     with torch.no_grad():
         for images, labels in test_loader:
             images = images.to(device, non_blocking=True)
             labels = labels.to(device, non_blocking=True)
             logits = model(images)
-            loss = criterion(logits, labels)
+            if logits.shape != (labels.numel(), num_classes) or not torch.isfinite(logits).all():
+                raise FloatingPointError("Invalid or non-finite evaluation logits")
+            sample_losses = nn.functional.cross_entropy(logits, labels, reduction="none")
+            loss = sample_losses.mean()
             preds = logits.argmax(dim=1)
+            if not torch.isfinite(loss):
+                raise FloatingPointError("Non-finite evaluation loss")
 
-            loss_sum += loss.item() * labels.numel()
+            loss_sum += sample_losses.double().sum().item()
             correct += (preds == labels).sum().item()
             total += labels.numel()
 
-            for target, pred in zip(labels.cpu().tolist(), preds.cpu().tolist()):
+            for target, pred, sample_loss in zip(labels.cpu().tolist(), preds.cpu().tolist(), sample_losses.cpu().tolist()):
                 matrix[target][pred] += 1
-                predictions_rows.append({"sample_index": len(predictions_rows), "target": target, "prediction": pred})
+                predictions_rows.append({"sample_index": len(predictions_rows), "target": target,
+                                         "prediction": pred, "negative_log_likelihood": sample_loss})
 
+    if total == 0:
+        raise ValueError("Cannot evaluate an empty loader")
     top1 = 100.0 * correct / total
     loss_avg = loss_sum / total
 
@@ -126,13 +130,15 @@ def evaluate(
     }
 
     # Save artifacts
-    (output_dir / "test_metrics.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    from models.cifar_experiment import atomic_json
+    output_dir.mkdir(parents=True, exist_ok=True)
+    atomic_json(output_dir / "test_metrics.json", result)
 
     with (output_dir / "confusion_matrix.csv").open("w", encoding="utf-8", newline="") as f:
         csv.writer(f).writerows(matrix)
 
     with (output_dir / "test_predictions.csv").open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=("sample_index", "target", "prediction"))
+        writer = csv.DictWriter(f, fieldnames=("sample_index", "target", "prediction", "negative_log_likelihood"))
         writer.writeheader()
         writer.writerows(predictions_rows)
 
@@ -142,8 +148,8 @@ def evaluate(
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, help="Path to JSON configuration file")
-    parser.add_argument("--model", choices=("l", "basic"), default="l", help="Model architecture: 'l' for TickNet-L, 'basic' for author's TickNet Basic")
-    parser.add_argument("--dataset", choices=("cifar10", "cifar100"), default="cifar10")
+    parser.add_argument("--model", choices=("l", "basic"), default=None, help="Model architecture: l or basic")
+    parser.add_argument("--dataset", choices=("cifar10", "cifar100"), default=None)
     parser.add_argument("--data-root", type=Path, default=Path("data"))
     parser.add_argument("--optimizer", choices=("sgd", "adam"), default="sgd")
     parser.add_argument("--learning-rate", type=float, default=0.1)
@@ -155,12 +161,17 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--cutout-length", type=int, default=16, help="Cutout length in pixels")
     parser.add_argument("--adam-beta1", type=float, default=0.9, help="Beta1 for Adam")
     parser.add_argument("--adam-beta2", type=float, default=0.999, help="Beta2 for Adam")
+    parser.add_argument("--adam-eps", type=float, default=1e-8)
+    parser.add_argument("--eta-min", type=float, default=0.0)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--val-fraction", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num-workers", type=int, default=2)
+    parser.add_argument("--threads", type=int, default=2)
+    parser.add_argument("--no-download", dest="download", action="store_false", default=True)
+    parser.add_argument("--skip-test", action="store_true", help="Train and select by validation only")
     parser.add_argument("--device", default="auto", help="auto, cpu, cuda, or cuda:0")
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--resume", type=Path, help="Path to last.pt checkpoint to resume")
@@ -173,10 +184,54 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         config_path = raw_args.config.resolve()
         if not config_path.is_file():
             parser.error(f"Config file not found: {config_path}")
-        defaults = json.loads(config_path.read_text(encoding="utf-8"))
+        try:
+            defaults = json.loads(config_path.read_text(encoding="utf-8"))
+        except (ValueError, OSError) as error:
+            parser.error(f"Invalid config: {error}")
+        allowed = {action.dest for action in parser._actions} - {"help", "config"}
+        if not isinstance(defaults, dict) or set(defaults) - allowed:
+            parser.error("Config must be an object with known CLI keys")
         parser.set_defaults(**defaults)
 
     args = parser.parse_args(argv)
+    args._dataset_explicit = args.dataset is not None
+    args._model_explicit = args.model is not None
+    args.dataset = args.dataset or "cifar10"
+    args.model = args.model or "l"
+    for key, choices in (("model", ("l", "basic")), ("dataset", ("cifar10", "cifar100")),
+                         ("optimizer", ("sgd", "adam"))):
+        if getattr(args, key) not in choices:
+            parser.error(f"Invalid {key}")
+    for key in ("epochs", "batch_size", "seed", "num_workers", "threads", "cutout_length"):
+        value = getattr(args, key)
+        minimum = 0 if key in ("seed", "num_workers", "cutout_length") else 1
+        if type(value) is not int or value < minimum or (key == "seed" and value >= 2**32 - 2):
+            parser.error(f"Invalid integer {key}")
+    for key in ("learning_rate", "momentum", "adam_beta1", "adam_beta2", "adam_eps",
+                "weight_decay", "val_fraction", "eta_min"):
+        value = getattr(args, key)
+        if type(value) not in (float, int) or not math.isfinite(value):
+            parser.error(f"Invalid finite number {key}")
+    for key in ("nesterov", "cutout", "download", "skip_test"):
+        if type(getattr(args, key)) is not bool:
+            parser.error(f"Invalid boolean {key}")
+    for key in ("data_root", "output_dir", "resume", "evaluate"):
+        value = getattr(args, key)
+        if value is not None:
+            if not isinstance(value, (str, Path)):
+                parser.error(f"Invalid path {key}")
+            setattr(args, key, Path(value))
+    if not 0 <= args.momentum < 1 or not all(0 <= b < 1 for b in (args.adam_beta1, args.adam_beta2)):
+        parser.error("Momentum and Adam betas must be in [0, 1)")
+    if args.weight_decay < 0 or args.adam_eps <= 0 or not 0 <= args.eta_min <= args.learning_rate:
+        parser.error("Invalid weight decay, epsilon, or minimum learning rate")
+    if not 0 < args.val_fraction < 1:
+        parser.error("Training requires val-fraction in (0, 1)")
+    if args.stop_after_epoch is not None and (type(args.stop_after_epoch) is not int or
+                                             not 1 <= args.stop_after_epoch <= args.epochs):
+        parser.error("stop-after-epoch must be between 1 and epochs")
+    if args.resume and args.evaluate:
+        parser.error("resume and evaluate are mutually exclusive")
 
     if args.evaluate is None and args.output_dir is None:
         parser.error("--output-dir is required when training")
@@ -206,196 +261,20 @@ def build_optimizer_and_scheduler(
             model.parameters(),
             lr=args.learning_rate,
             betas=(args.adam_beta1, args.adam_beta2),
+            eps=args.adam_eps,
             weight_decay=args.weight_decay,
         )
     else:
         raise ValueError(f"Unsupported optimizer: {args.optimizer}")
 
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=args.eta_min)
     return optimizer, scheduler
 
 
 def main(argv: Optional[List[str]] = None) -> Dict[str, Any]:
-    args = parse_args(argv)
-    seed_everything(args.seed)
-
-    # Resolve device
-    if args.device == "auto":
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    else:
-        device = torch.device(args.device)
-
-    dataset_name = normalize_dataset_name(args.dataset)
-    num_classes = NUM_CLASSES[dataset_name]
-
-    # Evaluate-only mode
-    if args.evaluate:
-        ckpt_path = args.evaluate.resolve()
-        checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=False)
-        model_name = checkpoint.get("config", {}).get("model", args.model)
-        if model_name == "basic":
-            model = build_TickNet(num_classes=num_classes, typesize="basic", cifar=True).to(device)
-        else:
-            model = build_ticknet_l(num_classes=num_classes, cifar=True).to(device)
-        model.load_state_dict(checkpoint["model_state_dict"])
-        out_dir = args.output_dir.resolve() if args.output_dir else ckpt_path.parent
-        out_dir.mkdir(parents=True, exist_ok=True)
-
-        _, _, test_loader = build_cifar_loaders(
-            args.data_root, dataset_name, batch_size=args.batch_size,
-            val_fraction=0.0, seed=args.seed, num_workers=args.num_workers,
-            pin_memory=device.type == "cuda", cutout=False,
-        )
-        result = evaluate(model, test_loader, device, out_dir, num_classes)
-        print(f"[✓] Evaluated checkpoint {ckpt_path.name}: Top-1={result['top1']:.2f}%, Loss={result['loss']:.4f}, Macro-F1={result['macro_f1']:.4f}")
-        return result
-
-    # Training mode
-    output_dir = args.output_dir.resolve()
-    if output_dir.exists() and not args.resume:
-        raise FileExistsError(f"Output directory exists; select a fresh directory or use --resume: {output_dir}")
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    # Data loaders
-    train_loader, val_loader, test_loader = build_cifar_loaders(
-        args.data_root, dataset_name, batch_size=args.batch_size,
-        val_fraction=args.val_fraction, seed=args.seed,
-        num_workers=args.num_workers, pin_memory=device.type == "cuda",
-        cutout=getattr(args, "cutout", True),
-        cutout_length=getattr(args, "cutout_length", 16),
-    )
-
-    # Initialize model
-    arch_revision = "ticknet-basic-author" if args.model == "basic" else ARCHITECTURE_REVISION
-    if args.model == "basic":
-        model = build_TickNet(num_classes=num_classes, typesize="basic", cifar=True)
-    else:
-        model = build_ticknet_l(num_classes=num_classes, cifar=True)
-
-    complexity = profile_model(model, 32, cross_check=True)
-    if not complexity["within_exam_limits"]:
-        raise ValueError("Model exceeds exam limits (6M params or 1G FLOPs)")
-    model = model.to(device)
-
-    criterion = nn.CrossEntropyLoss()
-    optimizer, scheduler = build_optimizer_and_scheduler(model, args)
-
-    # Record config
-    config = {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()}
-    config.update(
-        trainer_revision=TRAINER_REVISION,
-        architecture_revision=arch_revision,
-        num_classes=num_classes,
-        learnable_parameters=complexity["learnable_parameters"],
-        flops_forward=complexity["flops"],
-        gflops_forward=complexity["flops"] / 1e9,
-        within_exam_limits=complexity["within_exam_limits"],
-        python_version=platform.python_version(),
-        torch_version=str(torch.__version__),
-        torchvision_version=str(torchvision.__version__),
-        device=str(device),
-    )
-    (output_dir / "config.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
-
-    start_epoch = 1
-    best_val_record: Optional[Dict[str, Any]] = None
-    history: List[Dict[str, Any]] = []
-
-    # Handle resume
-    if args.resume:
-        resume_ckpt = torch.load(args.resume.resolve(), map_location="cpu", weights_only=False)
-        model.load_state_dict(resume_ckpt["model_state_dict"])
-        optimizer.load_state_dict(resume_ckpt["optimizer_state_dict"])
-        scheduler.load_state_dict(resume_ckpt["scheduler_state_dict"])
-        start_epoch = resume_ckpt["epoch"] + 1
-        best_val_record = resume_ckpt.get("best_val_record")
-        history = resume_ckpt.get("history", [])
-        print(f"[*] Resumed training from epoch {start_epoch} (best val: {best_val_record})")
-
-    stop_epoch = args.stop_after_epoch or args.epochs
-
-    fields = ("epoch", "learning_rate", "train_loss", "train_top1", "train_samples", "val_loss", "val_top1", "val_samples")
-    csv_mode = "a" if args.resume and (output_dir / "epochs.csv").is_file() else "w"
-
-    with (output_dir / "epochs.csv").open(csv_mode, encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
-        if csv_mode == "w":
-            writer.writeheader()
-
-        for epoch in range(start_epoch, stop_epoch + 1):
-            lr = optimizer.param_groups[0]["lr"]
-            train_metrics = run_epoch(model, train_loader, criterion, device, optimizer)
-
-            val_metrics = None
-            if val_loader is not None:
-                val_metrics = run_epoch(model, val_loader, criterion, device)
-
-            improved = False
-            if val_metrics is not None:
-                if best_val_record is None:
-                    improved = True
-                else:
-                    curr_tuple = (val_metrics["top1"], -val_metrics["loss"])
-                    best_tuple = (best_val_record["top1"], -best_val_record["loss"])
-                    improved = curr_tuple > best_tuple
-
-                if improved:
-                    best_val_record = {**val_metrics, "epoch": epoch}
-                    torch.save({
-                        "epoch": epoch,
-                        "model_state_dict": {k: v.detach().cpu().clone() for k, v in model.state_dict().items()},
-                        "config": config,
-                        "best_validation": best_val_record,
-                    }, output_dir / "best_val.pt")
-
-            scheduler.step()
-
-            row = {
-                "epoch": epoch,
-                "learning_rate": lr,
-                "train_loss": train_metrics["loss"],
-                "train_top1": train_metrics["top1"],
-                "train_samples": train_metrics["samples"],
-                "val_loss": val_metrics["loss"] if val_metrics else "",
-                "val_top1": val_metrics["top1"] if val_metrics else "",
-                "val_samples": val_metrics["samples"] if val_metrics else 0,
-            }
-            writer.writerow(row)
-            f.flush()
-            history.append(row)
-
-            # Save last.pt for uninterrupted checkpointing
-            torch.save({
-                "epoch": epoch,
-                "model_state_dict": model.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-                "scheduler_state_dict": scheduler.state_dict(),
-                "config": config,
-                "best_val_record": best_val_record,
-                "history": history,
-            }, output_dir / "last.pt")
-
-            val_str = f" | Val Top-1: {val_metrics['top1']:.2f}%, Val Loss: {val_metrics['loss']:.4f}" if val_metrics else ""
-            print(f"Epoch {epoch:03d}/{args.epochs:03d} [LR: {lr:.5f}] - Train Top-1: {train_metrics['top1']:.2f}%, Train Loss: {train_metrics['loss']:.4f}{val_str}", flush=True)
-
-    # Final evaluation on test set using the best validation checkpoint (or last checkpoint)
-    print("\n[*] Evaluating on official 10,000 test set...")
-    best_weights_path = output_dir / "best_val.pt" if (output_dir / "best_val.pt").is_file() else output_dir / "last.pt"
-    best_ckpt = torch.load(best_weights_path, map_location="cpu", weights_only=False)
-    model.load_state_dict(best_ckpt["model_state_dict"])
-
-    test_results = evaluate(model, test_loader, device, output_dir, num_classes)
-    print(f"\n[✓] Final Test Evaluation Completed:")
-    print(f"    - Test Top-1 Accuracy: {test_results['top1']:.2f}%")
-    print(f"    - Test Loss:           {test_results['loss']:.4f}")
-    print(f"    - Test Macro F1:       {test_results['macro_f1']:.4f}")
-    print(f"    - Output Directory:    {output_dir}")
-
-    return {
-        "final_test": test_results,
-        "best_validation": best_val_record,
-        "output_dir": str(output_dir),
-    }
+    from models.cifar_training import execute
+    return execute(parse_args(argv), build_cifar_loaders, build_ticknet_l, build_TickNet,
+                   run_epoch, evaluate, profile_model)
 
 
 if __name__ == "__main__":

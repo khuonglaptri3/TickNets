@@ -47,10 +47,14 @@ class Cutout(object):
     """
 
     def __init__(self, n_holes: int = 1, length: int = 16):
+        if type(n_holes) is not int or n_holes < 0 or type(length) is not int or length < 1:
+            raise ValueError("Cutout requires nonnegative integer n_holes and positive integer length")
         self.n_holes = n_holes
         self.length = length
 
     def __call__(self, img: torch.Tensor) -> torch.Tensor:
+        if img.ndim != 3 or not img.is_floating_point():
+            raise ValueError("Cutout expects a floating CHW tensor")
         h, w = img.shape[-2], img.shape[-1]
         mask = np.ones((h, w), np.float32)
 
@@ -59,9 +63,9 @@ class Cutout(object):
             x = np.random.randint(w)
 
             y1 = np.clip(y - self.length // 2, 0, h)
-            y2 = np.clip(y + self.length // 2, 0, h)
+            y2 = np.clip(y + self.length - self.length // 2, 0, h)
             x1 = np.clip(x - self.length // 2, 0, w)
-            x2 = np.clip(x + self.length // 2, 0, w)
+            x2 = np.clip(x + self.length - self.length // 2, 0, w)
 
             mask[y1:y2, x1:x2] = 0.0
 
@@ -131,6 +135,8 @@ def stratified_split_indices(
     rng = random.Random(seed)
     class_to_indices: Dict[int, List[int]] = {c: [] for c in range(num_classes)}
     for idx, label in enumerate(targets):
+        if int(label) != label or not 0 <= label < num_classes:
+            raise ValueError("Target outside the dataset class range")
         class_to_indices[int(label)].append(idx)
 
     train_indices: List[int] = []
@@ -140,6 +146,8 @@ def stratified_split_indices(
         indices = class_to_indices[c]
         rng.shuffle(indices)
         val_count = int(round(len(indices) * val_fraction))
+        if not 0 < val_count < len(indices):
+            raise ValueError("Each class needs at least one training and one validation sample")
         val_indices.extend(indices[:val_count])
         train_indices.extend(indices[val_count:])
 
@@ -162,6 +170,8 @@ def build_cifar_datasets(
 ) -> Tuple[Dataset, Optional[Dataset], Dataset]:
     """Download and return train, validation (optional), and test datasets."""
     canon_name = normalize_dataset_name(dataset_name)
+    if not 0 <= val_fraction < 1:
+        raise ValueError("val_fraction must be in [0, 1)")
     data_path = Path(data_root).resolve()
     data_path.mkdir(parents=True, exist_ok=True)
 
@@ -230,6 +240,7 @@ def build_cifar_loaders(
 
     val_loader = None
     if val_set is not None:
+        val_generator = torch.Generator().manual_seed(seed + 1)
         val_loader = DataLoader(
             val_set,
             batch_size=batch_size,
@@ -237,6 +248,7 @@ def build_cifar_loaders(
             num_workers=num_workers,
             pin_memory=pin_memory,
             worker_init_fn=seed_worker,
+            generator=val_generator,
         )
 
     test_loader = DataLoader(
@@ -246,6 +258,7 @@ def build_cifar_loaders(
         num_workers=num_workers,
         pin_memory=pin_memory,
         worker_init_fn=seed_worker,
+        generator=torch.Generator().manual_seed(seed + 2),
     )
 
     return train_loader, val_loader, test_loader

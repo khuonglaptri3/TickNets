@@ -2,6 +2,11 @@
 
 Thư mục này quản lý toàn bộ các tài liệu đặc tả thiết kế kỹ thuật (**Specs**) và kế hoạch hành động (**Plans**) cho hệ thống mô hình `TickNet-L v1` và `TickNet-Basic` phục vụ Đồ án Cuối kỳ.
 
+**Hiện hành:** [CIFAR/Kaggle reliability v2](specs/2026-10-05-cifar-kaggle-reliability.md),
+[hướng dẫn Phase 1–4](../kaggle/README.md) và [bằng chứng kiểm thử](../kaggle/VALIDATION.md).
+Các bảng/checkbox v1 bên dưới là hồ sơ triển khai lịch sử; không xác nhận đã hoàn thành
+thực nghiệm 200 epochs, báo cáo PDF hay toàn bộ đề thi.
+
 Toàn bộ tài liệu tuân thủ chuẩn của quy trình phát triển dựa trên kế hoạch (**Plan-Driven Development**) và được cập nhật đầy đủ theo tiến độ thực tế ngày **2026-10-05**.
 
 ---
@@ -21,7 +26,7 @@ Toàn bộ tài liệu tuân thủ chuẩn của quy trình phát triển dựa 
 | :--- | :--- | :---: |
 | [`plans/2026-10-05-final-exam-system-evolution.md`](plans/2026-10-05-final-exam-system-evolution.md) | **Kế hoạch hành động toàn diện:** Theo dõi chi tiết 8 nhóm nhiệm vụ lớn (Cutout, Nesterov, 10 Configs, 5 Notebooks Kaggle, 11 Docs Critical, README Overhaul & Citation, 47/47 Tests Passed, Git Sync). | **8/8 Tasks (100%)** |
 | [`plans/2026-10-05-cifar-grid-search.md`](plans/2026-10-05-cifar-grid-search.md) | Kế hoạch triển khai ban đầu cho module `train_cifar.py` và 8 file cấu hình. | **5/5 Tasks (100%)** |
-| [`plans/2026-10-05-cifar-dataloaders.md`](plans/2026-10-05-cifar-dataloaders.md) | Kế hoạch triển khai ban đầu cho `models/cifar_data.py` và script tải dữ liệu `download_cifar.py`. | **4/4 Tasks (100%)** |
+| [`plans/2026-10-05-cifar-dataloaders.md`](plans/2026-10-05-cifar-dataloaders.md) | Kế hoạch triển khai ban đầu cho `models/cifar_data.py` và script tải dữ liệu `download_cifar.py`. | **3/3 Tasks (h? s? v1)** |
 
 ---
 

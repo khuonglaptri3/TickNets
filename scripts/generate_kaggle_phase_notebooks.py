@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Generate 4 focused Kaggle notebooks for the Final Exam Grid Search."""
 import json
+import base64
+import hashlib
+import io
+import zipfile
 from pathlib import Path
 
 phases = [
@@ -54,176 +58,127 @@ phases = [
     },
 ]
 
-out_dir = Path("docs/kaggle")
-out_dir.mkdir(parents=True, exist_ok=True)
+ROOT = Path(__file__).resolve().parents[1]
+BUNDLE_TESTS = ["test_train_cifar.py", "test_cifar_data.py", "test_download_cifar.py",
+                "test_cifar_recovery.py", "test_cifar_contracts.py",
+                "test_cifar_download_integrity.py", "test_cifar_results.py"]
 
-for p in phases:
-    cells = []
-    title = p["title"]
-    dataset_name = p["dataset_name"]
-    optimizer_name = p["optimizer_name"]
-    dataset_key = p["dataset"]
-    zip_name = p["zip_name"]
-    zip_stem = Path(zip_name).stem
-    target_configs = [r[1] for r in p["runs"]]
 
-    # Title Markdown
-    cells.append({
-        "cell_type": "markdown",
-        "metadata": {},
-        "source": [
-            f"# Final Exam: {title}\n",
-            f"Tập trung thực nghiệm trên **{dataset_name}** sử dụng thuật toán **{optimizer_name}** với kiến trúc **TickNet-L v1** (200 epochs).\n",
-            "\n",
-            "### Hướng dẫn chạy nhanh trên Kaggle:\n",
-            "1. Chọn **Accelerator**: GPU T4 x2 hoặc GPU P100.\n",
-            "2. Bật **Internet**: Always on (để clone repo và tải dataset).\n",
-            "3. Bấm **Save Version** -> **Save & Run All (Commit)** hoặc chạy từng cell.\n",
-            f"4. Sau khi hoàn thành, file `{zip_name}` sẽ tự động được tạo ở `/kaggle/working/` để tải về máy.\n",
-        ],
-    })
+def build_source_bundle():
+    paths = [ROOT / "train_cifar.py", ROOT / "download_cifar.py"]
+    paths += sorted((ROOT / "models").glob("*.py"))
+    paths += sorted((ROOT / "configs/final").glob("*.json"))
+    paths += [ROOT / "scripts" / name for name in
+              ("download_cifar.py", "verify_cifar_run.py", "aggregate_grid_search.py", "run_kaggle_phase.py")]
+    paths += [ROOT / "tests" / name for name in ["conftest.py", *BUNDLE_TESTS]]
+    buffer = io.BytesIO()
+    manifest = {}
+    # Stored entries avoid platform/zlib-dependent bytes in the embedded source snapshot.
+    def entry(name):
+        info = zipfile.ZipInfo(name, date_time=(2026, 10, 5, 0, 0, 0))
+        info.create_system = 3
+        info.external_attr = 0o100644 << 16
+        info.compress_type = zipfile.ZIP_STORED
+        return info
+    with zipfile.ZipFile(buffer, "w") as archive:
+        for path in sorted(paths):
+            name = path.relative_to(ROOT).as_posix()
+            # Canonical newlines ensure source fingerprints survive Windows -> Kaggle.
+            content = path.read_text(encoding="utf-8").replace("\r\n", "\n").encode("utf-8")
+            manifest[name] = hashlib.sha256(content).hexdigest()
+            archive.writestr(entry(name), content)
+        archive.writestr(entry("source_manifest.json"), json.dumps(manifest, sort_keys=True))
+    return buffer.getvalue()
 
-    # Cell 1: Preflight & Clone
-    cells.append({
-        "cell_type": "code",
-        "execution_count": None,
-        "metadata": {},
-        "outputs": [],
-        "source": [
-            "# 1. Environment & GPU Preflight Check\n",
-            "import os\n",
-            "import torch\n",
-            "\n",
-            "# Auto-clone repository from branch feature/final-exam-model-l\n",
-            "if not os.path.exists('train_cifar.py'):\n",
-            "    !test -d /kaggle/working/TickNets/.git || git clone --depth 1 --branch feature/final-exam-model-l https://github.com/khuonglaptri3/TickNets.git /kaggle/working/TickNets\n",
-            "    %cd /kaggle/working/TickNets\n",
-            "\n",
-            "print(f'PyTorch Version: {torch.__version__}')\n",
-            "print(f'CUDA Available: {torch.cuda.is_available()}')\n",
-            "if torch.cuda.is_available():\n",
-            "    print(f'GPU Device: {torch.cuda.get_device_name(0)}')\n",
-            "!nvidia-smi\n",
-        ],
-    })
 
-    # Cell 2: Download dataset
-    cells.append({
-        "cell_type": "code",
-        "execution_count": None,
-        "metadata": {},
-        "outputs": [],
-        "source": [
-            f"# 2. Download and Verify {dataset_name} Dataset\n",
-            f"!python download_cifar.py --data-root /kaggle/working/data --dataset {dataset_key}\n",
-        ],
-    })
+def cell(kind, source):
+    result = {"cell_type": kind, "metadata": {}, "source": source.splitlines(keepends=True)}
+    if kind == "code":
+        result.update(execution_count=None, outputs=[])
+    return result
 
-    # Run experiments
-    for idx, (cfg_path, exp_name, desc) in enumerate(p["runs"], start=1):
-        cells.append({
-            "cell_type": "markdown",
-            "metadata": {},
-            "source": [
-                f"### Thực nghiệm {idx}: {desc}",
-            ],
-        })
-        cells.append({
-            "cell_type": "code",
-            "execution_count": None,
-            "metadata": {},
-            "outputs": [],
-            "source": [
-                f"# Run {exp_name}\n",
-                f"!python train_cifar.py --config {cfg_path} --data-root /kaggle/working/data --output-dir /kaggle/working/runs/{exp_name}\n",
-            ],
-        })
 
-    # Summary & Zip
-    cells.append({
-        "cell_type": "markdown",
-        "metadata": {},
-        "source": [
-            "### Tổng kết Kết Quả và Đóng Gói Artifacts",
-        ],
-    })
+def generate_notebooks(output_dir=None):
+    output_dir = ROOT / "docs/kaggle" if output_dir is None else Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    bundle = build_source_bundle()
+    encoded = base64.b64encode(bundle).decode("ascii")
+    digest = hashlib.sha256(bundle).hexdigest()
+    for phase_index, phase in enumerate(phases, 1):
+        intro = f"""# Final Exam: {phase['title']}
+Mỗi notebook chứa sẵn mã nguồn và test đã review; không clone nhánh GitHub đang thay đổi.
+Chọn GPU, bật Internet để tải CIFAR và bảo đảm môi trường có torch, torchvision, numpy, pandas, pillow, pytest.
+Cấu hình cố định: 200 epochs, seed 42, train/validation 45.000/5.000; chọn checkpoint bằng validation.
+Test chính thức được đánh giá sau khi hoàn tất mỗi thực nghiệm; không dùng test để chọn learning rate.
 
-    summary_source = [
-        "import json\n",
-        "import shutil\n",
-        "from pathlib import Path\n",
-        "import pandas as pd\n",
-        "\n",
-        "runs_dir = Path('/kaggle/working/runs')\n",
-        f"target_configs = {target_configs!r}\n",
-        "records = []\n",
-        "\n",
-        "for exp_name in target_configs:\n",
-        "    p = runs_dir / exp_name\n",
-        "    metric_file = p / 'test_metrics.json'\n",
-        "    cfg_file = p / 'config.json'\n",
-        "    if metric_file.is_file() and cfg_file.is_file():\n",
-        "        metrics = json.loads(metric_file.read_text())\n",
-        "        cfg = json.loads(cfg_file.read_text())\n",
-        "        records.append({\n",
-        "            'Experiment': exp_name,\n",
-        "            'Dataset': cfg['dataset'].upper(),\n",
-        "            'Optimizer': cfg['optimizer'].upper(),\n",
-        "            'LR': cfg['learning_rate'],\n",
-        "            'Test Top-1 (%)': f\"{metrics['top1']:.2f}%\",\n",
-        "            'Test Loss': f\"{metrics['loss']:.4f}\",\n",
-        "            'Macro F1': f\"{metrics['macro_f1']:.4f}\",\n",
-        "            'Params': f\"{cfg['learnable_parameters']:,}\",\n",
-        "            'FLOPs (G)': f\"{cfg['gflops_forward']:.4f}G\",\n",
-        "        })\n",
-        "\n",
-        "df = pd.DataFrame(records)\n",
-        "print('=== KẾT QUẢ THỰC NGHIỆM ===')\n",
-        "display(df)\n",
-        "\n",
-        "# Đóng gói kết quả thành file zip để download\n",
-        f"zip_base = Path('/kaggle/working') / '{zip_stem}'\n",
-        "stage_dir = Path('/kaggle/working/stage_results')\n",
-        "if stage_dir.exists():\n",
-        "    shutil.rmtree(stage_dir)\n",
-        "stage_dir.mkdir(parents=True, exist_ok=True)\n",
-        "for exp in target_configs:\n",
-        "    src = runs_dir / exp\n",
-        "    if src.exists():\n",
-        "        shutil.copytree(src, stage_dir / exp)\n",
-        "\n",
-        "shutil.make_archive(str(zip_base), 'zip', stage_dir)\n",
-        "print(f'[✓] Đã tạo file kết quả tải về tại: {zip_base}.zip')\n",
-    ]
+Nếu cần chạy nhiều phiên, đặt EPOCHS_PER_SESSION (ví dụ 50); tải recovery.zip về trước khi phiên kết thúc.
+Phiên tiếp theo: giải nén recovery.zip thành Kaggle Dataset, attach dataset, rồi đặt RESUME_ROOT trỏ đến thư mục chứa các run.
+Resume yêu cầu cùng phiên bản torch/torchvision/NumPy/Pillow, loại GPU, mã nguồn và cấu hình.
+Kết quả chỉ được gắn nhãn results khi cả hai run đủ 200 epochs và toàn bộ artifact được xác thực.
+"""
+        bootstrap = f"""import base64, hashlib, io, json, os, sys, zipfile
+from pathlib import Path
+import subprocess, importlib.util
 
-    cells.append({
-        "cell_type": "code",
-        "execution_count": None,
-        "metadata": {},
-        "outputs": [],
-        "source": summary_source,
-    })
+BUNDLE_SHA256 = {digest!r}
+SOURCE_BUNDLE = {encoded!r}
+raw = base64.b64decode(SOURCE_BUNDLE)
+assert hashlib.sha256(raw).hexdigest() == BUNDLE_SHA256
+PROJECT = Path('/kaggle/working') / ('TickNets-' + BUNDLE_SHA256[:16])
+PROJECT.mkdir(parents=True, exist_ok=True)
+with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+    manifest = json.loads(archive.read('source_manifest.json'))
+    for name, expected in manifest.items():
+        payload = archive.read(name)
+        assert hashlib.sha256(payload).hexdigest() == expected
+        target = (PROJECT / name).resolve()
+        assert target.is_relative_to(PROJECT.resolve())
+        if target.exists() and target.read_bytes() != payload:
+            raise RuntimeError('Extracted source was modified: ' + name)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(payload)
+    (PROJECT / 'source_manifest.json').write_bytes(archive.read('source_manifest.json'))
+os.chdir(PROJECT)
+sys.path.insert(0, str(PROJECT))
+os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+# Install only missing test/report dependencies; preserve Kaggle's torch/CUDA build.
+requirements = {{'pytest': 'pytest>=8,<10', 'pandas': 'pandas', 'numpy': 'numpy', 'PIL': 'pillow'}}
+missing = [package for module, package in requirements.items() if importlib.util.find_spec(module) is None]
+if missing:
+    subprocess.run([sys.executable, '-m', 'pip', 'install', *missing], check=True)
+import torch, torchvision
+from torch.utils.flop_counter import FlopCounterMode
+assert torch.cuda.is_available(), 'Select a Kaggle GPU accelerator before running.'
+print('Source bundle:', BUNDLE_SHA256)
+print('Runtime:', torch.__version__, torchvision.__version__, torch.cuda.get_device_name(0))
+"""
+        preflight = """# Validate the embedded code before spending GPU time.
+environment = dict(os.environ, CUDA_VISIBLE_DEVICES='-1', OMP_NUM_THREADS='2', MKL_NUM_THREADS='2')
+subprocess.run([sys.executable, '-m', 'pytest', *""" + repr(['tests/' + n for n in BUNDLE_TESTS]) + """,
+                '-q', '-p', 'no:cacheprovider'], cwd=PROJECT, env=environment, check=True)
+"""
+        settings = """# None: run all remaining epochs. Integer: epochs per experiment for this session.
+EPOCHS_PER_SESSION = None
+# Path to the attached recovery dataset containing the experiment folders (not the zip itself).
+RESUME_ROOT = None
+"""
+        launch = f"""command = [sys.executable, 'scripts/run_kaggle_phase.py', '--phase', '{phase_index}']
+if EPOCHS_PER_SESSION is not None:
+    command += ['--epochs-per-session', str(EPOCHS_PER_SESSION)]
+if RESUME_ROOT is not None:
+    command += ['--resume-root', str(RESUME_ROOT)]
+subprocess.run(command, cwd=PROJECT, check=True)
+"""
+        notebook = {"nbformat": 4, "nbformat_minor": 4,
+                    "metadata": {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+                                 "ticknets_source_sha256": digest, "ticknets_phase": phase_index},
+                    "cells": [cell("markdown", intro), cell("code", bootstrap), cell("code", preflight),
+                              cell("code", settings), cell("code", launch)]}
+        path = output_dir / phase["filename"]
+        path.write_text(json.dumps(notebook, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(f"Created {path} (source {digest[:16]})")
+    return digest
 
-    nb = {
-        "cells": cells,
-        "metadata": {
-            "kernelspec": {
-                "display_name": "Python 3",
-                "language": "python",
-                "name": "python3",
-            },
-            "language_info": {
-                "name": "python",
-                "version": "3.11.14",
-            },
-        },
-        "nbformat": 4,
-        "nbformat_minor": 4,
-    }
 
-    file_path = out_dir / p["filename"]
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(nb, f, indent=2, ensure_ascii=False)
-    print(f"Created: {file_path}")
-
-print("All 4 phase notebooks created successfully.")
+if __name__ == "__main__":
+    generate_notebooks()

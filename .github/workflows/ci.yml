@@ -25,12 +25,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install torch torchvision numpy pillow pytest
+          pip install torch torchvision numpy pillow pandas scipy pytest
 
       - name: Cache CIFAR Datasets
         id: cache-cifar
@@ -51,7 +50,12 @@ jobs:
 
       - name: Run Unit Tests
         run: |
-          python -m pytest tests -v
+          OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 python -m pytest tests -v
+
+      - name: Verify embedded Kaggle source matches the checkout
+        run: |
+          python scripts/generate_kaggle_phase_notebooks.py
+          git diff --exit-code -- docs/kaggle/Phase1_CIFAR10_SGD.ipynb docs/kaggle/Phase2_CIFAR10_Adam.ipynb docs/kaggle/Phase3_CIFAR100_SGD.ipynb docs/kaggle/Phase4_CIFAR100_Adam.ipynb
 
       - name: Verify TickNet-L Exam Limits (Params <= 6M, FLOPs < 1G)
         run: |

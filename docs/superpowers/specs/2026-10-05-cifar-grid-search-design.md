@@ -2,15 +2,15 @@
 
 **Môn học:** Deep Learning Final Examination  
 **Ngày lập:** 2026-10-05  
-**Kiến trúc mục tiêu:** `TickNet-L v1` ([`models/ticknet_l.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_l.py))  
+**Kiến trúc mục tiêu:** `TickNet-L v1` ([`models/ticknet_l.py`](../../../models/ticknet_l.py))
 **Tập dữ liệu:** CIFAR-10 (10 lớp) và CIFAR-100 (100 lớp)  
 
 ---
 
 ## 1. Mục Tiêu & Cơ Sở Thiết Kế
 
-Đề bài Cuối kỳ ([`.doc/Final exam.docx`](file:///home/intern-tdkhuong/Desktop/TickNets/.doc/Final%20exam.docx)) yêu cầu:
-1. Huấn luyện mô hình $L$ (`TickNet-L`) từ đầu (from scratch) trên **CIFAR-10** và **CIFAR-100**.
+Đề bài Cuối kỳ ([`.doc/Final exam.docx`](../../../.doc/Final%20exam.docx)) yêu cầu train/test hai bộ CIFAR, ngân sách mô hình và khảo sát optimizer/LR. Giao thức nhóm lựa chọn:
+1. Huấn luyện mô hình $L$ (`TickNet-L`) từ đầu trên **CIFAR-10** và **CIFAR-100**; from-scratch là lựa chọn thực nghiệm, không phải điều kiện được ghi trong DOCX.
 2. Ràng buộc phần cứng: **Số tham số $\le 6M$**, **FLOPs $< 1G$**.
 3. Khảo sát có hệ thống giữa các mức Learning Rate (ví dụ `0.1`, `0.15`,...) và cả 2 bộ tối ưu hóa: **SGD** và **Adam**.
 4. Báo cáo chi tiết các thông số (momentum, learning rate, epochs, weight decay, loss, accuracy).
@@ -21,12 +21,12 @@
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | `cifar10_sgd_lr010` | CIFAR-10 | SGD | `0.10` | momentum=0.9 | 1e-4 | CosineAnnealingLR ($T_{\max}=200$) |
 | `cifar10_sgd_lr015` | CIFAR-10 | SGD | `0.15` | momentum=0.9 | 1e-4 | CosineAnnealingLR ($T_{\max}=200$) |
-| `cifar10_adam_lr0001` | CIFAR-10 | Adam | `0.001` (1e-3) | betas=(0.9, 0.999) | 1e-4 | CosineAnnealingLR ($T_{\max}=200, \eta_{\min}=10^{-6}$) |
-| `cifar10_adam_lr00003` | CIFAR-10 | Adam | `0.0003` (3e-4) | betas=(0.9, 0.999) | 1e-4 | CosineAnnealingLR ($T_{\max}=200, \eta_{\min}=10^{-6}$) |
+| `cifar10_adam_lr0001` | CIFAR-10 | Adam | `0.001` (1e-3) | betas=(0.9, 0.999) | 1e-4 | CosineAnnealingLR ($T_{\max}=200, \eta_{\min}=0$) |
+| `cifar10_adam_lr00003` | CIFAR-10 | Adam | `0.0003` (3e-4) | betas=(0.9, 0.999) | 1e-4 | CosineAnnealingLR ($T_{\max}=200, \eta_{\min}=0$) |
 | `cifar100_sgd_lr010` | CIFAR-100 | SGD | `0.10` | momentum=0.9 | 1e-4 | CosineAnnealingLR ($T_{\max}=200$) |
 | `cifar100_sgd_lr015` | CIFAR-100 | SGD | `0.15` | momentum=0.9 | 1e-4 | CosineAnnealingLR ($T_{\max}=200$) |
-| `cifar100_adam_lr0001` | CIFAR-100 | Adam | `0.001` (1e-3) | betas=(0.9, 0.999) | 1e-4 | CosineAnnealingLR ($T_{\max}=200, \eta_{\min}=10^{-6}$) |
-| `cifar100_adam_lr00003` | CIFAR-100 | Adam | `0.0003` (3e-4) | betas=(0.9, 0.999) | 1e-4 | CosineAnnealingLR ($T_{\max}=200, \eta_{\min}=10^{-6}$) |
+| `cifar100_adam_lr0001` | CIFAR-100 | Adam | `0.001` (1e-3) | betas=(0.9, 0.999) | 1e-4 | CosineAnnealingLR ($T_{\max}=200, \eta_{\min}=0$) |
+| `cifar100_adam_lr00003` | CIFAR-100 | Adam | `0.0003` (3e-4) | betas=(0.9, 0.999) | 1e-4 | CosineAnnealingLR ($T_{\max}=200, \eta_{\min}=0$) |
 
 ---
 
