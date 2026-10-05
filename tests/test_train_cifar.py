@@ -156,3 +156,49 @@ def test_train_cifar_smoke_run(tmp_path: Path, monkeypatch):
     ])
     assert eval_res["samples"] == 8
     assert (eval_dir / "test_metrics.json").is_file()
+
+
+def test_train_cifar_author_basic_model_smoke_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    x_train = torch.randn(8, 3, 32, 32)
+    y_train = torch.randint(0, 10, (8,))
+    x_val = torch.randn(4, 3, 32, 32)
+    y_val = torch.randint(0, 10, (4,))
+    x_test = torch.randn(4, 3, 32, 32)
+    y_test = torch.randint(0, 10, (4,))
+
+    train_l = DataLoader(TensorDataset(x_train, y_train), batch_size=4)
+    val_l = DataLoader(TensorDataset(x_val, y_val), batch_size=4)
+    test_l = DataLoader(TensorDataset(x_test, y_test), batch_size=4)
+
+    monkeypatch.setattr(train_cifar, "build_cifar_loaders", lambda *args, **kwargs: (train_l, val_l, test_l))
+
+    out_dir = tmp_path / "basic_smoke_run"
+    result = train_cifar.main([
+        "--model", "basic",
+        "--dataset", "cifar10",
+        "--output-dir", str(out_dir),
+        "--epochs", "1",
+        "--batch-size", "4",
+        "--optimizer", "sgd",
+        "--learning-rate", "0.1",
+        "--device", "cpu",
+        "--num-workers", "0",
+    ])
+
+    assert (out_dir / "best_val.pt").is_file()
+    assert (out_dir / "test_metrics.json").is_file()
+    cfg = json.loads((out_dir / "config.json").read_text(encoding="utf-8"))
+    assert cfg["model"] == "basic"
+    assert cfg["architecture_revision"] == "ticknet-basic-author"
+
+    # Test evaluate with author basic model checkpoint
+    eval_dir = tmp_path / "basic_eval_run"
+    eval_res = train_cifar.main([
+        "--dataset", "cifar10",
+        "--evaluate", str(out_dir / "best_val.pt"),
+        "--output-dir", str(eval_dir),
+        "--device", "cpu",
+        "--num-workers", "0",
+    ])
+    assert eval_res["samples"] == 4
+

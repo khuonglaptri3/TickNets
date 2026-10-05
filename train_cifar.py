@@ -21,6 +21,7 @@ from torch.utils.data import DataLoader
 from models.cifar_data import NUM_CLASSES, build_cifar_loaders, normalize_dataset_name, seed_everything
 from models.model_profile import profile_model
 from models.ticknet_l import ARCHITECTURE_REVISION, build_ticknet_l
+from models.TickNet import build_TickNet
 
 TRAINER_REVISION = "cifar-trainer-v1"
 
@@ -141,6 +142,7 @@ def evaluate(
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, help="Path to JSON configuration file")
+    parser.add_argument("--model", choices=("l", "basic"), default="l", help="Model architecture: 'l' for TickNet-L, 'basic' for author's TickNet Basic")
     parser.add_argument("--dataset", choices=("cifar10", "cifar100"), default="cifar10")
     parser.add_argument("--data-root", type=Path, default=Path("data"))
     parser.add_argument("--optimizer", choices=("sgd", "adam"), default="sgd")
@@ -223,7 +225,11 @@ def main(argv: Optional[List[str]] = None) -> Dict[str, Any]:
     if args.evaluate:
         ckpt_path = args.evaluate.resolve()
         checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=False)
-        model = build_ticknet_l(num_classes=num_classes, cifar=True).to(device)
+        model_name = checkpoint.get("config", {}).get("model", args.model)
+        if model_name == "basic":
+            model = build_TickNet(num_classes=num_classes, typesize="basic", cifar=True).to(device)
+        else:
+            model = build_ticknet_l(num_classes=num_classes, cifar=True).to(device)
         model.load_state_dict(checkpoint["model_state_dict"])
         out_dir = args.output_dir.resolve() if args.output_dir else ckpt_path.parent
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -251,7 +257,12 @@ def main(argv: Optional[List[str]] = None) -> Dict[str, Any]:
     )
 
     # Initialize model
-    model = build_ticknet_l(num_classes=num_classes, cifar=True)
+    arch_revision = "ticknet-basic-author" if args.model == "basic" else ARCHITECTURE_REVISION
+    if args.model == "basic":
+        model = build_TickNet(num_classes=num_classes, typesize="basic", cifar=True)
+    else:
+        model = build_ticknet_l(num_classes=num_classes, cifar=True)
+
     complexity = profile_model(model, 32, cross_check=True)
     if not complexity["within_exam_limits"]:
         raise ValueError("Model exceeds exam limits (6M params or 1G FLOPs)")
@@ -264,7 +275,7 @@ def main(argv: Optional[List[str]] = None) -> Dict[str, Any]:
     config = {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()}
     config.update(
         trainer_revision=TRAINER_REVISION,
-        architecture_revision=ARCHITECTURE_REVISION,
+        architecture_revision=arch_revision,
         num_classes=num_classes,
         learnable_parameters=complexity["learnable_parameters"],
         flops_forward=complexity["flops"],
