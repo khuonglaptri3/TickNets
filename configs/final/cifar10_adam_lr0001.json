@@ -1,0 +1,12 @@
+{
+  "dataset": "cifar10",
+  "optimizer": "adam",
+  "learning_rate": 0.001,
+  "adam_beta1": 0.9,
+  "adam_beta2": 0.999,
+  "weight_decay": 0.0001,
+  "epochs": 200,
+  "batch_size": 128,
+  "val_fraction": 0.1,
+  "seed": 42
+}
