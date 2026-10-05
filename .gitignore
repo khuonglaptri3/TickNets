@@ -4,3 +4,6 @@ __pycache__/
 data.building-*/
 runs/
 .superpowers/
+data/cifar-10*
+data/cifar-100*
+data/*.tar.gz
