@@ -86,6 +86,17 @@ Inspect the exact internal parameter allocation using PyTorch forward hooks via 
 | **`classifier`** | `(1, 10)` / **10,250** (0.96%) / 0 | `(1, 10)` / **7,690** (0.70%) / 0 | Conv $1\times 1$ classifier head |
 | **TOTAL** | **1,067,348 Params** (100%) / **0.1584 GFLOPs** | **1,100,105 Params** (100%) / **0.1578 GFLOPs** | Capacity reinvested into Stages 3 & 4 |
 
+#### Transition to CIFAR-100 (100 Classes Breakdown)
+
+When scaling from CIFAR-10 to CIFAR-100, the **backbone parameters (Stages 1–5, stem, pre-pool conv) remain 100% identical**. The only layer that changes is the final $1\times 1$ convolution classifier head (`python checkmodel.py --classes 100`):
+
+| Component | Author TickNet-Basic (CIFAR-100) | Proposed TickNet-L v1 (CIFAR-100) | Architectural Advantage |
+| :--- | :--- | :--- | :--- |
+| **Backbone (Stages 1–5 + Stem)** | 1,057,098 Params (91.16%) | 1,092,415 Params (93.42%) | +35.3k params reallocated to Stages 3 & 4 |
+| **Classifier Head (100 classes)**| 102,500 Params (`Conv2d(1024, 100)`) | 76,900 Params (`Conv2d(768, 100)`) | **Saves 25,600 parameters (-25%)** |
+| **Total Learnable Parameters** | **1,159,598** ($\le 6\text{M}$ budget: 19.3%) | **1,169,315** ($\le 6\text{M}$ budget: 19.5%) | Strictly compliant with $\le 6\text{M}$ ceiling |
+| **Forward FLOPs ($32 \times 32$)**| **0.1586 GFLOPs** ($< 1\text{G}$ budget: 15.9%) | **0.1580 GFLOPs** ($< 1\text{G}$ budget: 15.8%) | Strictly compliant with $< 1\text{G}$ ceiling |
+
 ---
 
 ## 3. Training Strategy & Data Regularization (DeVries & Taylor, 2017)
