@@ -1,119 +1,94 @@
-# 6. DataLoader: Batch / Shuffle / Workers / Pin_Memory
+# 6. DataLoader: CIFAR-10 & CIFAR-100 (Batch / Shuffle / Workers / Pin_Memory / Cutout)
 
-Tài liệu này ghi nhận chi tiết hiện trạng thiết kế, cơ chế kỹ thuật và bằng chứng mã nguồn (source code proof) thực tế trong đồ án đối với mục **DataLoader**, bao gồm kích thước Batch (`batch_size`, `drop_last`), cơ chế xáo trộn (`shuffle`, generator isolation), đa tiến trình nạp dữ liệu (`num_workers`, `seed_worker`) và tối ưu hóa bộ nhớ GPU (`pin_memory`).
+Tài liệu này ghi nhận chi tiết hiện trạng thiết kế, cơ chế kỹ thuật và bằng chứng mã nguồn (source code proof) thực tế trong đồ án cuối kỳ đối với mục **DataLoader**, phục vụ huấn luyện mô hình trên hai tập chuẩn quốc tế **CIFAR-10** và **CIFAR-100**.
 
 ---
 
-## 1. Bảng tổng hợp cấu hình DataLoader trong đồ án
+## 1. Bảng tổng hợp cấu hình DataLoader trong Đồ án Cuối kỳ
 
-| Hạng mục | Tập Train | Tập Test | Căn cứ thiết kế & Triển khai trong code |
-| :--- | :--- | :--- | :--- |
-| **Batch Size** | Mặc định 64 (tùy biến qua `--batch-size`) | 64 (cùng kích thước với train) | Kiểm soát tài nguyên VRAM, phù hợp cả CPU lẫn GPU |
-| **Drop Last** | `drop_last=False` (giữ trọn 25.000 mẫu) | `drop_last=False` (giữ trọn 250 mẫu) | Không bỏ sót dữ liệu; batch lẻ được cân trọng số mẫu trong `run_epoch` |
-| **Shuffle** | `shuffle=True` (kèm `Generator(seed)`) | `shuffle=False` (kèm `Generator(seed + 1)`) | Xáo trộn chống overfit khi train; giữ tuần tự ổn định khi test |
-| **Num Workers** | Tùy biến qua `--num-workers` (kèm `seed_worker`) | Tùy biến qua `--num-workers` (kèm `seed_worker`) | Tối ưu nạp song song; `seed_worker` đảm bảo tính tái lập 100% |
-| **Pin Memory** | Tự động kích hoạt khi có CUDA (`device.type == "cuda"`) | Tự động kích hoạt khi có CUDA (`device.type == "cuda"`) | Tăng tốc DMA transfer từ RAM lên GPU qua PCIe |
-| **Verification** | Chế độ `--check-data` kiểm tra batch thô | Chế độ `--check-data` kiểm tra batch thô | Xác thực shape `(B, 3, H, W)` và class mapping trước khi train |
+| Hạng mục | Tập Train | Tập Validation | Tập Test | Căn cứ thiết kế & Triển khai trong code |
+| :--- | :--- | :--- | :--- | :--- |
+| **Kích thước mẫu** | **45.000 ảnh** (90% tập train) | **5.000 ảnh** (10% phân tầng) | **10.000 ảnh** (Chuẩn Test) | Tuyệt đối không rò rỉ dữ liệu (No Data Leakage); test giữ nguyên gốc |
+| **Batch Size** | 128 (tùy biến qua CLI) | 128 (cùng kích thước) | 128 (cùng kích thước) | Tối ưu hóa throughput bộ nhớ GPU T4/P100 |
+| **Drop Last** | `drop_last=False` | `drop_last=False` | `drop_last=False` | Không bỏ sót dữ liệu; batch lẻ được cân trọng số mẫu trong `run_epoch` |
+| **Shuffle** | `shuffle=True` (kèm `Generator(seed)`) | `shuffle=False` | `shuffle=False` | Xáo trộn chống overfit khi train; giữ tuần tự ổn định khi eval |
+| **Data Augmentation** | **RandomCrop + Flip + Cutout** | Không áp dụng (chỉ Normalize) | Không áp dụng (chỉ Normalize) | Tăng cường dữ liệu chống overfitting, tăng khả năng khái quát hóa |
+| **Num Workers** | 2 tiến trình (kèm `seed_worker`) | 2 tiến trình (kèm `seed_worker`) | 2 tiến trình | Tối ưu nạp song song; `seed_worker` đảm bảo tính tái lập 100% |
+| **Pin Memory** | Bật tự động khi có CUDA | Bật tự động khi có CUDA | Bật tự động khi có CUDA | Tăng tốc DMA transfer từ RAM máy chủ lên VRAM GPU qua PCIe |
 
 ---
 
 ## 2. Chi tiết kỹ thuật & Bằng chứng mã nguồn (Code Proof)
 
-Toàn bộ logic tạo DataLoader được đóng gói trong hàm `build_mid_loaders` tại [models/mid_data.py#L46-L77](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py#L46-L77) và tích hợp vào quy trình huấn luyện tại [train_mid.py#L76-L90](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py#L76-L90).
+Toàn bộ logic tạo DataLoader được đóng gói tập trung trong module [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py) và tích hợp vào quy trình huấn luyện tại [`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py).
 
-### 2.1. Batch: Xử lý Batch không chẵn & Cân trọng số chính xác
+### 2.1. Phân chia Phân tầng (Stratified Validation Split)
+Triển khai tại [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py) hàm `stratified_split_indices`:
+- Tập train 50.000 ảnh của CIFAR được phân chia theo tỷ lệ $9 : 1$ ($45.000$ train và $5.000$ validation).
+- Mỗi lớp trong CIFAR-10 có chính xác $4.500$ ảnh train và $500$ ảnh validation.
+- Mỗi lớp trong CIFAR-100 có chính xác $450$ ảnh train và $50$ ảnh validation.
+- Tập Validation được dùng làm tiêu chí đánh giá chọn `best_val.pt`. Tập Test 10.000 ảnh hoàn toàn độc lập và chỉ được đánh giá 1 lần duy nhất.
 
-* **Khởi tạo tham số**: Tham số `--batch-size` được định nghĩa trong [train_mid.py#L50](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py#L50) (mặc định = 64), bắt buộc `batch_size >= 1`.
-* **Giữ trọn mẫu với `drop_last=False`** ([models/mid_data.py#L71-L72](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py#L71-L72)):
-  ```python
-  common = dict(batch_size=batch_size, num_workers=num_workers, worker_init_fn=seed_worker,
-                pin_memory=pin_memory, drop_last=False)
-  ```
-  * Đối với **Train** (25.000 ảnh): Gồm $390$ batch đủ 64 mẫu và $1$ batch cuối có $40$ mẫu ($390 \times 64 + 40 = 25.000$).
-  * Đối với **Test** (250 ảnh): Gồm $3$ batch đủ 64 mẫu và $1$ batch cuối có $58$ mẫu ($3 \times 64 + 58 = 250$).
-* **Thuật toán tính metric theo trọng số mẫu (Sample-Weighted Metrics)**:
-  Khi `drop_last=False`, nếu chỉ cộng trung bình loss giữa các batch thì batch cuối (40 mẫu) sẽ bị tính ngang quyền với batch 64 mẫu, gây sai số thống kê.
-  Hàm `run_epoch` trong [train_mid.py#L35-L41](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py#L35-L41) giải quyết triệt để điều này bằng cách nhân trọng số số lượng mẫu thực tế:
-  ```python
-  batch_count = labels.numel()
-  loss_sum += loss.item() * batch_count
-  correct += (logits.argmax(dim=1) == labels).sum().item()
-  count += batch_count
-  ...
-  return {"loss": loss_sum / count, "top1": 100.0 * correct / count, "samples": count}
-  ```
-  *(Được kiểm chứng qua unit test: `test_epoch_metrics_weight_partial_batches_by_sample_count` trong `tests/test_mid_pipeline.py`).*
-
----
-
-### 2.2. Shuffle: Độc lập luồng sinh số ngẫu nhiên (RNG Stream Isolation)
-
-Triển khai tại [models/mid_data.py#L73-L75](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py#L73-L75):
+### 2.2. Chuỗi Xử lý Ảnh & Tăng cường Dữ liệu Cutout (DeVries & Taylor, 2017)
+Triển khai tại [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py) hàm `get_cifar_transforms`:
 ```python
-train_loader = DataLoader(train, shuffle=True, generator=torch.Generator().manual_seed(seed), **common)
+class Cutout(object):
+    def __init__(self, n_holes: int = 1, length: int = 16):
+        self.n_holes = n_holes
+        self.length = length
 
-# A separate generator prevents test iteration from changing the train RNG stream.
-test_loader = DataLoader(test, shuffle=False, generator=torch.Generator().manual_seed(seed + 1), **common)
+    def __call__(self, img: torch.Tensor) -> torch.Tensor:
+        h, w = img.shape[-2], img.shape[-1]
+        mask = np.ones((h, w), np.float32)
+        for _ in range(self.n_holes):
+            y = np.random.randint(h)
+            x = np.random.randint(w)
+            y1 = np.clip(y - self.length // 2, 0, h)
+            y2 = np.clip(y + self.length // 2, 0, h)
+            x1 = np.clip(x - self.length // 2, 0, w)
+            x2 = np.clip(x + self.length // 2, 0, w)
+            mask[y1:y2, x1:x2] = 0.0
+        mask_tensor = torch.from_numpy(mask).to(dtype=img.dtype, device=img.device).expand_as(img)
+        return img * mask_tensor
 ```
-* **Tập Train (`shuffle=True`)**:
-  - Dùng `torch.Generator().manual_seed(seed)` riêng biệt.
-  - Xáo trộn ngẫu nhiên thứ tự ảnh trước mỗi epoch để phá vỡ mối tương quan thứ tự, chống overfitting.
-* **Tập Test (`shuffle=False`)**:
-  - Dùng `torch.Generator().manual_seed(seed + 1)` riêng biệt.
-  - Giữ thứ tự mẫu duyệt qua tuần tự (`range(len(test))`), giúp việc theo dõi lỗi phân loại và tính confusion matrix giữa các lần đánh giá luôn cố định và nhất quán.
-* **Nguyên tắc cách ly RNG**: Việc test loader có bộ generator riêng ngăn việc gọi `iter(test_loader)` làm lệch luồng số ngẫu nhiên của `train_loader`.
+Chuỗi biến đổi cho tập **Train**:
+1. `transforms.RandomCrop(32, padding=4, padding_mode="reflect")`
+2. `transforms.RandomHorizontalFlip(p=0.5)`
+3. `transforms.ToTensor()`
+4. `transforms.Normalize(mean=mean, std=std)` (Chuẩn hóa chuẩn theo từng bộ dữ liệu)
+5. `Cutout(n_holes=1, length=16)` (Che ngẫu nhiên 1 ô $16 \times 16$ pixel)
 
----
+Chuỗi biến đổi cho tập **Validation & Test**:
+1. `transforms.ToTensor()`
+2. `transforms.Normalize(mean=mean, std=std)`
 
-### 2.3. Workers: Đa tiến trình song song & Bảo toàn tính tái lập (`seed_worker`)
+### 2.3. Hằng số Chuẩn hóa Toàn vẹn (Standard Normalization Constants)
+Mỗi bộ dữ liệu được chuẩn hóa theo giá trị trung bình và độ lệch chuẩn chuẩn mực:
+- **CIFAR-10:**
+  - Mean: `(0.4914, 0.4822, 0.4465)`
+  - Std: `(0.2470, 0.2435, 0.2616)`
+- **CIFAR-100:**
+  - Mean: `(0.5071, 0.4867, 0.4408)`
+  - Std: `(0.2675, 0.2565, 0.2761)`
 
-* **Tham số điều khiển**:
-  - `--num-workers`: Số tiến trình con đọc dữ liệu song song (mặc định = 0).
-  - `--threads`: Số luồng CPU tính toán nội bộ (PyTorch intra-op threads), thiết lập qua `torch.set_num_threads(args.threads)` ([train_mid.py#L76](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py#L76)).
-* **Cơ chế `seed_worker` chống trùng lặp ngẫu nhiên** ([models/mid_data.py#L29-L32](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py#L29-L32)):
-  ```python
-  def seed_worker(worker_id: int) -> None:
-      worker_seed = torch.initial_seed() % (2**32)
-      random.seed(worker_seed)
-      np.random.seed(worker_seed)
-  ```
-  Khi nạp dữ liệu bằng nhiều tiến trình con (`num_workers > 0`), hàm `seed_worker` tự động gán seed độc lập cho thư viện `random` và `numpy` của từng worker dựa trên `initial_seed` của PyTorch. Nhờ đó, các phép data augmentation (`RandomCrop`, `RandomHorizontalFlip`) được thực thi trên nhiều worker vẫn **hoàn toàn tái lập bit-for-bit**.
-
----
-
-### 2.4. Pin Memory: Tự động tối ưu hóa bộ nhớ GPU (Pinned Memory / DMA)
-
-* **Thiết lập tự động thích ứng** tại [train_mid.py#L81](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py#L81):
-  ```python
-  train_loader, test_loader = build_mid_loaders(
-      args.data_root, args.variant, batch_size=args.batch_size,
-      seed=args.seed, num_workers=args.num_workers,
-      augment=not args.no_augment, pin_memory=device.type == "cuda"
-  )
-  ```
-* **Bản chất kỹ thuật**:
-  - Khi phát hiện thiết bị là GPU (`device.type == "cuda"`), cờ `pin_memory=True` tự động được bật.
-  - PyTorch sẽ cấp phát bộ nhớ trang cố định (page-locked / pinned memory) trên RAM của máy chủ.
-  - Dữ liệu ảnh sau đó được sao chép trực tiếp sang bộ nhớ VRAM của GPU thông qua bus PCIe bằng cơ chế **DMA (Direct Memory Access)**, bỏ qua sự can thiệp của CPU, giúp GPU không bị nghẽn (bottleneck) khi chờ nạp batch.
-  - Khi chạy trên CPU (`device.type == "cpu"`), `pin_memory=False` để giải phóng tài nguyên RAM.
-
----
-
-### 2.5. Chế độ kiểm tra nhanh dữ liệu (`--check-data`)
-
-Tại [train_mid.py#L83-L90](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py#L83-L90), hệ thống cung cấp chế độ kiểm tra dữ liệu độc lập không cần train:
-```bash
-python train_mid.py --data-root data --variant Mid224 --seed 42 --check-data
+### 2.4. Tính Toán Metric Có Trọng Số Mẫu (Sample-Weighted Metrics)
+Khi `drop_last=False`, batch cuối cùng thường có số lượng mẫu ít hơn `batch_size`. Hàm `run_epoch` trong [`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py) tính toán loss và accuracy có trọng số chính xác:
+```python
+loss_sum += loss.item() * labels.numel()
+correct += (preds == labels).sum().item()
+total += labels.numel()
+...
+loss_avg = loss_sum / total
+top1_acc = 100.0 * correct / total
 ```
-Lệnh này nạp thử ngay 1 batch đầu tiên từ cả `train_loader` và `test_loader`, kiểm tra và in ra thông số:
-- Số lượng mẫu của train (25.000) và test (250).
-- Shape tensor: `[64, 3, 224, 224]`.
-- Bảng ánh xạ nhãn (`class_to_idx`).
-- Hạt giống ngẫu nhiên (`seed`).
+Tránh hoàn toàn sai lệch thống kê do lấy trung bình số học giữa các batch kích thước không đồng đều.
 
 ---
 
-## 3. Liên kết tham chiếu trong dự án
-- [models/mid_data.py](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py): Định nghĩa `build_mid_loaders`, `seed_worker`, cấu hình `DataLoader`.
-- [train_mid.py](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py): Điều phối tham số batch, device, `pin_memory` và vòng lặp `run_epoch`.
-- [tests/test_mid_pipeline.py](file:///home/intern-tdkhuong/Desktop/TickNets/tests/test_mid_pipeline.py): Bộ unit test tự động xác thực tính tái lập của shuffle, native shape và tính chính xác của sample-weighted metric.
+## 3. Bằng chứng Kiểm thử (Verification Evidence)
+Hệ thống DataLoader được bảo vệ bởi test suite tự động trong [`tests/test_cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/tests/test_cifar_data.py):
+- `test_normalize_dataset_name`: Chuẩn hóa tên dataset.
+- `test_get_cifar_transforms_shape_and_type`: Đảm bảo output luôn là tensor `(3, 32, 32)` float32.
+- `test_cutout_transform`: Xác nhận mảng pixel bị che về 0 chính xác.
+- `test_stratified_split_indices_proportions_and_disjoint`: Đảm bảo không trùng lặp index giữa train và val.
+- `test_cifar_batches_forward_pass_ticknet_l`: Kiểm tra tương thích forward pass với `TickNet-L`.

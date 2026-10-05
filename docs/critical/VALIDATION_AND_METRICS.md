@@ -1,126 +1,99 @@
-# 9. Validation: Accuracy, Precision, Recall, F1-Score & Confusion Matrix
+# 9. Validation & Metrics: Đánh giá Năng lực Mô hình trên CIFAR-10 & CIFAR-100
 
-Tài liệu này ghi nhận chi tiết cơ sở toán học, hiện trạng triển khai trong đồ án và luận giải chuyên sâu về câu hỏi: **"Tại sao phải sử dụng hệ thống độ đo (Accuracy, Precision, Recall, F1-score) và Ma trận nhầm lẫn (Confusion Matrix) trong bài toán phân loại ảnh?"**
-
----
-
-## 1. Cơ sở toán học của các Độ đo đánh giá (Evaluation Metrics)
-
-Bài toán trong đồ án là **phân loại 5 lớp đối tượng**:
-$$\mathcal{C} = \{0: \text{bird}, \; 1: \text{cat}, \; 2: \text{dog}, \; 3: \text{frog}, \; 4: \text{horse}\}$$
-
-Đối với mỗi lớp mục tiêu $c \in \mathcal{C}$, không gian dự đoán được chia thành 4 thành phần cơ bản:
-- **$TP_c$ (True Positive)**: Mẫu thực tế là lớp $c$ và mô hình dự đoán chính xác là lớp $c$.
-- **$FP_c$ (False Positive)**: Mẫu thực tế KHÔNG phải là $c$ nhưng mô hình dự đoán nhầm thành $c$ (*Báo động giả / Lỗi Loại I*).
-- **$FN_c$ (False Negative)**: Mẫu thực tế là lớp $c$ nhưng mô hình bỏ sót và dự đoán sang lớp khác (*Bỏ sót / Lỗi Loại II*).
-- **$TN_c$ (True Negative)**: Mẫu thực tế không phải $c$ và mô hình dự đoán không phải $c$.
-
-### 1.1. Độ chính xác tổng thể (Accuracy / Top-1 Accuracy)
-$$\text{Accuracy} = \frac{\sum_{c \in \mathcal{C}} TP_c}{N} = \frac{\text{Tổng số mẫu dự đoán đúng}}{\text{Tổng số mẫu toàn tập}}$$
-- Trong `train_mid.py#L37-L41`: Được tính bằng `correct / count` (tỷ lệ phần trăm Top-1).
-
-### 1.2. Độ chuẩn xác (Precision / Positive Predictive Value)
-$$\text{Precision}_c = \frac{TP_c}{TP_c + FP_c}$$
-- **Ý nghĩa thực tế**: *"Trong tất cả các ảnh mà mô hình tuyên bố là 'Mèo', có bao nhiêu phần trăm thực sự là Mèo?"*
-- Đo lường **độ tin cậy** của lời dự đoán. Precision thấp đồng nghĩa với việc mô hình hay đoán bừa, dễ bị ảo giác gán nhãn sai.
-
-### 1.3. Độ nhạy / Độ bao phủ (Recall / Sensitivity / True Positive Rate)
-$$\text{Recall}_c = \frac{TP_c}{TP_c + FN_c}$$
-- **Ý nghĩa thực tế**: *"Trong tất cả các bức ảnh 'Mèo' thực tế có trong tập dữ liệu, mô hình tìm ra và nhận diện được bao nhiêu phần trăm?"*
-- Đo lường **khả năng không bỏ sót**. Recall thấp nghĩa là mô hình bị "mù" trước một bộ phận mẫu của lớp đó.
-
-### 1.4. Điểm số F1 (F1-Score / Balanced F-Score)
-$$F1_c = 2 \times \frac{\text{Precision}_c \times \text{Recall}_c}{\text{Precision}_c + \text{Recall}_c} = \frac{2 TP_c}{2 TP_c + FP_c + FN_c}$$
-- Là **trung bình điều hòa (Harmonic Mean)** giữa Precision và Recall.
-- **Đặc tính toán học**: F1-Score phạt rất nặng nếu một trong hai chỉ số Precision hoặc Recall bị lệch quá thấp. Một mô hình chỉ đạt F1 cao khi và chỉ khi **vừa đoán chuẩn (Precision cao), vừa không bỏ sót (Recall cao)**.
-- **Macro-F1 (Đa lớp)**:
-  $$\text{Macro-F1} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} F1_c$$
-  Đánh giá bình đẳng vai trò của cả 5 lớp đối tượng.
+Tài liệu này ghi nhận chi tiết cơ sở toán học, hiện trạng triển khai trong đồ án cuối kỳ đối với hệ thống độ đo: **Top-1 Accuracy, Loss, Macro F1-Score, và Ma trận nhầm lẫn (Confusion Matrix)** trên hai tập dữ liệu **CIFAR-10** (10 lớp) và **CIFAR-100** (100 lớp).
 
 ---
 
-## 2. Tại sao phải sử dụng Ma trận nhầm lẫn (Confusion Matrix) & Hệ độ đo này?
+## 1. Cơ sở Toán học của Hệ thống Độ đo (Evaluation Metrics)
 
-### 2.1. Cạm bẫy của việc chỉ dùng duy nhất Accuracy
-Accuracy là chỉ số phổ biến nhất nhưng lại có **nhược điểm chí tử: che giấu bản chất lỗi phân loại**:
-- Giả sử mô hình đạt **Accuracy = 80.0%**. Con số này trông rất khả quan, nhưng thực tế có thể xảy ra kịch bản:
-  - Lớp `bird`: Đúng $50/50$ ($100\%$)
-  - Lớp `frog`: Đúng $50/50$ ($100\%$)
-  - Lớp `horse`: Đúng $50/50$ ($100\%$)
-  - Lớp `cat`: Đúng $35/50$ ($70\%$)
-  - Lớp `dog`: Đúng **$15/50$ ($30\%$)** $\rightarrow$ Mô hình hoàn toàn thất bại trong việc phân biệt chó!
-- Nếu chỉ nhìn vào con số $80\%$, người làm nghiên cứu sẽ không thể phát hiện ra mạng đang bị suy thoái nghiêm trọng ở lớp `dog`.
+Trong bài toán phân loại ảnh nhiều lớp:
+- **CIFAR-10:** $|\mathcal{C}| = 10$ lớp đối tượng.
+- **CIFAR-100:** $|\mathcal{C}| = 100$ lớp đối tượng.
 
-### 2.2. Vai trò vượt trội của Ma trận nhầm lẫn (Confusion Matrix)
-Ma trận nhầm lẫn là một bảng vuông $5 \times 5$:
-- **Hàng (Rows)**: Nhãn thực tế (Ground Truth Labels).
-- **Cột (Columns)**: Nhãn mô hình dự đoán (Predicted Labels).
+Đối với từng lớp mục tiêu $c \in \mathcal{C}$:
+- **$TP_c$ (True Positive)**: Ảnh thực tế là lớp $c$ và mô hình dự đoán chính xác là lớp $c$.
+- **$FP_c$ (False Positive)**: Ảnh thực tế KHÔNG phải là $c$ nhưng mô hình dự đoán nhầm thành $c$ (*Báo động giả / Lỗi Loại I*).
+- **$FN_c$ (False Negative)**: Ảnh thực tế là lớp $c$ nhưng mô hình bỏ sót và dự đoán sang lớp khác (*Bỏ sót / Lỗi Loại II*).
+- **$TN_c$ (True Negative)**: Ảnh thực tế không phải $c$ và mô hình dự đoán không phải $c$.
 
-```text
-               DỰ ĐOÁN (Predicted)
-              Bird   Cat   Dog   Frog  Horse
-THỰC  Bird   [ 48     0     1     1      0  ]  -> Recall Bird  = 48/50 = 96%
-TẾ    Cat    [  0    38    10     0      2  ]  -> Recall Cat   = 38/50 = 76%
-(True)Dog    [  1    11    35     0      3  ]  -> Recall Dog   = 35/50 = 70%
-      Frog   [  0     0     0    49      1  ]  -> Recall Frog  = 49/50 = 98%
-      Horse  [  0     1     3     0     46  ]  -> Recall Horse = 46/50 = 92%
-                |     |     |     |      |
-             Prec. Prec. Prec. Prec.  Prec.
-```
+### 1.1. Độ chính xác Top-1 (Top-1 Accuracy)
+$$\text{Top-1 Accuracy} = \frac{\sum_{c \in \mathcal{C}} TP_c}{N} \times 100\%$$
+- Thể hiện tỷ lệ phần trăm mẫu mà xác suất dự đoán cao nhất trùng khớp với nhãn thực tế.
 
-**3 Giá trị cốt lõi chỉ có được từ Confusion Matrix:**
-1. **Chẩn đoán cặp lớp dễ nhầm lẫn (Semantic Ambiguity Diagnosis)**:
-   - Ma trận chỉ đích danh các ô ngoài đường chéo: Ví dụ `Cat` bị đoán thành `Dog` (10 ảnh) và `Dog` bị đoán thành `Cat` (11 ảnh). Điều này phản ánh sự tương đồng hình thái học (tai, mõm, bốn chân, lông) giữa 2 loài động vật ăn thịt nhỏ.
-2. **Phân tích hình học đặc trưng (Feature Disentanglement)**:
-   - Giúp đánh giá xem biểu diễn không gian ẩn (latent space) của mạng TickNet có tách biệt rạch ròi các cụm đặc trưng hay đang bị dính chùm giữa các loài thú bốn chân.
-3. **Cơ sở cho việc tinh chỉnh kiến trúc hoặc Data Augmentation**:
-   - Nếu `Cat` và `Dog` hay nhầm nhau, ta có thể bổ sung các phép augmentation tăng độ tương phản vùng mặt hoặc tinh chỉnh head phân loại.
+### 1.2. Độ mất mát Trung bình (Average Cross-Entropy Loss)
+$$\mathcal{L} = -\frac{1}{N} \sum_{i=1}^N \log \left(\frac{e^{z_{i, y_i}}}{\sum_{j=1}^{C} e^{z_{i, j}}}\right)$$
+- Đo lường độ tin cậy và mức độ phạt sai lệch của phân bố xác suất dự đoán so với phân bố one-hot thực tế.
+
+### 1.3. Điểm số Macro F1 (Macro-Averaged F1 Score)
+$$\text{F1}_c = \frac{2 \times TP_c}{2 \times TP_c + FP_c + FN_c}$$
+$$\text{Macro-F1} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \text{F1}_c$$
+- **Ý nghĩa khoa học:** F1-score là trung bình điều hòa giữa Precision và Recall. Macro-F1 tính trung bình F1 của tất cả các lớp với quyền số ngang nhau.
+- **Đặc biệt quan trọng trên CIFAR-100:** Với 100 lớp (mỗi lớp chỉ có 100 ảnh test), Macro-F1 vạch trần việc mô hình có thiên vị các lớp dễ nhận biết và "bỏ cuộc" ở các lớp khó hay không.
 
 ---
 
-## 3. Hiện trạng Triển khai trong Đồ án TickNets
+## 2. Ma trận Nhầm lẫn (Confusion Matrix)
 
-### 3.1. Những gì đã có sẵn trong Pipeline:
-- Trong [train_mid.py#L35-L41](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py#L35-L41), hàm `run_epoch` theo dõi liên tục qua từng epoch:
-  - `loss`: Cross-entropy loss trung bình có trọng số.
-  - `top1`: Top-1 Accuracy chính xác theo số lượng mẫu thực tế.
-- Kết quả được ghi nhận vào `epochs.csv` và `test_metrics.json`.
+Triển khai tại hàm `evaluate` trong [`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py):
+- **CIFAR-10:** Ma trận vuông $10 \times 10$ ($10.000$ mẫu test, $1.000$ mẫu/lớp).
+- **CIFAR-100:** Ma trận vuông $100 \times 100$ ($10.000$ mẫu test, $100$ mẫu/lớp).
+- **Hàng (Rows)**: Nhãn thực tế (Ground Truth $y$).
+- **Cột (Columns)**: Nhãn mô hình dự đoán ($\hat{y}$).
+- Đường chéo chính biểu diễn $TP_c$. Các phần tử ngoài đường chéo biểu diễn lỗi nhầm lẫn cụ thể giữa các cặp lớp tương đồng (ví dụ: *cat* nhầm sang *dog*, hoặc *automobile* nhầm sang *truck*).
 
-### 3.2. Đoạn mã mở rộng tính toán trọn bộ Metrics khi Đánh giá Checkpoint:
-Khi chạy đánh giá mô hình cuối cùng, việc trích xuất trọn bộ Precision, Recall, F1 và Confusion Matrix có thể thực thi đơn giản như sau:
+Được tự động xuất ra file `confusion_matrix.csv` và `test_predictions.csv` để trực quan hóa biểu đồ Heatmap trong báo cáo cuối kỳ.
+
+---
+
+## 3. Bằng chứng Triển khai Mã nguồn ([`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py))
 
 ```python
-import torch
-from sklearn.metrics import classification_report, confusion_matrix
-
-@torch.inference_mode()
-def evaluate_full_metrics(model, test_loader, device):
+def evaluate(model, test_loader, device, output_dir, num_classes):
     model.eval()
-    all_preds, all_labels = [], []
-    for images, labels in test_loader:
-        images = images.to(device)
-        logits = model(images)
-        preds = logits.argmax(dim=1).cpu()
-        all_preds.extend(preds.numpy())
-        all_labels.extend(labels.numpy())
+    criterion = nn.CrossEntropyLoss()
+    matrix = [[0] * num_classes for _ in range(num_classes)]
+    loss_sum, correct, total = 0.0, 0, 0
+    predictions_rows = []
 
-    class_names = ["bird", "cat", "dog", "frog", "horse"]
-    
-    # 1. Ma trận nhầm lẫn
-    cm = confusion_matrix(all_labels, all_preds)
-    
-    # 2. Báo cáo Precision, Recall, F1 theo từng lớp và Macro-F1
-    report = classification_report(all_labels, all_preds, target_names=class_names, digits=4)
-    
-    return cm, report
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images = images.to(device, non_blocking=True)
+            labels = labels.to(device, non_blocking=True)
+            logits = model(images)
+            loss = criterion(logits, labels)
+            preds = logits.argmax(dim=1)
+
+            loss_sum += loss.item() * labels.numel()
+            correct += (preds == labels).sum().item()
+            total += labels.numel()
+
+            for target, pred in zip(labels.cpu().tolist(), preds.cpu().tolist()):
+                matrix[target][pred] += 1
+                predictions_rows.append({"sample_index": len(predictions_rows), "target": target, "prediction": pred})
+
+    # Macro F1 computation
+    f1_sum = 0.0
+    for i in range(num_classes):
+        tp = matrix[i][i]
+        fp_plus_fn = sum(matrix[i]) + sum(matrix[r][i] for r in range(num_classes)) - 2 * tp
+        f1_sum += (2.0 * tp) / max(1, 2 * tp + fp_plus_fn)
+    macro_f1 = f1_sum / num_classes
+
+    result = {
+        "top1": 100.0 * correct / total,
+        "loss": loss_sum / total,
+        "macro_f1": macro_f1,
+        "samples": total,
+        "correct": correct,
+    }
+    ...
 ```
 
 ---
 
-## 4. Tóm tắt giá trị học thuật cho Báo cáo Giữa kỳ
-Khi trình bày mục **Validation & Evaluation Metrics**, việc sử dụng kết hợp bộ tứ:
-$$\{\text{Accuracy}, \; \text{Per-Class Precision}, \; \text{Per-Class Recall}, \; \text{Macro-F1}\} \; + \; \text{Confusion Matrix}$$
-chứng minh:
-1. **Tính khách quan và toàn diện**: Không bị "bẫy số liệu" bởi một con số Accuracy duy nhất.
-2. **Hiểu sâu sắc về dữ liệu và mô hình**: Phân tích được các ca nhầm lẫn biên (Edge cases) giữa các loài động vật tương đồng.
-3. **Tiêu chuẩn học thuật quốc tế**: Đúng chuẩn trình bày của các hội nghị thị giác máy tính hàng đầu (CVPR, ICCV, ECCV).
+## 4. Vai trò trong Đánh giá Đồ án Cuối kỳ
+
+Theo rubric chấm điểm của môn học:
+- **Oral Exam (30%):** Giảng viên sẽ chất vấn trực tiếp về nguyên nhân mô hình nhầm lẫn giữa các lớp trong Confusion Matrix và ý nghĩa của Macro-F1.
+- **Hiệu năng trên CIFAR-10 (30%) & CIFAR-100 (30%):** Điểm số được xếp hạng đối đầu giữa các nhóm sinh viên dựa trên Top-1 Accuracy trên tập Test.
+- **Chất lượng Báo cáo (10%):** Bảng tổng hợp số liệu Top-1, Loss, Macro-F1 và Confusion Matrix heatmap là bằng chứng khoa học không thể thiếu.

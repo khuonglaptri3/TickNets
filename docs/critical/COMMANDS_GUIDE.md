@@ -1,128 +1,128 @@
-# Sổ tay các Lệnh Thực thi Đồ án TickNets (Command-Line Reference Guide)
+# Sổ tay các Lệnh Thực thi Đồ án TickNets - Cuối kỳ (Command-Line Reference Guide)
 
-Tài liệu này tổng hợp toàn bộ các câu lệnh CLI đã được chuẩn hóa và kiểm thử thành công trong đồ án, phục vụ từ khâu kiểm định dữ liệu, đo lường FLOPs/Params, huấn luyện mô hình, tinh chỉnh siêu tham số (tuning) đến đánh giá checkpoint.
-
----
-
-## 1. Kiểm tra Môi trường, Unit Tests & Kiểm tra Dữ liệu
-
-### 1.1. Chạy toàn bộ Unit Tests kiểm tra tính toàn vẹn (PyTest)
-Chạy bộ test bao gồm kiểm tra loader, split manifest, shape ảnh, và kiểm thử huấn luyện 1 epoch mẫu:
-```bash
-pytest -v
-```
-
-### 1.2. Kiểm tra nhanh DataLoader (`--check-data`)
-Kiểm tra khả năng đọc dữ liệu thô, shape batch `(64, 3, H, W)` và bảng ánh xạ 5 lớp mà **không tốn thời gian train**:
-```bash
-# Kiểm tra bộ Mid32 (32x32)
-python train_mid.py --data-root data --variant Mid32 --seed 42 --check-data
-
-# Kiểm tra bộ Mid224 (224x224)
-python train_mid.py --data-root data --variant Mid224 --seed 42 --check-data
-```
+Tài liệu này tổng hợp toàn bộ các câu lệnh CLI đã được chuẩn hóa và kiểm thử thành công trong đồ án cuối kỳ, phục vụ từ khâu tải và kiểm định dữ liệu CIFAR-10/100, đo lường FLOPs/Params, huấn luyện mô hình TickNet-L & Baseline, khảo sát lưới siêu tham số (Grid Search), đến đánh giá và gộp báo cáo.
 
 ---
 
-## 2. Kiểm định & Làm sạch Dữ liệu (Data Cleaning & Quality Audit)
+## 1. Kiểm tra Môi trường & Bộ Kiểm thử Tự động (PyTest)
 
-Module `cleaning/` cung cấp công cụ kiểm định 3 lớp (pHash deduplication, blur/exposure filter, và MobileNetV3 object verification):
+Chạy toàn bộ 47 unit tests kiểm tra tính toàn vẹn của mô hình `TickNet-L`, mô hình tác giả `TickNet-Basic`, DataLoaders, Data Augmentation Cutout, Nesterov Momentum và pipeline huấn luyện:
+```bash
+PYTHONPATH=. pytest -v
+```
+*(Yêu cầu: 100% tests PASSED trước khi triển khai huấn luyện).*
+
+---
+
+## 2. Tải Tự động & Xác thực Toàn vẹn Dữ liệu CIFAR (Automated Downloader)
+
+Hệ thống tải trực tiếp từ server Đại học Toronto (`cave.cs.toronto.edu`) kèm fallback mirror (`www.cs.toronto.edu`) và cơ chế chống lỗi SSL trên Linux:
 
 ```bash
-# Quét kiểm tra nhanh 250 ảnh tập test
-python -m cleaning.clean_dataset --variant Mid224 --split test --output-dir cleaning/reports
+# Tải cả 2 bộ dữ liệu CIFAR-10 và CIFAR-100 vào thư mục data/
+python download_cifar.py --data-root data --dataset all
 
-# Quét toàn diện toàn bộ 25.000 ảnh tập train (có GPU)
-python -m cleaning.clean_dataset --variant Mid224 --split train --batch-size 64 --device auto --output-dir cleaning/reports
+# Tải riêng từng bộ dữ liệu:
+python download_cifar.py --data-root data --dataset cifar10
+python download_cifar.py --data-root data --dataset cifar100
 
-# Quét siêu nhanh trên CPU (Bỏ qua MobileNetV3, chỉ đo độ mờ Laplacian, tương phản và trùng lặp pHash)
-python -m cleaning.clean_dataset --variant Mid224 --split train --skip-object-filter --output-dir cleaning/reports
+# Bắt buộc tải lại (bỏ qua cache) và kiểm tra mã băm MD5
+python download_cifar.py --data-root data --force
 ```
 
 ---
 
 ## 3. Đo lường Hồ sơ Mô hình (Model Profiling - Params & FLOPs)
 
-Đo lường chính xác số lượng tham số học được và chi phí FLOPs cho cả 3 kiến trúc (**Basic, L, C**) trên 2 độ phân giải:
+Kiểm tra ràng buộc của đề bài (Tham số $\le 6.000.000$, FLOPs $< 1.000.000.000$):
+
 ```bash
-python profile_mid.py --models basic l c --output docs/model_profiles.json
+# Kiểm tra nhanh độ phức tạp mô hình TickNet-L trên CIFAR-10 và CIFAR-100
+python -c '
+from models.ticknet_l import build_ticknet_l
+from models.model_profile import profile_model
+print("TickNet-L CIFAR-10:", profile_model(build_ticknet_l(10, cifar=True), 32))
+print("TickNet-L CIFAR-100:", profile_model(build_ticknet_l(100, cifar=True), 32))
+'
+
+# Kiểm tra mô hình gốc tác giả TickNet-Basic trên CIFAR-10 và CIFAR-100
+python -c '
+from models.TickNet import build_TickNet
+from models.model_profile import profile_model
+print("TickNet-Basic CIFAR-10:", profile_model(build_TickNet(10, typesize="basic", cifar=True), 32))
+print("TickNet-Basic CIFAR-100:", profile_model(build_TickNet(100, typesize="basic", cifar=True), 32))
+'
 ```
-*(Kết quả ghi nhận: Basic: 1.06M / 0.988 GFLOPs; L: 1.10M / 0.796 GFLOPs; C: 5.16M / 0.821 GFLOPs).*
+
+*Số liệu kiểm chứng:*
+- **TickNet-L (CIFAR-10):** 1.100.105 tham số ($\le 6M$) | 0.1578 GFLOPs ($< 1G$).
+- **TickNet-L (CIFAR-100):** 1.169.315 tham số ($\le 6M$) | 0.1580 GFLOPs ($< 1G$).
+- **TickNet-Basic (CIFAR-10):** 1.067.370 tham số ($\le 6M$) | 0.1584 GFLOPs ($< 1G$).
+- **TickNet-Basic (CIFAR-100):** 1.159.598 tham số ($\le 6M$) | 0.1586 GFLOPs ($< 1G$).
 
 ---
 
-## 4. Huấn luyện Mô hình (Model Training Pipelines)
+## 4. Huấn luyện Mô hình Cuối kỳ (`train_cifar.py`)
 
-> [!NOTE]
-> Mặc định lệnh huấn luyện chạy 200 epochs với Cosine Annealing LR. Kết quả mỗi run được tự động lưu vào thư mục `--output-dir` gồm: `config.json`, `epochs.csv`, `last.pt` (checkpoint) và `test_metrics.json`.
+Huấn luyện chạy 200 epochs với Cosine Annealing LR về 0, hỗ trợ cả `sgd` (kèm Nesterov) và `adam`, tăng cường dữ liệu `Cutout` $16 \times 16$:
 
-### 4.1. Huấn luyện Baseline: TickNet-Basic (Bản gốc)
+### 4.1. Huấn luyện qua file cấu hình JSON (`configs/final/`)
 ```bash
-# Trên Mid32 (32x32)
-python train_mid.py --data-root data --variant Mid32 --model basic --seed 42 --output-dir runs/basic_mid32_seed42
+# CIFAR-10 với SGD lr=0.10 (Nesterov + Cutout)
+python train_cifar.py --config configs/final/cifar10_sgd_lr010.json --data-root data --output-dir runs/cifar10_sgd_lr010
 
-# Trên Mid224 (224x224)
-python train_mid.py --data-root data --variant Mid224 --model basic --seed 42 --output-dir runs/basic_mid224_seed42
+# CIFAR-10 với Adam lr=0.001 (Cutout)
+python train_cifar.py --config configs/final/cifar10_adam_lr0001.json --data-root data --output-dir runs/cifar10_adam_lr0001
+
+# CIFAR-100 với SGD lr=0.10 (Nesterov + Cutout)
+python train_cifar.py --config configs/final/cifar100_sgd_lr010.json --data-root data --output-dir runs/cifar100_sgd_lr010
+
+# Baseline Tác giả TickNet-Basic trên CIFAR-10
+python train_cifar.py --config configs/final/baseline_cifar10_sgd_lr010.json --data-root data --output-dir runs/baseline_cifar10_sgd_lr010
 ```
 
-### 4.2. Huấn luyện Ứng viên 1: TickNet-L v1 (Tối ưu FLOPs ~0.79G, Mixed DW 3x3/5x5)
+### 4.2. Huấn luyện trực tiếp qua CLI Flags
 ```bash
-# Trên Mid32 (32x32)
-python train_mid.py --data-root data --variant Mid32 --model l --seed 42 --output-dir runs/l_mid32_seed42
+# Chạy TickNet-L trên CIFAR-100 với SGD lr=0.15
+python train_cifar.py --model l --dataset cifar100 --optimizer sgd --learning-rate 0.15 --momentum 0.9 --nesterov --cutout --cutout-length 16 --epochs 200 --batch-size 128 --output-dir runs/cifar100_sgd_lr015
 
-# Trên Mid224 (224x224)
-python train_mid.py --data-root data --variant Mid224 --model l --seed 42 --output-dir runs/l_mid224_seed42
+# Chạy TickNet-Basic của tác giả trên CIFAR-100
+python train_cifar.py --model basic --dataset cifar100 --optimizer sgd --learning-rate 0.10 --momentum 0.9 --nesterov --cutout --cutout-length 16 --epochs 200 --batch-size 128 --output-dir runs/baseline_cifar100_sgd_lr010
 ```
 
-### 4.3. Huấn luyện Ứng viên 2: TickNet-C v1 (Mở rộng 5.16M params, 9 blocks)
+### 4.3. Phục hồi huấn luyện khi bị ngắt quãng (`--resume`)
 ```bash
-# Trên Mid32 (32x32)
-python train_mid.py --data-root data --variant Mid32 --model c --seed 42 --output-dir runs/c_mid32_seed42
-
-# Trên Mid224 (224x224)
-python train_mid.py --data-root data --variant Mid224 --model c --seed 42 --output-dir runs/c_mid224_seed42
+python train_cifar.py --config configs/final/cifar10_sgd_lr010.json --resume runs/cifar10_sgd_lr010/last.pt --output-dir runs/cifar10_sgd_lr010
 ```
 
----
-
-## 5. Tinh chỉnh Siêu tham số & Thí nghiệm Bóc tách (Ablation Studies)
-
-### 5.1. Thử nghiệm nhanh số epoch nhỏ (Sanity Check / Fast Run)
+### 4.4. Đánh giá Checkpoint độc lập trên tập Test (`--evaluate`)
 ```bash
-# Thử nghiệm nhanh 5 epoch trên GPU
-python train_mid.py --data-root data --variant Mid224 --model l --epochs 5 --batch-size 64 --output-dir runs/l_mid224_epochs5
-```
-
-### 5.2. Thử nghiệm quét Learning Rate & Batch Size
-```bash
-# Tốc độ học nhỏ hơn (lr=0.01)
-python train_mid.py --data-root data --variant Mid224 --model l --learning-rate 0.01 --output-dir runs/l_mid224_lr001
-
-# Batch size lớn hơn (batch-size=128)
-python train_mid.py --data-root data --variant Mid224 --model l --batch-size 128 --learning-rate 0.1 --output-dir runs/l_mid224_bs128
-```
-
-### 5.3. Thí nghiệm bóc tách: Tắt Data Augmentation (`--no-augment`)
-Đo lường mức độ đóng góp của `RandomCrop (reflect)` và `RandomHorizontalFlip`:
-```bash
-python train_mid.py --data-root data --variant Mid224 --model l --no-augment --output-dir runs/l_mid224_no_augment
+python train_cifar.py --dataset cifar10 --evaluate runs/cifar10_sgd_lr010/best_val.pt --output-dir runs/cifar10_sgd_lr010/eval_test
 ```
 
 ---
 
-## 6. Đánh giá lại Checkpoint đã lưu (Checkpoint Evaluation)
+## 5. Thực thi Thực nghiệm trên Kaggle GPU (Tesla T4 / P100)
 
-Khi đã có checkpoint `last.pt`, bạn có thể đánh giá lại độ chính xác trên tập test mà không cần huấn luyện lại:
-```bash
-python train_mid.py --data-root data --variant Mid224 --evaluate runs/l_mid224_seed42/last.pt
-```
-*(Lệnh này tự động kiểm tra đối chiếu mã SHA-256 của `split_manifest.csv` và `architecture_revision` trước khi load trọng số).*
+Đồ án đã được module hóa thành 5 Notebook độc lập trong [`docs/kaggle/`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle):
+
+1. **Baseline Tác giả:** Upload [`docs/kaggle/Kaggle_Author_TickNet_Baseline.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Kaggle_Author_TickNet_Baseline.ipynb) $\to$ Chạy 2 thực nghiệm trên CIFAR-10 & CIFAR-100.
+2. **Phase 1 (CIFAR-10 SGD):** Upload [`docs/kaggle/Phase1_CIFAR10_SGD.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase1_CIFAR10_SGD.ipynb) $\to$ Chạy SGD lr=0.10 & lr=0.15.
+3. **Phase 2 (CIFAR-10 Adam):** Upload [`docs/kaggle/Phase2_CIFAR10_Adam.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase2_CIFAR10_Adam.ipynb) $\to$ Chạy Adam lr=0.001 & lr=0.0003.
+4. **Phase 3 (CIFAR-100 SGD):** Upload [`docs/kaggle/Phase3_CIFAR100_SGD.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase3_CIFAR100_SGD.ipynb) $\to$ Chạy SGD lr=0.10 & lr=0.15.
+5. **Phase 4 (CIFAR-100 Adam):** Upload [`docs/kaggle/Phase4_CIFAR100_Adam.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase4_CIFAR100_Adam.ipynb) $\to$ Chạy Adam lr=0.001 & lr=0.0003.
+
+*(Mỗi notebook tự động tạo file `.zip` kết quả ở `/kaggle/working/` để tải về).*
 
 ---
 
-## 7. Tái tạo Dataset từ Thư mục Gốc (Dataset Preparation)
+## 6. Tổng hợp Kết Quả & Xuất Báo cáo So Sánh (Master Report Aggregation)
 
-Nếu cần tạo lại toàn bộ cấu trúc thư mục dữ liệu, manifest và file nén từ nguồn thô ban đầu:
+Sau khi giải nén các thư mục thực nghiệm vào thư mục `runs/`, chạy script tổng hợp:
 ```bash
-python prepare_mid_dataset.py --source-root "<path_to_source_folder>" --output-root data_recreated --seed 42 --archive-format tar.xz
+python scripts/aggregate_grid_search.py --runs-dir runs --output-csv docs/results/grid_search_summary.csv --output-md docs/results/grid_search_summary.md
 ```
+Script sẽ tự động:
+- Đọc tất cả 8 folder grid search + 2 folder baseline.
+- Tìm điểm `Best Val Epoch`, `Best Val Acc`, `Test Top-1 Accuracy`, `Test Loss`, `Macro F1`.
+- Xuất bảng Markdown và CSV để đưa thẳng vào báo cáo cuối kỳ.

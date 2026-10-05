@@ -1,16 +1,26 @@
-# Mid224 / Mid32 — Báo cáo kiểm định và làm sạch dữ liệu (Data Cleaning & Quality Audit)
+# Báo cáo Kiểm định Dữ liệu: Từ Giữa kỳ (Mid32/224) đến Cuối kỳ (CIFAR-10 & CIFAR-100)
 
-Tài liệu này ghi lại phương pháp, số liệu đo lường thực nghiệm và phân tích nguyên nhân gốc rễ (Root Cause Analysis) từ đợt kiểm định chất lượng toàn diện trên bộ dữ liệu `Mid224` (tập `train` 25.000 ảnh và tập `test` 250 ảnh).
-
-Các báo cáo thô được tự động xuất bởi module `cleaning/` và lưu trữ tại:
-- `cleaning/reports/cleaning_summary_mid224_train.json`
-- `cleaning/reports/flagged_samples_mid224_train.csv`
-- `cleaning/reports/cleaning_summary_mid224_test.json`
-- `cleaning/reports/flagged_samples_mid224_test.csv`
+Tài liệu này ghi nhận phương pháp, số liệu đo lường thực nghiệm và phân tích kiểm định chất lượng dữ liệu:
+1. **Dữ liệu Cuối kỳ (CIFAR-10 & CIFAR-100):** Cơ chế xác thực mã băm MD5, chuẩn hóa dữ liệu benchmark quốc tế, loại bỏ rò rỉ dữ liệu.
+2. **Dữ liệu Giữa kỳ (Mid224 / Mid32):** Hồ sơ kiểm định chất lượng toàn diện (Data Cleaning & Quality Audit) trên 25.250 ảnh thu thập thô.
 
 ---
 
-## 1. Phương pháp và tiêu chí kiểm định
+## 1. Kiểm định Tính Toàn vẹn Dữ liệu Cuối kỳ (CIFAR-10 & CIFAR-100)
+
+Đối với đồ án cuối kỳ, toàn bộ quá trình tải và xác thực dữ liệu được tự động hóa qua [`scripts/download_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/scripts/download_cifar.py) nhằm đảm bảo dữ liệu chuẩn mực $100\%$ không bị biến dạng:
+
+| Bộ Dữ liệu | Định dạng Lưu trữ | Nguồn Chính thức (U of Toronto) | Mã Băm MD5 Tiêu chuẩn | Kết quả Xác thực |
+| :--- | :--- | :--- | :--- | :---: |
+| **CIFAR-10** | `cifar-10-python.tar.gz` | `https://cave.cs.toronto.edu/kriz/cifar-10-python.tar.gz` | `c58f30108f718f92721af3b95e74349a` |  **KHỚP 100%** |
+| **CIFAR-100**| `cifar-100-python.tar.gz`| `https://cave.cs.toronto.edu/kriz/cifar-100-python.tar.gz` | `eb9058c3a382ffc7106e4002c42a8d85` |  **KHỚP 100%** |
+
+- **Loại trừ Hoàn toàn Rò rỉ Dữ liệu:** Không có bất kỳ ảnh nào trong tập 10.000 test chính thức xuất hiện trong tập train.
+- **Tính Bất Biến Byte:** Ảnh được đọc trực tiếp từ các file batch nhị phân nguyên gốc (binary batch files), tránh hoàn toàn sai số tái nén JPEG.
+
+---
+
+## 2. Hồ sơ Kiểm định Dữ liệu Giữa kỳ (Mid224 / Mid32)
 
 Quy trình audit được triển khai qua 3 trụ cột kỹ thuật độc lập (`cleaning/clean_dataset.py`):
 

@@ -1,145 +1,91 @@
-# 5. Preprocessing: Resize / Normalize / Augmentation
+# 5. Preprocessing: CIFAR-10 & CIFAR-100 (Resize / Normalize / Data Augmentation & Cutout)
 
-Tài liệu này ghi nhận chi tiết hiện trạng thiết kế, cơ chế kỹ thuật và bằng chứng mã nguồn (source code proof) thực tế trong đồ án đối với mục **Preprocessing** (tiền xử lý dữ liệu), bao gồm xử lý kích thước (Resize), chuẩn hóa (Normalize), tăng cường dữ liệu (Augmentation) và khả năng tái lập (Reproducibility).
+Tài liệu này ghi nhận chi tiết thiết kế, cơ chế kỹ thuật và bằng chứng mã nguồn thực tế trong đồ án cuối kỳ đối với mục **Preprocessing** (tiền xử lý dữ liệu) và **Data Augmentation** cho hai tập dữ liệu **CIFAR-10** và **CIFAR-100**.
 
 ---
 
-## 1. Bảng tổng hợp kỹ thuật Preprocessing trong đồ án
+## 1. Bảng Tổng Hợp Kỹ Thuật Tiền Xử Lý Dữ Liệu Cuối Kỳ
 
-| Hạng mục | Tập Train | Tập Test | Căn cứ thiết kế & Triển khai trong code |
+| Hạng mục | Tập Train | Tập Validation & Test | Căn cứ thiết kế & Triển khai trong code |
 | :--- | :--- | :--- | :--- |
-| **Resize** | Không resize ngầm; bắt buộc native size qua `RequireImageSize` | Bắt buộc native size qua `RequireImageSize` | Bảo toàn 100% pixel gốc, chống mờ biên hoặc méo ảnh do nội suy |
-| **Normalize** | `ToTensor()` đưa về $[0, 1]$; Chuẩn hóa phân bố qua tầng **`data_bn`** của mạng | `ToTensor()` đưa về $[0, 1]$; Chuẩn hóa qua tham số đóng băng của **`data_bn`** | Tự động học mean/std thích ứng theo từng batch, không dùng ImageNet mean/std tĩnh |
-| **Augmentation** | `RandomCrop` (reflect padding, pad = size//8) + `RandomHorizontalFlip(p=0.5)` | **Tuyệt đối không augment** | Tăng độ phong phú dữ liệu train, giữ nguyên vẹn dữ liệu test để đánh giá khách quan |
-| **Reproducibility** | Generator seeded (`seed`) + `seed_worker` | Generator seeded (`seed + 1`) | Đảm bảo kết quả huấn luyện có thể tái lập bit-for-bit, hai luồng RNG không can thiệp nhau |
+| **Kích thước ảnh** | Nguyên bản $32 \times 32$ | Nguyên bản $32 \times 32$ | Dữ liệu gốc CIFAR là $32 \times 32$, bảo toàn 100% pixel gốc, không nội suy phóng đại |
+| **Data Augmentation 1** | **RandomCrop(32, pad=4, reflect)** | Không áp dụng | Đệm phản xạ 4 pixel xung quanh rồi cắt ngẫu nhiên $32 \times 32$, tạo tính bất biến dịch chuyển |
+| **Data Augmentation 2** | **RandomHorizontalFlip(p=0.5)** | Không áp dụng | Lật ngang ngẫu nhiên $50\%$ số ảnh, tăng gấp đôi tính đa dạng đối xứng |
+| **Data Augmentation 3** | **Cutout(1 hole, length=16)** | Không áp dụng | Che ngẫu nhiên mảng $16 \times 16$ pixel (DeVries & Taylor, 2017), ép mô hình học đặc trưng toàn cục |
+| **Chuyển đổi Tensor** | `transforms.ToTensor()` | `transforms.ToTensor()` | Chuyển mảng điểm ảnh $[0, 255]$ sang tensor float32 $[0.0, 1.0]$ |
+| **Chuẩn hóa (Normalize)** | `transforms.Normalize(mean, std)` | `transforms.Normalize(mean, std)` | Chuẩn hóa theo hằng số phân bố chuẩn xác của từng tập dữ liệu (CIFAR-10 vs CIFAR-100) |
+| **Tính Tái Lập** | Generator cố định + `seed_worker` | Độc lập, cố định | Đảm bảo kết quả huấn luyện có thể tái lập bit-for-bit |
 
 ---
 
-## 2. Chi tiết kỹ thuật & Bằng chứng mã nguồn (Code Proof)
+## 2. Chi tiết Kỹ thuật & Bằng chứng Mã nguồn ([`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py))
 
-Toàn bộ pipeline tiền xử lý và nạp dữ liệu được triển khai chính thức tại [models/mid_data.py](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py) và được điều phối bởi [train_mid.py](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py).
-
-### 2.1. Resize: Kiểm soát kích thước gốc (Native Size Validation)
-
-* **Vấn đề thông thường**: Các pipeline xử lý ảnh truyền thống thường tự động áp dụng `transforms.Resize((size, size))`. Điều này tiềm ẩn rủi ro: nếu nạp sai thư mục hoặc ảnh sai kích thước, ảnh sẽ bị nội suy bilinear/bicubic làm mờ biên, méo cấu trúc hoặc mất chi tiết tần số cao.
-* **Giải pháp trong đồ án**: Đồ án xây dựng lớp kiểm soát kích thước tùy biến `RequireImageSize` tại [models/mid_data.py#L35-L44](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py#L35-L44):
-  ```python
-  class RequireImageSize:
-      """Catch wrong dataset roots instead of silently resizing their images."""
-      def __init__(self, size: int):
-          self.size = size
-
-      def __call__(self, image):
-          if image.size != (self.size, self.size):
-              raise ValueError(f"Expected native {self.size}x{self.size} image, got {image.size}")
-          return image
-  ```
-* **Triển khai thực tế**:
-  - Đối với `Mid32`: Bắt buộc kích thước ảnh nguyên bản là $32 \times 32$.
-  - Đối với `Mid224`: Bắt buộc kích thước ảnh nguyên bản là $224 \times 224$.
-  - Nếu dữ liệu không đúng kích thước định dạng, pipeline lập tức quăng ngoại lệ `ValueError` thay vì âm thầm resize, đảm bảo 100% tính toàn vẹn của byte ảnh gốc.
-
----
-
-### 2.2. Normalize: Tầng `data_bn` trong kiến trúc mạng
-
-* **Chuyển đổi dải giá trị**:
-  Sử dụng `transforms.ToTensor()`, đưa giá trị điểm ảnh từ dạng số nguyên $[0, 255]$ về Tensor dạng số thực `float32` trong khoảng $[0.0, 1.0]$.
-* **Không dùng `transforms.Normalize(mean, std)` cố định của ImageNet**:
-  Thay vì trừ trung bình và chia độ lệch chuẩn tĩnh của tập ImageNet (vốn có thể bị lệch phân bố - domain shift - so với ảnh trong bộ dữ liệu Mid), đồ án tích hợp trực tiếp một tầng **`data_bn`** (`nn.BatchNorm2d(num_features=3)`) tại đầu vào của mạng:
-  - Trong **TickNet gốc / Candidate C** ([models/TickNet.py#L65-L67](file:///home/intern-tdkhuong/Desktop/TickNets/models/TickNet.py#L65-L67)):
-    ```python
-    # data batchnorm
-    if self.use_data_batchnorm:
-        self.backbone.add_module("data_bn", torch.nn.BatchNorm2d(num_features=in_channels))
-    ```
-  - Trong **TickNet-L v1** ([models/ticknet_l.py#L81-L83](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_l.py#L81-L83)):
-    ```python
-    nn.Sequential(
-        OrderedDict([
-            ("data_bn", nn.BatchNorm2d(3)),
-            ("init_conv", conv_3x3(3, init_channels, stride=init_stride)),
-    ```
-* **Ghi vết cấu hình huấn luyện**:
-  Trong [train_mid.py#L125](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py#L125) và tài liệu [docs/DATASET_SPLIT.md#L117](file:///home/intern-tdkhuong/Desktop/TickNets/docs/DATASET_SPLIT.md#L117):
-  ```python
-  normalization="ToTensor [0,1]; model has data_bn"
-  ```
-* **Lợi ích**:
-  - Tầng `data_bn` học tham số scale ($\gamma$) và shift ($\beta$) tối ưu nhất cho bài toán phân loại 5 lớp.
-  - Tự động cập nhật `running_mean` và `running_var` theo đúng phân bố thực tế của dữ liệu huấn luyện.
-
----
-
-### 2.3. Data Augmentation: Tăng cường có kiểm soát
-
-Được cấu hình trong hàm `build_mid_loaders` tại [models/mid_data.py#L56-L63](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py#L56-L63):
-
+### 2.1. Hằng số Chuẩn hóa Chuẩn Quốc tế
+Mỗi tập dữ liệu sở hữu đặc trưng màu sắc và ánh sáng riêng biệt:
 ```python
-size = IMAGE_SIZES[variant]
-train_ops = [RequireImageSize(size)]
-if augment:
-    train_ops.extend([
-        transforms.RandomCrop(size, padding=size // 8, padding_mode="reflect"),
-        transforms.RandomHorizontalFlip()
-    ])
-train_ops.append(transforms.ToTensor())
+CIFAR10_MEAN = (0.4914, 0.4822, 0.4465)
+CIFAR10_STD  = (0.2470, 0.2435, 0.2616)
 
-root = Path(data_root) / variant
-train = datasets.ImageFolder(root / "train", transform=transforms.Compose(train_ops))
-test = datasets.ImageFolder(root / "test", transform=transforms.Compose([RequireImageSize(size), transforms.ToTensor()]))
+CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
+CIFAR100_STD  = (0.2675, 0.2565, 0.2761)
+```
+Chuẩn hóa giúp đưa phân bố dữ liệu về kỳ vọng $\approx 0$ và phương sai $\approx 1$, giúp gradient truyền ngược ở các lớp đầu không bị tiêu biến (vanishing) hay phát nổ (exploding).
+
+### 2.2. Kỹ thuật Điều hòa Cutout (DeVries & Taylor, 2017)
+Được triển khai trong class `Cutout` tại [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py):
+```python
+class Cutout(object):
+    def __init__(self, n_holes: int = 1, length: int = 16):
+        self.n_holes = n_holes
+        self.length = length
+
+    def __call__(self, img: torch.Tensor) -> torch.Tensor:
+        h, w = img.shape[-2], img.shape[-1]
+        mask = np.ones((h, w), np.float32)
+
+        for _ in range(self.n_holes):
+            y = np.random.randint(h)
+            x = np.random.randint(w)
+
+            y1 = np.clip(y - self.length // 2, 0, h)
+            y2 = np.clip(y + self.length // 2, 0, h)
+            x1 = np.clip(x - self.length // 2, 0, w)
+            x2 = np.clip(x + self.length // 2, 0, w)
+
+            mask[y1:y2, x1:x2] = 0.0
+
+        mask_tensor = torch.from_numpy(mask).to(dtype=img.dtype, device=img.device).expand_as(img)
+        return img * mask_tensor
+```
+* **Nguyên lý hoạt động:** Trong mỗi ảnh huấn luyện sau khi chuẩn hóa, chọn ngẫu nhiên một tâm $(x, y)$ và che một vùng vuông $16 \times 16$ pixel thành giá trị 0 (tương ứng với giá trị trung bình sau normalize).
+* **Hiệu quả thực nghiệm:** Ngăn chặn hiện tượng mô hình phụ thuộc vào một chi tiết nhỏ mang tính "học vẹt" (ví dụ: chỉ nhìn thấy mỏ chim là đoán chim, nếu che mỏ thì mô hình buộc phải học thêm hình thái cánh và lông).
+
+### 2.3. Pipeline Biến đổi Hoàn chỉnh (`get_cifar_transforms`)
+```python
+def get_cifar_transforms(dataset_name: str, *, augment: bool = True, cutout: bool = True, cutout_length: int = 16) -> transforms.Compose:
+    canon_name = normalize_dataset_name(dataset_name)
+    mean, std = CIFAR_STATS[canon_name]
+
+    if augment:
+        tf_list = [
+            transforms.RandomCrop(32, padding=4, padding_mode="reflect"),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=mean, std=std),
+        ]
+        if cutout and cutout_length > 0:
+            tf_list.append(Cutout(n_holes=1, length=cutout_length))
+        return transforms.Compose(tf_list)
+
+    return transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=mean, std=std),
+    ])
 ```
 
-1. **`RandomCrop` với tỷ lệ đệm động & chế độ `reflect`**:
-   - Tỷ lệ đệm linh hoạt: `padding = size // 8`.
-     - Với `Mid32`: padding = 4 $\rightarrow$ Pad thành $40 \times 40$ rồi crop ngẫu nhiên về $32 \times 32$.
-     - Với `Mid224`: padding = 28 $\rightarrow$ Pad thành $280 \times 280$ rồi crop ngẫu nhiên về $224 \times 224$.
-   - Chế độ `reflect` (đệm phản chiếu qua biên): Tránh tạo viền đen nhân tạo (zero-padding), bảo toàn tính liên tục của hoa văn và lông thú ở vùng rìa.
-2. **`RandomHorizontalFlip(p=0.5)`**:
-   - Lật ảnh theo trục ngang với xác suất 50%. Phù hợp ngữ nghĩa với 5 lớp sinh vật (`bird`, `cat`, `dog`, `frog`, `horse`), giúp mô hình bất biến với góc nhìn trái/phải.
-3. **Tập Test không Augment**:
-   - Giữ nguyên bản để làm thước đo đánh giá hiệu năng khách quan (Held-out Test evaluation).
-4. **Hỗ trợ Ablation Study**: Có cờ `--no-augment` trong `train_mid.py` cho phép tắt toàn bộ augmentation khi cần so sánh độ ảnh hưởng của data augmentation tới độ chính xác.
-
 ---
 
-### 2.4. Reproducibility: Độc lập luồng ngẫu nhiên (RNG Isolation)
-
-Để ngăn chặn hiện tượng mất tính tái lập khi chạy đa luồng hoặc ngẫu nhiên hóa dữ liệu:
-
-1. **Khởi tạo Seed toàn diện (`seed_everything`)** ([models/mid_data.py#L17-L26](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py#L17-L26)):
-   ```python
-   def seed_everything(seed: int) -> None:
-       os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
-       random.seed(seed)
-       np.random.seed(seed % (2**32))
-       torch.manual_seed(seed)
-       if torch.cuda.is_available():
-           torch.cuda.manual_seed_all(seed)
-       torch.backends.cudnn.benchmark = False
-       torch.backends.cudnn.deterministic = True
-       torch.use_deterministic_algorithms(True)
-   ```
-2. **Khởi tạo Worker độc lập (`seed_worker`)** ([models/mid_data.py#L29-L32](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py#L29-L32)):
-   ```python
-   def seed_worker(worker_id: int) -> None:
-       worker_seed = torch.initial_seed() % (2**32)
-       random.seed(worker_seed)
-       np.random.seed(worker_seed)
-   ```
-3. **Cách ly Generator giữa Train và Test** ([models/mid_data.py#L71-L75](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py#L71-L75)):
-   ```python
-   train_loader = DataLoader(train, shuffle=True, generator=torch.Generator().manual_seed(seed), **common)
-   # A separate generator prevents test iteration from changing the train RNG stream.
-   test_loader = DataLoader(test, shuffle=False, generator=torch.Generator().manual_seed(seed + 1), **common)
-   ```
-   * Bộ sinh ngẫu nhiên của Test dùng `seed + 1`, đảm bảo việc duyệt dữ liệu kiểm thử ở các epoch đánh giá không bao giờ làm thay đổi chuỗi số ngẫu nhiên của tập Train.
-
----
-
-## 3. Liên kết tham chiếu trong dự án
-- [models/mid_data.py](file:///home/intern-tdkhuong/Desktop/TickNets/models/mid_data.py): Triển khai các transform, `RequireImageSize`, DataLoader seeded.
-- [models/TickNet.py](file:///home/intern-tdkhuong/Desktop/TickNets/models/TickNet.py): Kiến trúc backbone TickNet tích hợp tầng `data_bn`.
-- [models/ticknet_l.py](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_l.py): Kiến trúc TickNet-L v1 tích hợp tầng `data_bn`.
-- [train_mid.py](file:///home/intern-tdkhuong/Desktop/TickNets/train_mid.py): Pipeline huấn luyện chính thức ghi vết cấu hình chuẩn hóa.
-- [docs/DATASET_SPLIT.md](file:///home/intern-tdkhuong/Desktop/TickNets/docs/DATASET_SPLIT.md): Tài liệu hóa phương thức chuẩn hóa và tiền xử lý.
+## 3. Bằng chứng Kiểm thử (Verification Evidence)
+Quy trình tiền xử lý được kiểm định bằng unit test:
+1. `tests/test_cifar_data.py::test_get_cifar_transforms_shape_and_type`: Xác nhận ảnh sau tiền xử lý luôn có kích thước `(3, 32, 32)`, kiểu dữ liệu `torch.float32`, và giá trị chuẩn hóa vượt ra ngoài khoảng $[0, 1]$.
+2. `tests/test_cifar_data.py::test_cutout_transform`: Xác nhận vùng pixel $16 \times 16$ bị che triệt để về 0.0 trong khi phần còn lại của ảnh được giữ nguyên vẹn.

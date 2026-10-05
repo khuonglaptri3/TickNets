@@ -1,85 +1,65 @@
-# 4. Dataset Splitting: Train / Val / Test & Stratified Split
+# 4. Dataset Splitting: Cơ Chế Phân Tầng và Phòng Chống Rò Rỉ Dữ Liệu Cuối Kỳ
 
-Tài liệu này tổng hợp chi tiết hiện trạng, phương pháp luận và các bước kỹ thuật đã thực hiện trong đồ án đối với mục **Dataset Splitting**, bao gồm cơ chế phân tầng (Stratified Split), cấu trúc phân chia Train / Val / Test, cơ chế ghép cặp đa độ phân giải (Paired Splitting) và quy trình kiểm thử chống rò rỉ dữ liệu (Data Leakage Prevention).
-
----
-
-## 1. Phương pháp phân tầng (Stratified Split)
-
-### 1.1. Mục tiêu và thách thức
-Bộ dữ liệu gồm 5 lớp đối tượng: `bird`, `cat`, `dog`, `frog`, `horse`.
-Nếu áp dụng chia ngẫu nhiên thuần túy (random split) trên toàn bộ 25.250 mẫu, xác suất cao sẽ dẫn đến hiện tượng phân bố lệch giữa các lớp (Class Imbalance) giữa tập Train và Test, làm sai lệch đánh giá khách quan về hiệu năng mô hình.
-
-### 1.2. Thuật toán phân tầng trong đồ án (Per-Class Stratification)
-Đồ án áp dụng phương pháp **Stratified Random Hold-Out theo từng lớp**:
-- **Cố định hạt giống ngẫu nhiên (Reproducible Seed)**: Sử dụng duy nhất một bộ sinh số ngẫu nhiên `random.Random(seed=42)` cho toàn bộ quá trình, không khởi tạo lại giữa các lớp.
-- **Thứ tự duyệt lớp cố định**: Duyệt theo thứ tự bảng chữ cái/chỉ số nhãn chuẩn hóa:
-  $$\text{bird (0)} \longrightarrow \text{cat (1)} \longrightarrow \text{dog (2)} \longrightarrow \text{frog (3)} \longrightarrow \text{horse (4)}$$
-- **Khử phụ thuộc hệ điều hành (Deterministic Ordering)**:
-  Trước khi lấy mẫu, danh sách định danh mẫu (`class_name/filename`) trong từng lớp được sắp xếp theo thứ tự chuỗi (`sorted_ids`).
-- **Lấy mẫu không hoàn lại (Sampling without replacement)**:
-  Với mỗi lớp, gọi `rng.sample(sorted_ids, 50)` để chọn chính xác **50 mẫu cho tập Test**, toàn bộ **5.000 mẫu còn lại** được gán vào tập Train.
-
-### 1.3. Kết quả phân tầng
-- Tỷ lệ mỗi lớp trong tập Train: Đúng $5.000 / 25.000 = \mathbf{20.0\%}$.
-- Tỷ lệ mỗi lớp trong tập Test: Đúng $50 / 250 = \mathbf{20.0\%}$.
-- **Phân bố cân bằng tuyệt đối** (perfectly balanced), triệt tiêu hoàn toàn độ lệch phân bố nhãn.
+Tài liệu này tổng hợp phương pháp luận, cơ sở toán học và bằng chứng mã nguồn của thuật toán phân chia phân tầng (Stratified Splitting) trên hai tập dữ liệu **CIFAR-10** và **CIFAR-100**.
 
 ---
 
-## 2. Cấu trúc các tập dữ liệu: Train / Val / Test
+## 1. Phương pháp Phân tầng theo Lớp (Per-Class Stratification)
 
-### 2.1. Thống kê phân bổ
+### 1.1. Tại sao phải Phân tầng?
+Nếu chia 50.000 ảnh train ngẫu nhiên không điều kiện, xác suất xuất hiện độ lệch số lượng mẫu giữa các lớp là rất lớn. Với CIFAR-100 (mỗi lớp chỉ có 500 ảnh trong tập train gốc), sự chênh lệch ngẫu nhiên này có thể làm một số lớp có ít hơn 40 ảnh validation, khiến tín hiệu đánh giá mô hình bị nhiễu động nghiêm trọng.
 
-| Tập dữ liệu | Số lượng / lớp | Tổng số lượng | Tỷ lệ dữ liệu | Vai trò & Quy định xử lý trong đồ án |
-| :--- | :---: | :---: | :---: | :--- |
-| **Train** | 5.000 ảnh | **25.000 ảnh** | 99.01% | Dùng huấn luyện mạng TickNet. Tích hợp data augmentation: `RandomCrop` (reflection padding) và `RandomHorizontalFlip`. |
-| **Test** | 50 ảnh | **250 ảnh** | 0.99% | **Held-Out Test Set**: Đánh giá độc lập 1 lần duy nhất ở cuối quá trình huấn luyện; không tham gia chọn checkpoint hay tuning siêu tham số. |
-| **Validation** | *(Tách từ train)* | — | — | **Chưa đóng gói thư mục `val/` cứng trên ổ đĩa**, tuân thủ nguyên tắc thiết kế chống rò rỉ dữ liệu (xem mục 2.2). |
+### 1.2. Thuật toán Triển khai trong Mã nguồn
+Triển khai tại hàm `stratified_split_indices` trong [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py):
 
-### 2.2. Giải trình bản chất tập Validation trong đồ án
-Trong cấu trúc thư mục đóng gói (`Mid32.tar.xz`, `Mid224.tar.xz` và `data/<variant>/`), đồ án **chủ động không chia sẵn thư mục `val/` vật lý trên ổ đĩa**:
-1. **Khớp với yêu cầu đề bài**: Đề tài quy định cụ thể số lượng mẫu nộp là 5.000 train và 50 test mỗi lớp.
-2. **Nguyên tắc bảo vệ tập Test (Held-out Integrity)**:
-   Tập Test được coi là "hộp đen" chỉ mở một lần cuối cùng. Tuyệt đối không dùng Test để điều chỉnh learning rate, chọn epoch dừng sớm (early stopping) hay chọn seed tốt nhất.
-3. **Chiến lược tạo tập Validation khi thực nghiệm**:
-   Đồ án quy định rõ trong tài liệu kỹ thuật (`docs/DATASET_SPLIT.md` và `docs/MODEL_C.md`): Khi cần so sánh kiến trúc (Basic vs. L vs. C) hoặc tinh chỉnh siêu tham số (tuning), nhóm nghiên cứu sẽ **tách một phần từ 25.000 ảnh Train** (ví dụ: Stratified K-Fold hoặc tách 10-20% từ tập train) để làm Validation cục bộ, giữ tập Test hoàn toàn biệt lập.
+```python
+def stratified_split_indices(
+    targets: List[int],
+    num_classes: int,
+    val_fraction: float,
+    seed: int = 42,
+) -> Tuple[List[int], List[int]]:
+    if not (0.0 < val_fraction < 1.0):
+        raise ValueError(f"val_fraction must be in (0, 1), got {val_fraction}")
 
----
+    rng = random.Random(seed)
+    class_to_indices: Dict[int, List[int]] = {c: [] for c in range(num_classes)}
+    for idx, label in enumerate(targets):
+        class_to_indices[int(label)].append(idx)
 
-## 3. Cơ chế chia đồng bộ đa độ phân giải (Paired Cross-Resolution Splitting)
+    train_indices: List[int] = []
+    val_indices: List[int] = []
 
-Một đóng góp kỹ thuật quan trọng của đồ án là xử lý tính nhất quán giữa 2 phiên bản độ phân giải:
-- **Mid32** ($32 \times 32$ pixels, phục vụ huấn luyện nhanh và kiểm thử giới hạn tính toán).
-- **Mid224** ($224 \times 224$ pixels, độ phân giải tiêu chuẩn thị giác máy tính).
+    for c in sorted(class_to_indices):
+        indices = class_to_indices[c]
+        rng.shuffle(indices)
+        val_count = int(round(len(indices) * val_fraction))
+        val_indices.extend(indices[:val_count])
+        train_indices.extend(indices[val_count:])
 
-Thay vì chia độc lập 2 bộ dữ liệu:
-- Hai bộ dữ liệu được **ghép cặp 1-1 (Paired Mapping)** theo mã định danh `class_name/filename`.
-- Thuật toán phân chia chỉ thực thi **một lần duy nhất** trên manifest chung, sau đó ánh xạ đồng thời cho cả Mid32 và Mid224.
-- **Cam kết**: Bất kỳ hình ảnh nào ở Mid32 thuộc tập Train (hoặc Test) thì hình ảnh tương ứng tại Mid224 cũng nằm đúng ở tập đó, loại trừ mọi nguy cơ bất tương thích khi đối sánh thực nghiệm liên độ phân giải.
+    train_indices.sort()
+    val_indices.sort()
+    return train_indices, val_indices
+```
 
----
-
-## 4. Xác thực tính toàn vẹn & Chống rò rỉ dữ liệu (Data Leakage Verification)
-
-Đồ án đã thực thi 4 tầng kiểm định độc lập để chứng minh tính hợp lệ của phân chia:
-
-1. **Kiểm tra giao tập định danh (Sample ID Disjointness)**:
-   $$\text{Train} \cap \text{Test} = \emptyset$$
-   Đã kiểm tra bằng unit test tự động trong pipeline (`models/mid_data.py`), nếu phát hiện bất kỳ file nào trùng tên giữa train và test sẽ báo lỗi dừng chương trình.
-2. **Kiểm tra trùng pixel thô (Raw Pixel SHA-256 Check)**:
-   Giải mã pixel thô của toàn bộ ảnh và tính hash SHA-256. Ghi nhận **0 nhóm ảnh trùng pixel** giữa Train và Test.
-3. **Kiểm tra trùng lặp nhận thức (Perceptual Hashing Audit - pHash)**:
-   Được ghi nhận tại `docs/DATASET_CLEANING.md`: Sử dụng biến đổi DCT tần số thấp để quét toàn bộ 25.000 ảnh train và 250 ảnh test. Kết quả xác nhận **không có bất kỳ cặp ảnh trùng lặp nhận thức nào xuyên giữa tập Train và Test**.
-4. **Truy vết và tái lập (Provenance & Reproducibility)**:
-   Toàn bộ kết quả phân chia được khóa cứng trong file `data/split_manifest.csv` với chữ ký SHA-256:
-   `9939a6ee404c6fbbdbe1b07a50763dc6d606497709385708512e1e98d71f2780`.
-   Trong `train_mid.py`, mã nguồn tích hợp bộ kiểm tra mã băm manifest tự động trước khi cho phép huấn luyện mô hình.
+### 1.3. Đặc tính Kỹ thuật của Thuật toán:
+1. **Cố định Seed Khử Nhiễu Hệ điều hành:** Sử dụng `random.Random(42)`, đảm bảo thứ tự phân tách độc lập hoàn toàn với nền tảng (Linux, Windows, macOS, Kaggle).
+2. **Cân Bằng Phân Bố Tuyệt Đối:**
+   - Trên CIFAR-10: Mỗi lớp có chính xác 4.500 ảnh Train và 500 ảnh Validation.
+   - Trên CIFAR-100: Mỗi lớp có chính xác 450 ảnh Train và 50 ảnh Validation.
+3. **Không Giao Thoa (Disjoint Sets):**
+   $$\text{Train}_{\text{indices}} \cap \text{Val}_{\text{indices}} = \emptyset$$
+   Được chứng thực qua unit test `test_stratified_split_indices_proportions_and_disjoint`.
 
 ---
 
-## 5. Tài liệu tham chiếu liên quan
-- [DATASET_SPLIT.md](../DATASET_SPLIT.md): Báo cáo chi tiết về thông số kích thước, dung lượng TAR.XZ và lệnh tạo lại dataset.
-- [DATASET_CLEANING.md](../DATASET_CLEANING.md): Báo cáo kiểm định chất lượng dữ liệu, phân tích quang học và giải mã nhãn cảnh báo.
-- `prepare_mid_dataset.py`: Mã nguồn thực thi thuật toán phân tầng và đóng gói.
-- `models/mid_data.py`: Pipeline nạp dữ liệu PyTorch với seeded sampler và data augmentation.
+## 2. Nguyên Tắc Vàng: Chống Rò Rỉ Dữ Liệu (Zero Data Leakage)
+
+1. **Cô lập Tuyệt Đối Tập Test:**
+   - Tập Test (10.000 ảnh) không hề tham gia vào quá trình tính toán thống kê hay chọn lọc siêu tham số.
+   - Hằng số chuẩn hóa Mean và Std được tính toán trên toàn bộ không gian ảnh chuẩn, không bị rò rỉ nhãn phân loại.
+2. **Tách Biến đổi Giữa Train và Val:**
+   - Lớp `TransformedSubset` trong [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py) nhận mảng ảnh gốc (raw numpy arrays) và chỉ áp dụng các phép biến đổi riêng biệt khi một batch được nạp:
+     - Tập Train nhận `train_transform` (gồm RandomCrop, Flip, Cutout).
+     - Tập Val nhận `eval_transform` (chỉ ToTensor và Normalize).
+   - Đảm bảo dữ liệu Validation luôn phản ánh ảnh thực tế không bị che mờ hay cắt xén nhân tạo.
