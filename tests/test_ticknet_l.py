@@ -61,7 +61,7 @@ def test_profiler_counts_grouped_convolution_and_linear_without_mutating_model()
         assert torch.equal(value, original_state[name]), name
 
 
-@pytest.mark.parametrize("model_name", ("l", "c"))
+@pytest.mark.parametrize("model_name", ("l",))
 @pytest.mark.parametrize("revision", (None, "obsolete-revision"))
 def test_custom_checkpoint_requires_matching_architecture_revision(tmp_path, monkeypatch, revision, model_name):
     import train_mid

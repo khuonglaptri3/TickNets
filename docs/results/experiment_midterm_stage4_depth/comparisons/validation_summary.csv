@@ -1,5 +1,0 @@
-run,variant,kind,best_epoch,validation_top1,validation_loss,train_samples,validation_samples
-mid32_baseline_seed42,Mid32,Baseline,173,90.4,0.500444689655304,22500,2500
-mid32_experiment_seed42,Mid32,Stage4-depth3,200,90.12,0.4782560255050659,22500,2500
-mid224_baseline_seed42,Mid224,Baseline,177,93.88,0.2763168884038925,22500,2500
-mid224_experiment_seed42,Mid224,Stage4-depth3,154,94.12,0.2945774095714092,22500,2500

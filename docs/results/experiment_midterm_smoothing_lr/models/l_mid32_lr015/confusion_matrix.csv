@@ -1,6 +1,0 @@
-actual_class,predicted_bird,predicted_cat,predicted_dog,predicted_frog,predicted_horse
-bird,48,0,0,2,0
-cat,0,46,4,0,0
-dog,0,7,42,1,0
-frog,3,0,0,47,0
-horse,1,0,0,1,48

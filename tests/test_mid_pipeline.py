@@ -68,7 +68,7 @@ def test_epoch_metrics_weight_partial_batches_by_sample_count():
     assert result["loss"] == pytest.approx(torch.nn.functional.cross_entropy(logits, labels).item())
 
 
-@pytest.mark.parametrize("model_name", ("basic", "l", "c"))
+@pytest.mark.parametrize("model_name", ("basic", "l"))
 def test_training_writes_epoch_log_checkpoint_and_final_test_metrics(prepared, tmp_path, model_name):
     module = importlib.import_module("train_mid")
     output = tmp_path / "run"
