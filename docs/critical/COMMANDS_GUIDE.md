@@ -57,7 +57,7 @@ print("TickNet-Basic CIFAR-100:", profile_model(build_TickNet(100, typesize="bas
 *Số liệu kiểm chứng:*
 - **TickNet-L (CIFAR-10):** 1.100.105 tham số ($\le 6M$) | 0.1578 GFLOPs ($< 1G$).
 - **TickNet-L (CIFAR-100):** 1.169.315 tham số ($\le 6M$) | 0.1580 GFLOPs ($< 1G$).
-- **TickNet-Basic (CIFAR-10):** 1.067.370 tham số ($\le 6M$) | 0.1584 GFLOPs ($< 1G$).
+- **TickNet-Basic (CIFAR-10):** 1.067.348 tham số ($\le 6M$) | 0.1584 GFLOPs ($< 1G$).
 - **TickNet-Basic (CIFAR-100):** 1.159.598 tham số ($\le 6M$) | 0.1586 GFLOPs ($< 1G$).
 
 ---

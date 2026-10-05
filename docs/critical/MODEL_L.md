@@ -64,7 +64,7 @@ $$\text{hidden} = \max\left(16, \left\lfloor \frac{0.75 \times C_{in} + 4}{8} \r
 ### 4.3. Bảng Tổng Hợp So Sánh Độ Phức Tạp
 | Mô hình | Dataset | Tham số (Params) | Tỷ lệ trần Params (6M) | Chi phí FLOPs | Tỷ lệ trần FLOPs (1G) | Trạng thái Tuân thủ |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **TickNet-Basic** (Tác giả) | CIFAR-10 | 1.067.370 | 17.8% | 0.1584 GFLOPs | 15.8% |  HỢP LỆ |
+| **TickNet-Basic** (Tác giả) | CIFAR-10 | 1.067.348 | 17.8% | 0.1584 GFLOPs | 15.8% |  HỢP LỆ |
 | **TickNet-Basic** (Tác giả) | CIFAR-100| 1.159.598 | 19.3% | 0.1586 GFLOPs | 15.9% |  HỢP LỆ |
 | **TickNet-L v1** (Đề xuất) | CIFAR-10 | **1.100.105** | **18.3%** | **0.1578 GFLOPs** | **15.8%** |  **HỢP LỆ** |
 | **TickNet-L v1** (Đề xuất) | CIFAR-100| **1.169.315** | **19.5%** | **0.1580 GFLOPs** | **15.8%** |  **HỢP LỆ** |

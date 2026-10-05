@@ -63,10 +63,28 @@ Evaluated strictly using the independent profiling tool [`models/model_profile.p
 
 | Architecture | Dataset | Learnable Params | Param Budget ($\le 6\text{M}$) | Forward FLOPs | FLOPs Budget ($< 1\text{G}$) | Compliance Status |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Author TickNet-Basic** | **CIFAR-10** | 1,067,370 | 17.8% | 0.1584 GFLOPs | 15.8% | **PASSED** |
+| **Author TickNet-Basic** | **CIFAR-10** | 1,067,348 | 17.8% | 0.1584 GFLOPs | 15.8% | **PASSED** |
 | **Author TickNet-Basic** | **CIFAR-100** | 1,159,598 | 19.3% | 0.1586 GFLOPs | 15.9% | **PASSED** |
 | **Proposed TickNet-L v1** | **CIFAR-10** | **1,100,105** | **18.3%** | **0.1578 GFLOPs** | **15.8%** | **PASSED** |
 | **Proposed TickNet-L v1** | **CIFAR-100** | **1,169,315** | **19.5%** | **0.1580 GFLOPs** | **15.8%** | **PASSED** |
+
+### 2.3. PyTorch Summary: Stage-by-Stage Parameter & FLOPs Breakdown (CIFAR-10)
+
+Inspect the exact internal parameter allocation using PyTorch forward hooks via [`checkmodel.py`](checkmodel.py) (`python checkmodel.py`):
+
+| Stage / Submodule | Author TickNet-Basic (Shape / Params / FLOPs) | Proposed TickNet-L v1 (Shape / Params / FLOPs) | Key Architectural Shift |
+| :--- | :--- | :--- | :--- |
+| **`backbone.data_bn`** | `(1, 3, 32, 32)` / **6** (0.00%) / 0 | `(1, 3, 32, 32)` / **6** (0.00%) / 0 | Input batch normalization |
+| **`backbone.init_conv`** | `(1, 32, 32, 32)` / **928** (0.09%) / 1.77M | `(1, 24, 32, 32)` / **696** (0.06%) / 1.33M | Channels 32 $\rightarrow$ 24 (saves early FLOPs) |
+| **`backbone.stage1`** | `(1, 128, 32, 32)` / **12,264** (1.15%) / 19.47M | `(1, 112, 32, 32)` / **8,351** (0.76%) / 12.64M | Bottleneck ratio 0.75, channels 128 $\rightarrow$ 112 |
+| **`backbone.stage2`** | `(1, 64, 32, 32)` / **35,012** (3.28%) / 69.47M | `(1, 64, 32, 32)` / **24,460** (2.22%) / 48.02M | Bottleneck ratio 0.75 (saves ~21.4M FLOPs) |
+| **`backbone.stage3`** | `(1, 128, 16, 16)` / **23,880** (2.24%) / 17.08M | `(1, 144, 16, 16)` / **60,850** (5.53%) / 32.47M | 1 block $\rightarrow$ 2 blocks, Mixed DW ($3\times 3 + 5\times 5$) |
+| **`backbone.stage4`** | `(1, 256, 8, 8)` / **92,816** (8.70%) / 16.94M | `(1, 288, 8, 8)` / **243,580** (22.14%) / 34.38M | 1 block $\rightarrow$ 2 blocks, Mixed DW ($3\times 3 + 5\times 5$) |
+| **`backbone.stage5`** | `(1, 512, 4, 4)` / **365,856** (34.28%) / 16.92M | `(1, 512, 4, 4)` / **359,720** (32.70%) / 16.40M | Mixed DW ($3\times 3 + 5\times 5$), channels 512 |
+| **`backbone.final_conv`** | `(1, 1024, 4, 4)` / **526,336** (49.31%) / 16.78M | `(1, 768, 4, 4)` / **394,752** (35.88%) / 12.58M | Channels 1024 $\rightarrow$ 768 (saves 131.6k params) |
+| **`backbone.global_pool`**| `(1, 1024, 1, 1)` / **0** / 0 | `(1, 768, 1, 1)` / **0** / 0 | Adaptive Average Pooling |
+| **`classifier`** | `(1, 10)` / **10,250** (0.96%) / 0 | `(1, 10)` / **7,690** (0.70%) / 0 | Conv $1\times 1$ classifier head |
+| **TOTAL** | **1,067,348 Params** (100%) / **0.1584 GFLOPs** | **1,100,105 Params** (100%) / **0.1578 GFLOPs** | Capacity reinvested into Stages 3 & 4 |
 
 ---
 

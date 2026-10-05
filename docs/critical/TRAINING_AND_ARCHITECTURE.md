@@ -77,7 +77,7 @@ Mã nguồn hỗ trợ cả hai mô hình thông qua cờ `--model {l, basic}`:
 | **Cơ chế Pointwise Conv** | Không nén ($C_{in} \rightarrow C_{in}$) | **Thắt cổ chai (Bottleneck $0.75 \times C_{in}$)** |
 | **Cơ chế Depthwise Conv** | Thuần $3 \times 3$ trên mọi kênh | **Mixed DW (chia đôi kênh chạy song song $3 \times 3$ và $5 \times 5$)** |
 | **Kênh Conv trước Pooling** | 1024 kênh | **768 kênh** |
-| **Số tham số trên CIFAR-10** | **1.067.370** ($\le 6\text{M}$) | **1.100.105** ($\le 6\text{M}$) |
+| **Số tham số trên CIFAR-10** | **1.067.348** ($\le 6\text{M}$) | **1.100.105** ($\le 6\text{M}$) |
 | **Chi phí FLOPs trên CIFAR-10**| **0.1584 GFLOPs** ($< 1\text{G}$) | **0.1578 GFLOPs** ($< 1\text{G}$) |
 | **Số tham số trên CIFAR-100**| **1.159.598** ($\le 6\text{M}$) | **1.169.315** ($\le 6\text{M}$) |
 | **Chi phí FLOPs trên CIFAR-100**| **0.1586 GFLOPs** ($< 1\text{G}$) | **0.1580 GFLOPs** ($< 1\text{G}$) |
