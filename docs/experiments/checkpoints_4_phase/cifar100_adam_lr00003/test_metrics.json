@@ -1,0 +1,12 @@
+{
+  "top1": 63.81,
+  "loss": 1.6526533074751066,
+  "macro_f1": 0.6381180376721199,
+  "samples": 10000,
+  "correct": 6381,
+  "checkpoint_epoch": 164,
+  "checkpoint_sha256": "1f9b315ee99552e0d919b6cb61d3b0e374c261274ba6b367a173b7d2bf02a412",
+  "dataset": "cifar100",
+  "model": "l",
+  "test_data_sha256": "5bb47b33dbb643e23afd56c44bd8fe1c67fc37aac41c64106b64a99766e104e7"
+}
