@@ -1,18 +1,17 @@
-# Tổng kết kết quả TickNet
+# TickNet Results & Benchmarks Summary
 
-Tài liệu này tổng hợp kết quả đối chiếu giữa mô hình cơ sở **TickNet-Basic** (mô hình gốc của thầy) và mô hình cải tiến **TickNet-L v1** (Model L được lựa chọn cho đồ án Giữa kỳ và Cuối kỳ).
+This document summarizes comparative experimental results between the baseline **TickNet-Basic** (author's original model) and the proposed **TickNet-L v1** (Model L selected for the Midterm and Final Examination projects).
 
-| Mô hình | Top-1 Mid32 | Top-1 Mid224 | Tham số | GFLOPs Mid32 | GFLOPs Mid224 | Trạng thái đề tài |
+| Model Architecture | Top-1 Mid32 | Top-1 Mid224 | Parameters | GFLOPs Mid32 | GFLOPs Mid224 | Project Status |
 |---|---:|---:|---:|---:|---:|:---:|
-| **TickNet-Basic** (Gốc của thầy) | 89,6% | 92,4% | 1.062.223 | 0,158428 | 0,988343 *(sát trần 1G)* | Mốc đối chứng (Baseline) |
-| **TickNet-L v1** (Đề xuất) | **91,6%** | **95,6%** | 1.096.260 | **0,157821** | **0,796760** *(nhẹ nhất)* | **Được chọn phát triển** |
+| **TickNet-Basic** (Author Baseline) | 89.6% | 92.4% | 1,062,223 | 0.158428 | 0.988343 *(near 1G budget)* | Benchmark Baseline |
+| **TickNet-L v1** (Proposed) | **91.6%** | **95.6%** | 1,096,260 | **0.157821** | **0.796760** *(lightest)* | **Selected for Development** |
 
-Quy ước FLOPs: 1 MAC = 2 FLOPs, một ảnh, chế độ eval, chỉ tính Conv2d và Linear.
+FLOPs convention: 1 MAC = 2 FLOPs, single image, eval mode, Conv2d and Linear layers only.
 
-- **[Hồ sơ tổng hợp & Bằng chứng Model L (Được chọn phát triển)](Model_L/README.md)**
-- **[Hồ sơ tổng hợp Baseline Model Basic của thầy](Model_Basic/README.md)**
-- [Biên bản kiểm định độc lập ngày 2026-10-01](AUDIT_TICKNET_2026-10-01.md)
-- [Bảng so sánh và đối chiếu](model_comparison/README.md)
-- [Checkpoint và checksum SHA-256](checkpoints/README.md)
-- [Mã nguồn kiểm chứng độc lập](audit_20261001/)
-
+- **[Master Evidence & Dossier for Model L (Selected for Development)](Model_L/README.md)**
+- **[Master Evidence & Dossier for Baseline Model Basic](Model_Basic/README.md)**
+- [Independent Forensic Audit Report (2026-10-01)](AUDIT_TICKNET_2026-10-01.md)
+- [Comprehensive Comparative Benchmarks](model_comparison/README.md)
+- [Checkpoints and SHA-256 Checksums](checkpoints/README.md)
+- [Independent Verification Scripts](audit_20261001/)

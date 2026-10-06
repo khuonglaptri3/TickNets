@@ -1,51 +1,51 @@
-# 9. Validation & Metrics: Đánh giá Năng lực Mô hình trên CIFAR-10 & CIFAR-100
+# 9. Validation & Metrics: Model Performance Evaluation on CIFAR-10 & CIFAR-100
 
-Tài liệu này ghi nhận chi tiết cơ sở toán học, hiện trạng triển khai trong đồ án cuối kỳ đối với hệ thống độ đo: **Top-1 Accuracy, Loss, Macro F1-Score, và Ma trận nhầm lẫn (Confusion Matrix)** trên hai tập dữ liệu **CIFAR-10** (10 lớp) và **CIFAR-100** (100 lớp).
+This document records the mathematical foundations and source code implementation of the evaluation metrics suite: **Top-1 Accuracy, Loss, Macro F1-Score, and Confusion Matrix** across benchmark datasets **CIFAR-10** (10 classes) and **CIFAR-100** (100 classes).
 
 ---
 
-## 1. Cơ sở Toán học của Hệ thống Độ đo (Evaluation Metrics)
+## 1. Mathematical Foundations of the Metric Suite
 
-Trong bài toán phân loại ảnh nhiều lớp:
-- **CIFAR-10:** $|\mathcal{C}| = 10$ lớp đối tượng.
-- **CIFAR-100:** $|\mathcal{C}| = 100$ lớp đối tượng.
+For multi-class image classification:
+- **CIFAR-10:** $|\mathcal{C}| = 10$ target classes.
+- **CIFAR-100:** $|\mathcal{C}| = 100$ target classes.
 
-Đối với từng lớp mục tiêu $c \in \mathcal{C}$:
-- **$TP_c$ (True Positive)**: Ảnh thực tế là lớp $c$ và mô hình dự đoán chính xác là lớp $c$.
-- **$FP_c$ (False Positive)**: Ảnh thực tế KHÔNG phải là $c$ nhưng mô hình dự đoán nhầm thành $c$ (*Báo động giả / Lỗi Loại I*).
-- **$FN_c$ (False Negative)**: Ảnh thực tế là lớp $c$ nhưng mô hình bỏ sót và dự đoán sang lớp khác (*Bỏ sót / Lỗi Loại II*).
-- **$TN_c$ (True Negative)**: Ảnh thực tế không phải $c$ và mô hình dự đoán không phải $c$.
+For each target class $c \in \mathcal{C}$:
+- **$TP_c$ (True Positive)**: Ground-truth is class $c$ and the model correctly predicts class $c$.
+- **$FP_c$ (False Positive)**: Ground-truth is NOT $c$, but the model incorrectly predicts class $c$ (*False Alarm / Type I Error*).
+- **$FN_c$ (False Negative)**: Ground-truth is class $c$, but the model misses it and predicts another class (*Miss / Type II Error*).
+- **$TN_c$ (True Negative)**: Ground-truth is not $c$ and model correctly predicts non-$c$.
 
-### 1.1. Độ chính xác Top-1 (Top-1 Accuracy)
+### 1.1. Top-1 Accuracy
 $$\text{Top-1 Accuracy} = \frac{\sum_{c \in \mathcal{C}} TP_c}{N} \times 100\%$$
-- Thể hiện tỷ lệ phần trăm mẫu mà xác suất dự đoán cao nhất trùng khớp với nhãn thực tế.
+- Represents the percentage of samples where the highest predicted class probability matches the true ground-truth label.
 
-### 1.2. Độ mất mát Trung bình (Average Cross-Entropy Loss)
+### 1.2. Average Cross-Entropy Loss
 $$\mathcal{L} = -\frac{1}{N} \sum_{i=1}^N \log \left(\frac{e^{z_{i, y_i}}}{\sum_{j=1}^{C} e^{z_{i, j}}}\right)$$
-- Đo lường độ tin cậy và mức độ phạt sai lệch của phân bố xác suất dự đoán so với phân bố one-hot thực tế.
+- Quantifies model calibration and penalizes deviation between predicted probability distributions and ground-truth one-hot encodings.
 
-### 1.3. Điểm số Macro F1 (Macro-Averaged F1 Score)
+### 1.3. Macro-Averaged F1 Score (Macro-F1)
 $$\text{F1}_c = \frac{2 \times TP_c}{2 \times TP_c + FP_c + FN_c}$$
 $$\text{Macro-F1} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \text{F1}_c$$
-- **Ý nghĩa khoa học:** F1-score là trung bình điều hòa giữa Precision và Recall. Macro-F1 tính trung bình F1 của tất cả các lớp với quyền số ngang nhau.
-- **Đặc biệt quan trọng trên CIFAR-100:** Với 100 lớp (mỗi lớp chỉ có 100 ảnh test), Macro-F1 vạch trần việc mô hình có thiên vị các lớp dễ nhận biết và "bỏ cuộc" ở các lớp khó hay không.
+- **Scientific Significance:** F1-score is the harmonic mean of Precision and Recall. Macro-F1 computes the unweighted arithmetic mean of F1 scores across all classes, treating every class equally.
+- **Critical Role on CIFAR-100:** With 100 classes (each having exactly 100 test images), Macro-F1 reveals whether the network disproportionately relies on easily recognizable classes while collapsing on fine-grained or difficult classes.
 
 ---
 
-## 2. Ma trận Nhầm lẫn (Confusion Matrix)
+## 2. Confusion Matrix
 
-Triển khai tại hàm `evaluate` trong [`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py):
-- **CIFAR-10:** Ma trận vuông $10 \times 10$ ($10.000$ mẫu test, $1.000$ mẫu/lớp).
-- **CIFAR-100:** Ma trận vuông $100 \times 100$ ($10.000$ mẫu test, $100$ mẫu/lớp).
-- **Hàng (Rows)**: Nhãn thực tế (Ground Truth $y$).
-- **Cột (Columns)**: Nhãn mô hình dự đoán ($\hat{y}$).
-- Đường chéo chính biểu diễn $TP_c$. Các phần tử ngoài đường chéo biểu diễn lỗi nhầm lẫn cụ thể giữa các cặp lớp tương đồng (ví dụ: *cat* nhầm sang *dog*, hoặc *automobile* nhầm sang *truck*).
+Implemented in the `evaluate` routine within [`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py):
+- **CIFAR-10:** A square matrix of size $10 \times 10$ ($10,000$ test samples, $1,000$ per class).
+- **CIFAR-100:** A square matrix of size $100 \times 100$ ($10,000$ test samples, $100$ per class).
+- **Rows**: Ground-truth class label ($y$).
+- **Columns**: Predicted class label ($\hat{y}$).
+- The primary diagonal represents $TP_c$. Off-diagonal entries expose pairwise confusion between semantically adjacent classes (e.g., *cat* misclassified as *dog*, or *automobile* misclassified as *truck*).
 
-Được tự động xuất ra file `confusion_matrix.csv` và `test_predictions.csv` để trực quan hóa biểu đồ Heatmap trong báo cáo cuối kỳ.
+Automatically saved to `confusion_matrix.csv` and `test_predictions.csv` for downstream heatmap generation in the technical report.
 
 ---
 
-## 3. Bằng chứng Triển khai Mã nguồn ([`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py))
+## 3. Source Code Implementation Evidence ([`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py))
 
 ```python
 def evaluate(model, test_loader, device, output_dir, num_classes):
@@ -91,9 +91,9 @@ def evaluate(model, test_loader, device, output_dir, num_classes):
 
 ---
 
-## 4. Vai trò trong Đánh giá Đồ án Cuối kỳ
+## 4. Final Examination Evaluation Rubric Alignment
 
-Theo rubric chấm điểm của môn học:
-- **Oral Exam (30%):** Giảng viên sẽ chất vấn trực tiếp về nguyên nhân mô hình nhầm lẫn giữa các lớp trong Confusion Matrix và ý nghĩa của Macro-F1.
-- **Hiệu năng trên CIFAR-10 (30%) & CIFAR-100 (30%):** Điểm số được xếp hạng đối đầu giữa các nhóm sinh viên dựa trên Top-1 Accuracy trên tập Test.
-- **Chất lượng Báo cáo (10%):** Bảng tổng hợp số liệu Top-1, Loss, Macro-F1 và Confusion Matrix heatmap là bằng chứng khoa học không thể thiếu.
+According to the examination grading criteria:
+- **Oral Defense (30%):** Instructors probe the specific confusion pairs in the Confusion Matrix and examine the statistical implications of Macro-F1 vs. Top-1 Accuracy.
+- **CIFAR-10 Performance (30%) & CIFAR-100 Performance (30%):** Evaluated comparatively based on independent test set Top-1 Accuracy.
+- **Technical Report Quality (10%):** Metric tables documenting Top-1, Loss, Macro-F1, and Confusion Matrix heatmaps are indispensable technical artifacts.

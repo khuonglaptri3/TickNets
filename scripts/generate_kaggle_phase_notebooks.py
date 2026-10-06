@@ -106,15 +106,15 @@ def generate_notebooks(output_dir=None):
     digest = hashlib.sha256(bundle).hexdigest()
     for phase_index, phase in enumerate(phases, 1):
         intro = f"""# Final Exam: {phase['title']}
-Mỗi notebook chứa sẵn mã nguồn và test đã review; không clone nhánh GitHub đang thay đổi.
-Chọn GPU, bật Internet để tải CIFAR và bảo đảm môi trường có torch, torchvision, numpy, pandas, pillow, pytest.
-Cấu hình cố định: 200 epochs, seed 42, train/validation 45.000/5.000; chọn checkpoint bằng validation.
-Test chính thức được đánh giá sau khi hoàn tất mỗi thực nghiệm; không dùng test để chọn learning rate.
+Each notebook bundles audited source code and unit tests; no git cloning of changing branches required.
+Select a GPU accelerator, enable Internet access to download CIFAR, and ensure dependencies (torch, torchvision, numpy, pandas, pillow, pytest) are installed.
+Fixed configuration: 200 epochs, seed 42, 45,000 train / 5,000 validation split; checkpoints selected via validation metrics.
+Official test evaluation occurs strictly after completing each experiment; never select learning rates using test set outcomes.
 
-Nếu cần chạy nhiều phiên, đặt EPOCHS_PER_SESSION (ví dụ 50); tải recovery.zip về trước khi phiên kết thúc.
-Phiên tiếp theo: giải nén recovery.zip thành Kaggle Dataset, attach dataset, rồi đặt RESUME_ROOT trỏ đến thư mục chứa các run.
-Resume yêu cầu cùng phiên bản torch/torchvision/NumPy/Pillow, loại GPU, mã nguồn và cấu hình.
-Kết quả chỉ được gắn nhãn results khi cả hai run đủ 200 epochs và toàn bộ artifact được xác thực.
+If splitting execution across multiple sessions, set EPOCHS_PER_SESSION (e.g. 50); download recovery.zip before the session terminates.
+Next session: extract recovery.zip into a Kaggle Dataset, attach the dataset, and set RESUME_ROOT to the path containing run folders.
+Resuming requires matching torch/torchvision/NumPy/Pillow versions, identical GPU architecture, source code, and configurations.
+Results are packaged as results.zip only after both runs complete all 200 epochs and pass full artifact validation.
 """
         bootstrap = f"""import base64, hashlib, io, json, os, sys, zipfile
 from pathlib import Path

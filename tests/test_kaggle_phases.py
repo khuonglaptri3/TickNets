@@ -39,7 +39,7 @@ def test_notebooks_contain_current_source_and_fail_fast_commands(tmp_path):
         assert "git clone" not in "\n".join(source)
         assert "check=True" in source[1] and "check=True" in source[-1]
         assert "CUDA_VISIBLE_DEVICES='-1'" in source[1]
-        assert "Mỗi notebook chứa sẵn mã nguồn" in "".join(notebook["cells"][0]["source"])
+        assert "Each notebook bundles audited source code" in "".join(notebook["cells"][0]["source"])
         assert "'--phase', '" + str(i) + "'" in source[-1]
 
 

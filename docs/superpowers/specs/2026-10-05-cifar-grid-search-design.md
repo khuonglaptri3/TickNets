@@ -1,23 +1,23 @@
-# Thiết Kế Hệ Thống Thực Nghiệm Lưới (Grid Search) Cho Kỳ Thi Cuối Kỳ
+# Hyperparameter Grid Search System Design for the Final Examination
 
-**Môn học:** Deep Learning Final Examination  
-**Ngày lập:** 2026-10-05  
-**Kiến trúc mục tiêu:** `TickNet-L v1` ([`models/ticknet_l.py`](../../../models/ticknet_l.py))
-**Tập dữ liệu:** CIFAR-10 (10 lớp) và CIFAR-100 (100 lớp)  
+**Course:** Deep Learning Final Examination  
+**Date:** 2026-10-05  
+**Target Architecture:** `TickNet-L v1` ([`models/ticknet_l.py`](../../../models/ticknet_l.py))  
+**Datasets:** CIFAR-10 (10 classes) and CIFAR-100 (100 classes)  
 
 ---
 
-## 1. Mục Tiêu & Cơ Sở Thiết Kế
+## 1. Objectives & Experimental Framework
 
-Đề bài Cuối kỳ ([`.doc/Final exam.docx`](../../../.doc/Final%20exam.docx)) yêu cầu train/test hai bộ CIFAR, ngân sách mô hình và khảo sát optimizer/LR. Giao thức nhóm lựa chọn:
-1. Huấn luyện mô hình $L$ (`TickNet-L`) từ đầu trên **CIFAR-10** và **CIFAR-100**; from-scratch là lựa chọn thực nghiệm, không phải điều kiện được ghi trong DOCX.
-2. Ràng buộc phần cứng: **Số tham số $\le 6M$**, **FLOPs $< 1G$**.
-3. Khảo sát có hệ thống giữa các mức Learning Rate (ví dụ `0.1`, `0.15`,...) và cả 2 bộ tối ưu hóa: **SGD** và **Adam**.
-4. Báo cáo chi tiết các thông số (momentum, learning rate, epochs, weight decay, loss, accuracy).
+The final examination prompt ([`.doc/Final exam.docx`](../../../.doc/Final%20exam.docx)) mandates training and testing on CIFAR benchmarks, adhering to model complexity budgets, and investigating optimizer and learning rate spaces. The team's experimental protocol specifies:
+1. Train Model $L$ (`TickNet-L`) from scratch on **CIFAR-10** and **CIFAR-100**; 100% train-from-scratch is the team's experimental choice rather than an exam mandate.
+2. Hardware Constraints: **Learnable Parameters $\le 6M$**, **FLOPs $< 1G$**.
+3. Systematic exploration of initial Learning Rates (e.g., `0.10`, `0.15`,...) across two optimizers: **SGD** and **Adam**.
+4. Comprehensive reporting of hyperparameter settings (momentum, learning rate, epochs, weight decay, loss, accuracy).
 
-### Ma Trận Thí Nghiệm (8 Cấu hình Grid Search)
+### Experimental Matrix (8 Grid Search Configurations)
 
-| Mã thí nghiệm (Config ID) | Tập dữ liệu | Optimizer | Learning Rate ban đầu | Momentum / Betas | Weight Decay | Scheduler (200 Epochs) |
+| Config ID | Dataset | Optimizer | Initial Learning Rate | Momentum / Betas | Weight Decay | Scheduler (200 Epochs) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | `cifar10_sgd_lr010` | CIFAR-10 | SGD | `0.10` | momentum=0.9 | 1e-4 | CosineAnnealingLR ($T_{\max}=200$) |
 | `cifar10_sgd_lr015` | CIFAR-10 | SGD | `0.15` | momentum=0.9 | 1e-4 | CosineAnnealingLR ($T_{\max}=200$) |
@@ -30,29 +30,30 @@
 
 ---
 
-## 2. Kiến Trúc Kỹ Thuật Module Huấn Luyện `train_cifar.py`
+## 2. Technical Architecture of Training Module `train_cifar.py`
 
-### 2.1. Quản lý Siêu Tham Số & Cấu hình CLI / JSON
-- Hỗ trợ tải cấu hình từ JSON file (`--config configs/final/<id>.json`).
-- CLI có thể ghi đè các tham số: `--dataset`, `--optimizer`, `--learning-rate`, `--epochs`, `--batch-size`, `--val-fraction`, `--seed`, `--output-dir`.
+### 2.1. Hyperparameter Management & CLI / JSON Configuration
+- Supports configuration loading via JSON (`--config configs/final/<id>.json`).
+- CLI parameter override: `--dataset`, `--optimizer`, `--learning-rate`, `--epochs`, `--batch-size`, `--val-fraction`, `--seed`, `--output-dir`.
 
-### 2.2. Chiến Lược Phân Chia Tập Dữ Liệu (Split Policy)
-- Sử dụng phân tầng stratified: `val_fraction=0.1` (45.000 train / 5.000 val trên CIFAR-10; 450 train / 50 val mỗi lớp trên CIFAR-100).
-- Checkpoint được tuyển chọn hoàn toàn dựa trên tập validation (`best_val.pt` được chọn theo tiêu chí `val_top1` cao nhất, giải hòa bằng `val_loss` thấp hơn).
-- Tập test chính thức (10.000 ảnh) tuyệt đối không tham gia vào quá trình chọn epoch hoặc tinh chỉnh siêu tham số.
+### 2.2. Dataset Partitioning Policy
+- Stratified hold-out split: `val_fraction=0.1` (45,000 train / 5,000 val on CIFAR-10; 450 train / 50 val per class on CIFAR-100).
+- Checkpoints are selected purely based on the validation set (`best_val.pt` selected by highest `val_top1`, breaking ties with lower `val_loss`).
+- The official test set (10,000 images) is never evaluated during epoch selection or hyperparameter tuning.
 
-### 2.3. Đầu Ra Dữ Liệu (Output Artifacts)
-Mỗi thư mục output (`--output-dir`) sẽ tạo ra các file chuẩn:
-1. `config.json`: Toàn bộ cấu hình huấn luyện, git hash, model complexity (tham số, FLOPs), phiên bản thư viện.
-2. `epochs.csv`: Lịch sử từng epoch (epoch, learning_rate, train_loss, train_top1, val_loss, val_top1).
-3. `best_val.pt`: Trọng số checkpoint tốt nhất trên tập validation.
-4. `last.pt`: Checkpoint đầy đủ (model, optimizer, scheduler, rng) để resume nếu bị ngắt phiên trên Kaggle.
-5. `test_metrics.json`: Kết quả đánh giá cuối cùng trên 10.000 ảnh test (Top-1, loss, macro_f1).
-6. `confusion_matrix.csv`: Ma trận nhầm lẫn kích thước $10 \times 10$ (CIFAR-10) hoặc $100 \times 100$ (CIFAR-100).
+### 2.3. Output Artifact Tree
+Each experiment output directory (`--output-dir`) emits standardized artifacts:
+1. `config.json`: Full configuration snapshot, git commit hash, model complexity (parameters, FLOPs), library versions.
+2. `epochs.csv`: Per-epoch metrics history (epoch, learning_rate, train_loss, train_top1, val_loss, val_top1).
+3. `best_val.pt`: Checkpoint weights achieving best validation accuracy.
+4. `last.pt`: Complete state checkpoint (model, optimizer, scheduler, RNG) supporting session resumption.
+5. `test_metrics.json`: Unbiased final evaluation on the 10,000 test images (Top-1, loss, macro_f1).
+6. `confusion_matrix.csv`: Full confusion matrix ($10 \times 10$ or $100 \times 100$).
 
 ---
 
-## 3. Khả Năng Khôi Phục & Triển Khai Kaggle (Resume Capability)
-- Cờ `--resume <path/to/last.pt>`: Khôi phục chính xác trạng thái model, optimizer, scheduler, và generator tại ranh giới epoch bị ngắt.
-- Cờ `--stop-after-epoch <N>`: Dành cho việc chạy smoke test hoặc chạy từng chặng epoch trên môi trường giới hạn thời gian (GPU timeout).
-- Cờ `--evaluate <checkpoint>`: Chạy suy luận độc lập trên tập test 10.000 ảnh và xuất ma trận nhầm lẫn.
+## 3. Recovery & Multi-Session Kaggle Execution
+
+- Flag `--resume <path/to/last.pt>`: Restores exact model, optimizer, scheduler, and generator state at the interrupted epoch boundary.
+- Flag `--stop-after-epoch <N>`: Supports smoke testing or phased execution within restricted GPU session timeouts.
+- Flag `--evaluate <checkpoint>`: Runs standalone inference on the 10,000-image test set and exports confusion matrices.

@@ -1,51 +1,41 @@
-# Mid32 / Mid224 — mô tả dữ liệu và cách chia
+# Mid32 / Mid224 — Dataset Specification and Splitting Methodology
 
-## 1. Mục tiêu và nguồn dữ liệu
+## 1. Objectives & Data Sources
 
-Dataset phân loại 5 lớp: bird, cat, dog, frog, horse. Hai phiên bản có cùng
-25,250 mã mẫu; mỗi mã mẫu có một ảnh 32x32 và một ảnh 224x224.
-Nguồn khi tạo: `C:\Users\lanph\Downloads\Final_Dataset_`.
-Đầu ra: `C:\Users\lanph\OneDrive\Desktop\Deep Learning\TickNets\data`.
+5-class image classification dataset: `bird`, `cat`, `dog`, `frog`, `horse`. Both dataset versions share identical 25,250 sample identifiers; each sample identifier contains one 32×32 image and one 224×224 image.
+Source path during creation: `C:\Users\lanph\Downloads\Final_Dataset_`.
+Output destination: `data/`.
 
-Ảnh được sao chép nguyên byte JPEG, không resize hoặc nén lại. Tất cả ảnh đã
-được giải mã để kiểm tra JPEG, RGB, kích thước và kiểm tra SHA-256 sau sao chép.
+Images are preserved with raw JPEG byte streams without resizing or secondary re-compression. All images were decoded to verify JPEG headers, RGB color channels, dimensions, and post-copy SHA-256 checksums.
 
-## 2. Phương pháp chia: stratified random hold-out theo lớp
+## 2. Partitioning Methodology: Per-Class Stratified Random Hold-Out
 
-- **Seed: 42**; chia lại toàn bộ 5 lớp, gộp các thư mục train/test cũ
-  trước khi chọn mẫu. Split cũ chỉ được giữ trong manifest để truy vết.
-- Mỗi lớp chọn ngẫu nhiên không hoàn lại đúng **50 ảnh test**; các ảnh
-  còn lại là **5000 ảnh train**. Tỷ lệ là 99.009901% train
-  và 0.990099% test, xuất phát từ số lượng đề bài quy định.
-- Duyệt lớp theo thứ tự `bird, cat, dog, frog, horse` và sắp xếp mã mẫu trong
-  từng lớp theo thứ tự chuỗi Python trước khi lấy mẫu.
-- Khởi tạo **một** `random.Random(42)`; gọi `rng.sample(sorted_ids,
-  50)` lần lượt cho từng lớp. Không khởi tạo lại RNG giữa các lớp.
-- Mã mẫu là `class_name/filename`; tên giống nhau ở hai độ phân giải là một cặp.
-  Chọn split một lần rồi áp dụng cho cả hai phiên bản. Không chia độc lập từng bản.
-- Đây là cách chia phân tầng theo nhãn với số mẫu test cố định mỗi lớp, không
-  phải lời khẳng định PyTorch quy định một tỷ lệ chia train/test bắt buộc.
+- **Seed: 42**; re-partitions all 5 classes, consolidating legacy train/test folders prior to sampling. Legacy split assignments are retained solely in the manifest for provenance tracking.
+- Random sampling without replacement selects exactly **50 test images per class**; remaining images comprise **5,000 training images per class**. Yields 99.009901% train and 0.990099% test splits, derived from requirements specified in the midterm prompt.
+- Iterates over classes in alphabetical order (`bird`, `cat`, `dog`, `frog`, `horse`), sorting sample identifiers within each class lexicographically in Python prior to sampling.
+- Instantiates **a single** `random.Random(42)`; calls `rng.sample(sorted_ids, 50)` sequentially across classes without re-seeding between classes.
+- Sample identifiers follow `class_name/filename`; identical filenames across resolutions constitute matched pairs. Splits are decided once and mirrored across both resolutions.
+- This represents per-class stratified partitioning with fixed test quotas, rather than an assertion of a mandated PyTorch split ratio.
 
-## 3. Số lượng trong MỖI phiên bản
+## 3. Sample Counts in EACH Dataset Version
 
-| Lớp | Class index | Train | Test | Tổng |
+| Class | Class Index | Train Samples | Test Samples | Total |
 |---|---:|---:|---:|---:|
 | bird | 0 | 5,000 | 50 | 5,050 |
 | cat | 1 | 5,000 | 50 | 5,050 |
 | dog | 2 | 5,000 | 50 | 5,050 |
 | frog | 3 | 5,000 | 50 | 5,050 |
 | horse | 4 | 5,000 | 50 | 5,050 |
-| **Tổng** | | **25,000** | **250** | **25,250** |
+| **Total** | | **25,000** | **250** | **25,250** |
 
-Không tạo validation trong bản đóng gói. Nếu cần tuning, tách validation từ
-train và giữ test độc lập; không dùng test để chọn seed, siêu tham số hay checkpoint.
+No validation split is baked into the archive bundles. For hyperparameter tuning, separate validation subsets from training data while keeping the test set isolated; never select seeds, hyperparameters, or checkpoints using the test set.
 
-## 4. Cấu trúc tương thích torchvision.datasets.ImageFolder
+## 4. Directory Structure Compatible with `torchvision.datasets.ImageFolder`
 
 ```text
 data/
   Mid32/
-    train/bird/*.jpeg    (tương tự cat, dog, frog, horse)
+    train/bird/*.jpeg    (likewise for cat, dog, frog, horse)
     test/bird/*.jpeg
   Mid224/
     train/bird/*.jpeg
@@ -57,50 +47,40 @@ data/
   Mid224.tar.xz
 ```
 
-Truyền `data/Mid32/train` hoặc `data/Mid224/train` vào ImageFolder khi huấn luyện;
-truyền thư mục test tương ứng khi đánh giá. Ánh xạ lớp giống nhau cho mọi split.
+Pass `data/Mid32/train` or `data/Mid224/train` to `ImageFolder` during training; pass respective test directories during evaluation. Class label mappings remain uniform across all splits.
 
-## 5. Manifest, kiểm tra và tái lập
+## 5. Manifest, Verification, and Reproducibility
 
-`split_manifest.csv` có một dòng cho mỗi cặp ảnh: mã mẫu, nhãn, chỉ số nhãn,
-split mới, split cũ, đường dẫn nguồn/đích, SHA-256 tệp, SHA-256 pixel và số byte
-của từng phiên bản. **Manifest là danh sách phân chia chính thức** để dùng lại.
+`split_manifest.csv` contains a single row per image pair: sample identifier, class label, class index, new split, legacy split, source/destination paths, file SHA-256, pixel SHA-256, and byte size per resolution. **The manifest is the authoritative split record** for downstream replication.
 
-- Cặp ảnh Mid32/Mid224 có cùng split và tên lớp: đã kiểm tra.
-- Train/test không giao nhau theo mã mẫu: đã kiểm tra.
-- Ảnh trùng pixel chính xác nằm ở cả train và test: **0 nhóm** ở từng phiên bản.
-- Kiểm tra trùng pixel không phát hiện được mọi ảnh gần trùng, crop hay cùng chủ thể;
-  dữ liệu nguồn không cung cấp group ID để thực hiện group-aware split.
-- Cùng tập nguồn, tên tệp, thuật toán và seed sẽ tạo lại cùng danh sách. Lưu
-  manifest để tránh phụ thuộc vào thay đổi phiên bản thư viện trong tương lai.
+- Mid32/Mid224 image pairs share identical splits and class labels: verified.
+- Train and test splits are completely disjoint by sample ID: verified.
+- Identical pixel collisions across train and test: **0 instances** in both versions.
+- Exact pixel hashing does not detect near-duplicates, crops, or identical subjects; raw source metadata lacked group IDs for group-aware splitting.
+- Re-executing with identical sources, filenames, algorithm, and seed reproduces identical manifests.
 - Python: 3.11.16; Pillow: 12.3.0.
-- SHA-256 của manifest: `9939a6ee404c6fbbdbe1b07a50763dc6d606497709385708512e1e98d71f2780`.
+- Manifest SHA-256: `9939a6ee404c6fbbdbe1b07a50763dc6d606497709385708512e1e98d71f2780`.
 
-Tái tạo vào một thư mục đích chưa tồn tại:
+Recreating into an empty destination directory:
 
 ```powershell
 python prepare_mid_dataset.py --source-root "C:\Users\lanph\Downloads\Final_Dataset_" --output-root data_recreated --seed 42 --archive-format tar.xz
 ```
 
-## 6. Dung lượng
+## 6. Archive Sizing & Compression
 
-MB trong bảng = 1.000.000 byte, không phải dung lượng cấp phát trên ổ đĩa.
+MB values in this table = 1,000,000 bytes (decimal standard), rather than disk cluster allocation sizes.
 
-| Bản | Kích thước | Tổng JPEG (MB) | Gói nén (MB) |
+| Dataset Version | Resolution | Total Raw JPEG (MB) | Compressed Archive (MB) |
 |---|---|---:|---:|
 | Mid32 | 32 x 32 | 19.0571 | 12.3062 |
 | Mid224 | 224 x 224 | 31.8035 | 24.6096 |
 
-Gói TAR.XZ chỉ chứa cây thư mục ảnh của từng phiên bản; metadata nằm ngoài gói nén.
-Giới hạn đề bài: Mid224 không quá 25M, Mid32 không quá 20M. Đối chiếu dung lượng
-gói nén trong bảng khi nộp theo dạng nén; đề không định nghĩa rõ M/MB hay MiB.
-TAR.XZ nén toàn bộ luồng TAR chung (solid), giúp loại bỏ phần lặp giữa nhiều
-tệp nhỏ. Giải nén khôi phục nguyên byte JPEG. ZIP nén từng tệp riêng và có thêm
-header cho từng ảnh, nên bản ZIP của bộ này lớn hơn giới hạn; dùng TAR.XZ để đóng gói.
+The TAR.XZ archives contain only image directory hierarchies; metadata files reside externally.
+Prompt Constraints: Mid224 under 25M, Mid32 under 20M. TAR.XZ solid stream compression eliminates redundant headers across small files, restoring raw JPEG byte streams upon extraction. ZIP packaging exceeds size limits due to per-file headers; TAR.XZ is mandated.
+Extract using 7-Zip, WinRAR, or `tar -xf Mid32.tar.xz` / `tar -xf Mid224.tar.xz`.
 
-Giải nén bằng 7-Zip/WinRAR hoặc lệnh `tar -xf Mid32.tar.xz` / `tar -xf Mid224.tar.xz`.
-
-## 7. Bộ đọc và pipeline PyTorch
+## 7. PyTorch Dataloaders & Training Pipelines
 
 ```powershell
 conda activate fresher
@@ -108,17 +88,11 @@ python train_mid.py --data-root data --variant Mid32 --seed 42 --output-dir runs
 python train_mid.py --data-root data --variant Mid224 --seed 42 --output-dir runs/mid224_seed42
 ```
 
-Đây là lệnh huấn luyện để chạy sau khi chuẩn bị dữ liệu, không phải kết quả đã
-huấn luyện. Mặc định dùng TickNet-basic với đầu ra 5 lớp; Mid32 sử dụng cấu hình
-stride dành cho 32x32. Pipeline lưu cấu hình, log train từng epoch, checkpoint
-cuối và kết quả test cuối quá trình; không chọn checkpoint theo test.
+Defaults to TickNet-Basic with a 5-class head; Mid32 uses 32×32 stride schedules. Pipeline logs training configs, per-epoch metrics, final checkpoints, and end-of-run test metrics; checkpoint selection never uses test data.
 
-Train áp dụng random crop có padding và horizontal flip; test không augment.
-ToTensor chuyển RGB về [0, 1]; không thêm Normalize vì TickNet hiện có data_bn.
-Seed điều khiển Python, NumPy, Torch, sampler và worker. Kết quả huấn luyện vẫn
-phụ thuộc môi trường/phần cứng; seed cố định không bảo đảm giống bit giữa mọi máy.
+Training applies random crops with padding and horizontal flips; evaluation applies no augmentations. `ToTensor()` scales RGB values to $[0, 1]$; manual normalization is omitted because TickNet incorporates internal `data_bn`.
 
-## 8. Tài liệu phương pháp
+## 8. Methodology References
 
 - [ImageFolder — PyTorch](https://docs.pytorch.org/vision/stable/generated/torchvision.datasets.ImageFolder.html)
 - [Stratification — scikit-learn](https://scikit-learn.org/stable/modules/cross_validation.html#stratification)

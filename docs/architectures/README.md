@@ -1,51 +1,51 @@
-# Sơ đồ Kiến trúc Tương tác TickNets (Interactive Architecture Diagrams)
+# Interactive Architecture Diagrams: TickNets
 
-Thư mục này chứa các sơ đồ kiến trúc ụ , trực quan hóa chi tiết cấu trúc luồng tensor, các khối PDP (Pointwise-Depthwise-Pointwise), cơ chế nén kênh, Mixed Depthwise và phân bổ tham số / FLOPs của 3 dòng mô hình trong đồ án.
+This directory contains interactive architectural diagrams detailing tensor flow, Pointwise-Depthwise-Pointwise (PDP) blocks, channel bottlenecking, Mixed Depthwise Convolutions, and parameter / FLOP distributions across all 3 model families in the project.
 
-Tất cả các sơ đồ đều là file HTML độc lập (self-contained), có thể mở trực tiếp bằng bất kỳ trình duyệt web nào (Chrome, Firefox, Safari, Edge) mà không cần cài đặt thêm server hay web framework.
-
----
-
-## Danh mục các Sơ đồ Kiến trúc
-
-| Mô hình                  | File Sơ đồ Tương tác (.html)                                                                                 | Cấu hình Đầu vào (.json)            | Đặc điểm Kiến trúc Trực quan hóa                                                                                                                          |
-| :------------------------- | :----------------------------------------------------------------------------------------------------------------- | :--------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **TickNet-Basic**    | [ticknet_basic.html](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_basic.html)           | `ticknet_basic.architecture.json`      | 1.06M Params, 0.988 GFLOPs. Thể hiện rõ điểm nghẽn tính toán tại Stage 2 (52.7% FLOPs).                                                                  |
-| **TickNet-L v1**     | [ticknet_l.html](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_l.html)                   | `ticknet_l.architecture.json`          | 1.10M Params, 0.796 GFLOPs (-19.4%). Trực quan hóa cơ chế**Pointwise Bottleneck (0.75x)** và **Mixed DW (3x3 + 5x5)** mở rộng receptive field. |
-| **TickNet-C v1**     | [ticknet_c.html](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_c.html)                   | `ticknet_c.architecture.json`          | 5.16M Params, 0.821 GFLOPs. Kế thừa 100% backbone của thầy, mở rộng 9 blocks với Stage 5 đạt 896 channels và stride schedule`(2, 1, 2, 2, 2)`.        |
-| **Macro Comparison** | [ticknet_comparison.html](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_comparison.html) | `ticknet_comparison.architecture.json` | So sánh vĩ mô toàn diện 3 triết lý thiết kế: Baseline vs. Compute-Efficient vs. Capacity-Maximized.                                                      |
+All diagrams are self-contained HTML files that can be opened directly in any modern web browser (Chrome, Firefox, Safari, Edge) without local servers or external web frameworks.
 
 ---
 
-## Hướng dẫn mở và tương tác trên Trình duyệt
+## Architecture Diagram Inventory
 
-Bạn có thể mở các file HTML bằng trình duyệt web theo các cách sau:
+| Architecture | Interactive Diagram (.html) | Input Configuration (.json) | Visualized Architecture Highlights |
+| :--- | :--- | :--- | :--- |
+| **TickNet-Basic** | [ticknet_basic.html](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_basic.html) | `ticknet_basic.architecture.json` | 1.06M Params, 0.988 GFLOPs. Visualizes the Stage 2 computational bottleneck (52.7% of total FLOPs). |
+| **TickNet-L v1** | [ticknet_l.html](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_l.html) | `ticknet_l.architecture.json` | 1.10M Params, 0.796 GFLOPs (-19.4%). Highlights **Pointwise Bottleneck (0.75x)** and **Mixed DW (3x3 + 5x5)** multi-scale receptive field expansion. |
+| **TickNet-C v1** | [ticknet_c.html](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_c.html) | `ticknet_c.architecture.json` | 5.16M Params, 0.821 GFLOPs. Inherits original author backbone, expanding to 9 blocks with Stage 5 reaching 896 channels under stride schedule `(2, 1, 2, 2, 2)`. |
+| **Macro Comparison** | [ticknet_comparison.html](file:///home/intern-tdkhuong/Desktop/TickNets/docs/architectures/ticknet_comparison.html) | `ticknet_comparison.architecture.json` | Holistic comparison of 3 design philosophies: Baseline vs. Compute-Efficient vs. Capacity-Maximized. |
 
-### Cách 1: Mở trực tiếp từ dòng lệnh (Ubuntu / Linux)
+---
+
+## Instructions for Opening in Web Browsers
+
+Open any HTML diagram file using standard methods:
+
+### Option 1: Open Directly via Terminal (Ubuntu / Linux)
 
 ```bash
-# Mở sơ đồ TickNet-Basic
+# Open TickNet-Basic diagram
 xdg-open docs/architectures/ticknet_basic.html
 
-# Mở sơ đồ TickNet-L v1
+# Open TickNet-L v1 diagram
 xdg-open docs/architectures/ticknet_l.html
 
-# Mở sơ đồ TickNet-C v1
+# Open TickNet-C v1 diagram
 xdg-open docs/architectures/ticknet_c.html
 
-# Mở sơ đồ so sánh tổng thể
+# Open Macro Comparison diagram
 xdg-open docs/architectures/ticknet_comparison.html
 ```
 
-### Cách 2: Kéo thả vào trình duyệt
+### Option 2: Drag and Drop into Browser
 
-Kéo trực tiếp file `.html` từ trình quản lý tệp (Nautilus/Files) và thả vào cửa sổ Chrome / Edge / Firefox.
+Drag the `.html` file from your file manager (Nautilus/Files) directly into any browser window (Chrome, Edge, Firefox).
 
 ---
 
-## Tính năng tương tác trong mỗi Sơ đồ
+## Interactive Features in Each Diagram
 
-1. **Phóng to / Thu nhỏ & Xoay chuyển (Pan & Zoom)**: Dùng chuột cuộn hoặc touchpad để xem chi tiết từng tầng bên trong block hoặc thu nhỏ để xem luồng mạng toàn cục.
-2. **Chế độ Sáng / Tối (Light & Dark Theme)**: Nút chuyển đổi giao diện tích hợp sẵn ở góc sơ đồ, tối ưu hiển thị cho slide thuyết trình hoặc báo cáo kỹ thuật.
-3. **Thanh Thông tin Phân bổ (Metadata Badge)**: Hiển thị kích thước tensor qua từng stage `(B, C, H, W)`, kích thước kernel, stride, tham số và FLOPs tương ứng.
-4. **Kiểm định Chất lượng Showcase**: Tất cả các sơ đồ đều đạt chuẩn chất lượng nghiêm ngặt (9/9 tiêu chí kiểm định Archify passed, clearance nhãn $\ge 80$px, không tràn khung nhìn).
+1. **Pan & Zoom**: Scroll with mouse wheel or trackpad gestures to inspect individual layers within blocks or zoom out for end-to-end global flow.
+2. **Light & Dark Theme Switcher**: Dedicated theme toggle button located in the corner, optimized for slide decks or print-ready reports.
+3. **Metadata Badges**: Displays intermediate tensor shapes `(B, C, H, W)` per stage, kernel sizes, strides, parameter counts, and respective FLOPs.
+4. **Showcase Quality Compliance**: All diagrams adhere to strict presentation criteria (9/9 Archify validation standards passed, label clearances $\ge 80$px, zero viewport overflow).

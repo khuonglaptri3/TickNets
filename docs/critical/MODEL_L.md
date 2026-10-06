@@ -1,72 +1,73 @@
-# Kiến trúc Mô hình Đề xuất TickNet-L v1 trên CIFAR-10 & CIFAR-100
+# Proposed TickNet-L v1 Architecture for CIFAR-10 & CIFAR-100
 
-Tài liệu này ghi nhận chi tiết thiết kế kiến trúc của mô hình **TickNet-L v1** ([`models/ticknet_l.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_l.py)), các cải tiến kỹ thuật so với mô hình gốc **TickNet-Basic** của tác giả ([`models/TickNet.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/TickNet.py)), và chứng minh toán học về tính tuân thủ ngân sách của đề thi cuối kỳ.
-
----
-
-## 1. Mục tiêu Thiết kế & Ràng buộc Đề bài Cuối kỳ
-
-Đề thi quy định hai điều kiện tiên quyết cho mô hình L:
-1. **Số lượng tham số học được (Learnable Parameters):** Không vượt quá **6.000.000 tham số ($\le 6\text{M}$)**.
-2. **Chi phí tính toán (FLOPs forward):** Dưới **1.000.000.000 FLOPs ($< 1\text{G}$)**.
-3. **Mục tiêu thực nghiệm:** Huấn luyện và đánh giá trên hai bộ dữ liệu chuẩn quốc tế **CIFAR-10** (10 lớp) và **CIFAR-100** (100 lớp) với độ phân giải tự nhiên $32 \times 32$.
+This document details the architectural design of **TickNet-L v1** ([`models/ticknet_l.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_l.py)), its technical improvements compared to the author's original **TickNet-Basic** baseline ([`models/TickNet.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/TickNet.py)), and mathematical proofs verifying compliance with the final examination budget constraints.
 
 ---
 
-## 2. Bảng Đối chiếu Chi tiết: TickNet-L v1 vs TickNet-Basic (Tác giả)
+## 1. Design Objectives & Final Examination Constraints
 
-| Thành phần Kiến trúc | TickNet-Basic (Tác giả) | TickNet-L v1 (Đề xuất) | Rationale & Ý nghĩa Kỹ thuật |
+The examination specification establishes two strict prerequisites for Model L:
+1. **Learnable Parameters:** Strictly capped at **$\le 6,000,000$ parameters (6M)**.
+2. **Computational Complexity (Forward FLOPs):** Strictly capped at **$< 1,000,000,000$ FLOPs (1G)**.
+3. **Experimental Target:** Train and evaluate on two standard benchmark datasets: **CIFAR-10** (10 classes) and **CIFAR-100** (100 classes) at native $32 \times 32$ image resolution.
+
+---
+
+## 2. Comparative Matrix: TickNet-L v1 vs. Author's TickNet-Basic
+
+| Architectural Component | TickNet-Basic (Author Baseline) | TickNet-L v1 (Proposed) | Technical Rationale & Impact |
 | :--- | :--- | :--- | :--- |
-| **Stem Conv (Khởi đầu)** | 32 kênh, Stride 1 | **24 kênh, Stride 1** | Giảm chi phí tính toán tại tầng đầu khi độ phân giải không gian còn lớn ($32 \times 32$). |
-| **Kênh 5 Stages** | [128, 64, 128, 256, 512] | **[112, 64, 144, 288, 512]** | Tái phân bổ ngân sách: Giảm kênh ở Stage 1, tăng biểu diễn ở Stage 3 & 4. |
-| **Số Blocks mỗi Stage** | [1, 1, 1, 1, 1] (5 blocks) | **[1, 1, 2, 2, 1] (7 blocks)** | Tăng chiều sâu mạng ở các tầng có spatial nhỏ ($16 \times 16$ và $8 \times 8$), tăng khả năng trích xuất phi tuyến. |
-| **Pointwise Đầu Block** | $C_{in} \rightarrow C_{in}$ (Không nén) | **$C_{in} \rightarrow \text{hidden}$ (Tỷ lệ 0.75)** | Giảm $25\%$ số phép nhân ma trận ở tầng Pointwise tốn kém nhất. |
-| **Depthwise Convolution** | Thuần $3 \times 3$ trên mọi kênh | **Mixed DW ($3 \times 3$ và $5 \times 5$)** | Stage 1–2 dùng $3 \times 3$; Stage 3–5 chia đôi kênh chạy $3 \times 3$ và $5 \times 5$ song song, thu nhận đa trường nhìn (Multi-scale receptive field). |
-| **Squeeze-and-Excitation** | Có ở mọi block ($r=16$) | **Giữ nguyên SE Attention** | Tái hiệu chỉnh trọng số các kênh đặc trưng. |
-| **Tầng Conv trước Pooling**| 1024 kênh | **768 kênh** | Tiết kiệm tham số và FLOPs trước khi vào Classifier. |
-| **Phân loại (Head)** | 10 hoặc 100 lớp | **10 hoặc 100 lớp** | Tương thích hoàn hảo cả CIFAR-10 và CIFAR-100. |
+| **Stem Conv (Initial)** | 32 channels, Stride 1 | **24 channels, Stride 1** | Conserves computation at early layers where spatial resolution is largest ($32 \times 32$). |
+| **5-Stage Elasticity Channels** | [128, 64, 128, 256, 512] | **[112, 64, 144, 288, 512]** | Budget reallocation: Decreases channels in Stage 1, boosts representation capacity in Stages 3 & 4. |
+| **Stage Block Depths** | [1, 1, 1, 1, 1] (5 blocks) | **[1, 1, 2, 2, 1] (7 blocks)** | Increases network depth at compact spatial resolutions ($16 \times 16$ and $8 \times 8$), improving non-linear feature extraction. |
+| **Block-Entry Pointwise Conv** | $C_{in} \rightarrow C_{in}$ (No compression) | **$C_{in} \rightarrow \text{hidden}$ (0.75 Ratio)** | Reduces matrix multiplication operations by $25\%$ at the computationally expensive pointwise stage. |
+| **Depthwise Convolution** | Pure $3 \times 3$ across all channels | **Mixed DW ($3 \times 3$ and $5 \times 5$)** | Stages 1–2 use $3 \times 3$; Stages 3–5 split channels into parallel $3 \times 3$ and $5 \times 5$ branches, capturing multi-scale receptive fields. |
+| **Squeeze-and-Excitation** | Included in all blocks ($r=16$) | **Retained SE Attention** | Recalibrates channel-wise feature dependencies. |
+| **Pre-Pooling Conv Layer** | 1024 channels | **768 channels** | Saves parameters and FLOPs prior to the final classification head. |
+| **Classifier Head** | 10 or 100 classes | **10 or 100 classes** | Fully compatible with both CIFAR-10 and CIFAR-100. |
 
 ---
 
-## 3. Cấu trúc Khối FR-PDP Cải tiến trong TickNet-L
+## 3. Improved FR-PDP Block Structure in TickNet-L
 
-Khối FR-PDP v1 kết hợp cơ chế thắt cổ chai (bottlenecking) và Depthwise phân tách đa trường nhìn:
+The enhanced FR-PDP v1 block integrates pointwise bottlenecking with multi-scale depthwise convolutions:
 
 ```text
-                     +---------- Shortcut Identity / PW 1x1 ----------+
-                     |                                                 |
-Input (Cin) -> PW 1x1 Linear (hidden = 0.75*Cin) 
+                     +---------- Shortcut Identity / Linear PW 1x1 ----------+
+                     |                                                        |
+Input (Cin) -> Linear PW 1x1 (hidden = 0.75*Cin) 
             -> Split channels (50% DW 3x3, 50% DW 5x5) 
             -> Concat -> BN + ReLU 
             -> PW 1x1 (Cout) + BN + ReLU 
-            -> SE Attention (ChannelGate) 
-            -> Cộng với Shortcut (+) -> Output (Cout)
+            -> SE Attention (ChannelGate, r=16) 
+            -> Element-wise Addition (+) -> Output (Cout)
 ```
 
-Quy tắc làm tròn số kênh ẩn:
+Hidden channel rounding formula:
 $$\text{hidden} = \max\left(16, \left\lfloor \frac{0.75 \times C_{in} + 4}{8} \right\rfloor \times 8\right)$$
-Đảm bảo số kênh luôn chia hết cho 8, tối ưu hóa quá trình vector hóa trên GPU Tensor Cores.
+Ensures hidden channel dimensions are multiples of 8, optimizing memory alignment and vectorized execution on GPU Tensor Cores.
 
 ---
 
-## 4. Bằng chứng Định lượng Tuân thủ Ngân sách (Complexity Proof)
+## 4. Quantitative Complexity Proof & Budget Verification
 
-Đo lường bằng [`models/model_profile.py`](../../models/model_profile.py), phạm vi Conv2d/Linear (không tính BN, activation, pooling và phép toán phần tử), quy ước $1\text{ MAC} = 2\text{ FLOPs}$, batch size = 1, tensor đầu vào $(1, 3, 32, 32)$:
+Measured via [`models/model_profile.py`](../../models/model_profile.py) across Conv2d/Linear layers (excluding BN, activations, pooling, and element-wise ops), following the convention $1\text{ MAC} = 2\text{ FLOPs}$, batch size = 1, input tensor $(1, 3, 32, 32)$:
 
-### 4.1. Kết quả trên CIFAR-10 (10 lớp)
-- **Số lượng Tham số học được:** **1.100.105 tham số** ($\approx 1.10\text{M} \le 6.000.000$ $\to$ **ĐẠT, chỉ chiếm 18.3% trần cho phép**).
-- **Chi phí Tính toán (FLOPs forward):** **157.828.544 FLOPs** ($\approx 0.1578\text{ GFLOPs} < 1.000.000.000$ $\to$ **ĐẠT, chỉ chiếm 15.8% trần cho phép**).
+### 4.1. Results on CIFAR-10 (10 Classes)
+- **Learnable Parameters:** **1,100,105 parameters** ($\approx 1.10\text{M} \le 6,000,000$ $\to$ **PASSED, utilizes 18.3% of allowed ceiling**).
+- **Computational Cost (Forward FLOPs):** **157,828,544 FLOPs** ($\approx 0.1578\text{ GFLOPs} < 1,000,000,000$ $\to$ **PASSED, utilizes 15.8% of allowed ceiling**).
 
-### 4.2. Kết quả trên CIFAR-100 (100 lớp)
-- **Số lượng Tham số học được:** **1.169.315 tham số** ($\approx 1.17\text{M} \le 6.000.000$ $\to$ **ĐẠT, chỉ chiếm 19.5% trần cho phép**).
-- **Chi phí Tính toán (FLOPs forward):** **157.966.784 FLOPs** ($\approx 0.1580\text{ GFLOPs} < 1.000.000.000$ $\to$ **ĐẠT, chỉ chiếm 15.8% trần cho phép**).
+### 4.2. Results on CIFAR-100 (100 Classes)
+- **Learnable Parameters:** **1,169,315 parameters** ($\approx 1.17\text{M} \le 6,000,000$ $\to$ **PASSED, utilizes 19.5% of allowed ceiling**).
+- **Computational Cost (Forward FLOPs):** **157,966,784 FLOPs** ($\approx 0.1580\text{ GFLOPs} < 1,000,000,000$ $\to$ **PASSED, utilizes 15.8% of allowed ceiling**).
 
-### 4.3. Bảng Tổng Hợp So Sánh Độ Phức Tạp
-| Mô hình | Dataset | Tham số (Params) | Tỷ lệ trần Params (6M) | Chi phí FLOPs | Tỷ lệ trần FLOPs (1G) | Trạng thái Tuân thủ |
+### 4.3. Complexity Comparison Summary
+
+| Model Architecture | Dataset | Learnable Params | Param Budget ($\le 6\text{M}$) | Forward FLOPs | FLOPs Budget ($< 1\text{G}$) | Compliance Status |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **TickNet-Basic** (Tác giả) | CIFAR-10 | 1.067.348 | 17.8% | 0.1584 GFLOPs | 15.8% |  HỢP LỆ |
-| **TickNet-Basic** (Tác giả) | CIFAR-100| 1.159.598 | 19.3% | 0.1586 GFLOPs | 15.9% |  HỢP LỆ |
-| **TickNet-L v1** (Đề xuất) | CIFAR-10 | **1.100.105** | **18.3%** | **0.1578 GFLOPs** | **15.8%** |  **HỢP LỆ** |
-| **TickNet-L v1** (Đề xuất) | CIFAR-100| **1.169.315** | **19.5%** | **0.1580 GFLOPs** | **15.8%** |  **HỢP LỆ** |
+| **TickNet-Basic** (Author Baseline) | CIFAR-10 | 1,067,348 | 17.8% | 0.1584 GFLOPs | 15.8% | **PASSED** |
+| **TickNet-Basic** (Author Baseline) | CIFAR-100 | 1,159,598 | 19.3% | 0.1586 GFLOPs | 15.9% | **PASSED** |
+| **TickNet-L v1** (Proposed) | CIFAR-10 | **1,100,105** | **18.3%** | **0.1578 GFLOPs** | **15.8%** | **PASSED** |
+| **TickNet-L v1** (Proposed) | CIFAR-100 | **1,169,315** | **19.5%** | **0.1580 GFLOPs** | **15.8%** | **PASSED** |
 
-*(Cả hai mô hình đều được kiểm thử và xác nhận 100% qua bộ unit test `tests/test_ticknet_l.py`).*
+*(Both models are verified and confirmed with 100% pass rate in unit test suite `tests/test_ticknet_l.py`).*

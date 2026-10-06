@@ -1,45 +1,44 @@
 # Superpowers Artifacts: Deep Learning Final Examination
 
-Thư mục này quản lý toàn bộ các tài liệu đặc tả thiết kế kỹ thuật (**Specs**) và kế hoạch hành động (**Plans**) cho hệ thống mô hình `TickNet-L v1` và `TickNet-Basic` phục vụ Đồ án Cuối kỳ.
+This directory manages all technical design specifications (**Specs**) and execution plans (**Plans**) for the `TickNet-L v1` and `TickNet-Basic` model architectures supporting the Final Examination project.
 
-**Hiện hành:** [CIFAR/Kaggle reliability v2](specs/2026-10-05-cifar-kaggle-reliability.md),
-[hướng dẫn Phase 1–4](../kaggle/README.md) và [bằng chứng kiểm thử](../kaggle/VALIDATION.md).
-Các bảng/checkbox v1 bên dưới là hồ sơ triển khai lịch sử; không xác nhận đã hoàn thành
-thực nghiệm 200 epochs, báo cáo PDF hay toàn bộ đề thi.
+**Current Active Guidelines:** [CIFAR/Kaggle Reliability v2 Spec](specs/2026-10-05-cifar-kaggle-reliability.md), [Phase 1–4 Guide](../kaggle/README.md), and [Test Verification Evidence](../kaggle/VALIDATION.md).
+The v1 tables and checklists below represent historical implementation records; they do not attest to completion of full 200-epoch training runs, final PDF reports, or the overall examination defense.
 
-Toàn bộ tài liệu tuân thủ chuẩn của quy trình phát triển dựa trên kế hoạch (**Plan-Driven Development**) và được cập nhật đầy đủ theo tiến độ thực tế ngày **2026-10-05**.
+All documentation conforms to plan-driven development standards and reflects the state as of **2026-10-05**.
 
 ---
 
-## 1. Danh Mục Thiết Kế Kỹ Thuật (Specs)
+## 1. Technical Design Specifications (Specs)
 
-| Tập tin đặc tả | Mô tả nội dung cốt lõi | Trạng thái |
+| Specification File | Core Focus | Status |
 | :--- | :--- | :---: |
-| [`specs/2026-10-05-cifar-final-exam-full-system-spec.md`](specs/2026-10-05-cifar-final-exam-full-system-spec.md) | **Đặc tả toàn diện hệ thống:** Tích hợp kỹ thuật Cutout 16x16 (DeVries & Taylor 2017), SGD Nesterov momentum $\mu=0.9$, ma trận 10 file cấu hình (8 Grid Search + 2 Author Baseline), module hóa 5 notebook Kaggle, tái cấu trúc 11 tài liệu kỹ thuật và bảo tồn trích dẫn học thuật của tác giả gốc. | **Hoàn thành** |
-| [`specs/2026-10-05-cifar-grid-search-design.md`](specs/2026-10-05-cifar-grid-search-design.md) | Đặc tả ban đầu về cơ chế Grid Search cho `train_cifar.py` và chiến lược phân tầng Stratified 90/10 trên CIFAR-10 & CIFAR-100. | **Hoàn thành** |
+| [`specs/2026-10-05-cifar-final-exam-full-system-spec.md`](specs/2026-10-05-cifar-final-exam-full-system-spec.md) | **Comprehensive System Specification:** Integration of Cutout 16×16 (DeVries & Taylor 2017), SGD with Nesterov momentum $\mu=0.9$, 10 configuration files matrix (8 Grid Search + 2 Author Baseline), 5 modularized Kaggle notebooks, restructuring of 11 critical technical documents, and restoration of author citations. | **Completed** |
+| [`specs/2026-10-05-cifar-kaggle-reliability.md`](specs/2026-10-05-cifar-kaggle-reliability.md) | Current active specification for Kaggle execution reliability, recovery zip bundles, preflight CPU tests, atomic checkpointing, and artifact validation. | **Active / Current** |
+| [`specs/2026-10-05-cifar-grid-search-design.md`](specs/2026-10-05-cifar-grid-search-design.md) | Initial technical design specification for the grid search mechanics in `train_cifar.py` and 90/10 stratified dataset partitioning on CIFAR-10 & CIFAR-100. | **Completed (Historical)** |
 
 ---
 
-## 2. Danh Mục Kế Hoạch Triển Khai (Plans)
+## 2. Implementation Plans (Plans)
 
-| Tập tin kế hoạch | Mục tiêu triển khai | Nhiệm vụ đã hoàn thành |
+| Implementation Plan | Objective | Tasks Completed |
 | :--- | :--- | :---: |
-| [`plans/2026-10-05-final-exam-system-evolution.md`](plans/2026-10-05-final-exam-system-evolution.md) | **Kế hoạch hành động toàn diện:** Theo dõi chi tiết 8 nhóm nhiệm vụ lớn (Cutout, Nesterov, 10 Configs, 5 Notebooks Kaggle, 11 Docs Critical, README Overhaul & Citation, 47/47 Tests Passed, Git Sync). | **8/8 Tasks (100%)** |
-| [`plans/2026-10-05-cifar-grid-search.md`](plans/2026-10-05-cifar-grid-search.md) | Kế hoạch triển khai ban đầu cho module `train_cifar.py` và 8 file cấu hình. | **5/5 Tasks (100%)** |
-| [`plans/2026-10-05-cifar-dataloaders.md`](plans/2026-10-05-cifar-dataloaders.md) | Kế hoạch triển khai ban đầu cho `models/cifar_data.py` và script tải dữ liệu `download_cifar.py`. | **3/3 Tasks (h? s? v1)** |
+| [`plans/2026-10-05-final-exam-system-evolution.md`](plans/2026-10-05-final-exam-system-evolution.md) | **System Evolution Master Plan:** Tracking 8 major task groups (Cutout, Nesterov, 10 Configs, 5 Kaggle Notebooks, 11 Critical Docs, README Overhaul & Citation, Unit Tests, Git Synchronization). | **8/8 Tasks (100%)** |
+| [`plans/2026-10-05-cifar-grid-search.md`](plans/2026-10-05-cifar-grid-search.md) | Initial implementation plan for `train_cifar.py` and 8 grid search configuration files. | **5/5 Tasks (100%)** |
+| [`plans/2026-10-05-cifar-dataloaders.md`](plans/2026-10-05-cifar-dataloaders.md) | Initial implementation plan for `models/cifar_data.py` and automated dataset downloader `scripts/download_cifar.py`. | **3/3 Tasks (v1 record)** |
 
 ---
 
-## 3. Bản Đồ Liên Kết Hệ Thống (System Linkages)
+## 3. System Architecture and Dependency Map
 
 ```mermaid
 graph TD
     Spec["Spec: 2026-10-05-cifar-final-exam-full-system-spec.md"] --> Plan["Plan: 2026-10-05-final-exam-system-evolution.md"]
     Plan --> Data["models/cifar_data.py (Cutout 16x16)"]
     Plan --> Train["train_cifar.py (SGD Nesterov + Adam)"]
-    Plan --> Configs["configs/final/*.json (10 Cấu hình)"]
-    Plan --> Kaggle["docs/kaggle/ (5 Notebooks độc lập)"]
-    Plan --> Critical["docs/critical/ (11 Tài liệu chuyên sâu)"]
-    Plan --> Readme["README.md (Hướng dẫn + Trích dẫn Tác giả)"]
-    Plan --> Tests["tests/ (47/47 Tests Passed)"]
+    Plan --> Configs["configs/final/*.json (10 Configurations)"]
+    Plan --> Kaggle["docs/kaggle/ (5 Standalone Notebooks)"]
+    Plan --> Critical["docs/critical/ (11 Critical Technical Docs)"]
+    Plan --> Readme["README.md (Guide + Author Citations)"]
+    Plan --> Tests["tests/ (Test Suite Verification)"]
 ```

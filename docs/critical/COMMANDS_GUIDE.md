@@ -1,43 +1,43 @@
-# Sổ tay các Lệnh Thực thi Đồ án TickNets - Cuối kỳ (Command-Line Reference Guide)
+# Command-Line Reference Guide: TickNets Final Examination
 
-Tài liệu này tổng hợp toàn bộ các câu lệnh CLI đã được chuẩn hóa và kiểm thử thành công trong đồ án cuối kỳ, phục vụ từ khâu tải và kiểm định dữ liệu CIFAR-10/100, đo lường FLOPs/Params, huấn luyện mô hình TickNet-L & Baseline, khảo sát lưới siêu tham số (Grid Search), đến đánh giá và gộp báo cáo.
+This handbook consolidates all standardized and tested CLI commands supporting the final examination workflow: from automated CIFAR-10/100 dataset download and verification, FLOPs/parameter profiling, training TickNet-L & author baselines, running hyperparameter grid searches, to evaluation and report aggregation.
 
 ---
 
-## 1. Kiểm tra Môi trường & Bộ Kiểm thử Tự động (PyTest)
+## 1. Environment Verification & Automated Test Suite (PyTest)
 
-Chạy toàn bộ test kiểm tra mô hình, SGD/Adam, dữ liệu, metric, resume, ghi checkpoint và kết quả Kaggle:
+Execute the comprehensive test suite verifying architectures, optimizers (SGD/Adam), datasets, evaluation metrics, checkpoint resuming, and Kaggle notebook integrity:
 ```bash
 python -m pytest tests -v
 ```
-*(Yêu cầu: 100% tests PASSED trước khi triển khai huấn luyện).*
+*(Prerequisite: 100% tests PASSED prior to launching long-running training).*
 
 ---
 
-## 2. Tải Tự động & Xác thực Toàn vẹn Dữ liệu CIFAR (Automated Downloader)
+## 2. Automated Download & Verification of CIFAR Datasets
 
-Hệ thống tải trực tiếp từ server Đại học Toronto (`cave.cs.toronto.edu`) kèm fallback mirror (`www.cs.toronto.edu`) và cơ chế chống lỗi SSL trên Linux:
+Downloads datasets directly from the University of Toronto servers (`cave.cs.toronto.edu`) with automatic fallback mirror (`www.cs.toronto.edu`) and Linux SSL certificate handling:
 
 ```bash
-# Tải cả 2 bộ dữ liệu CIFAR-10 và CIFAR-100 vào thư mục data/
+# Download both CIFAR-10 and CIFAR-100 into data/
 python download_cifar.py --data-root data --dataset all
 
-# Tải riêng từng bộ dữ liệu:
+# Download individually:
 python download_cifar.py --data-root data --dataset cifar10
 python download_cifar.py --data-root data --dataset cifar100
 
-# Bắt buộc tải lại (bỏ qua cache) và kiểm tra mã băm MD5
+# Force re-download (bypass local cache) and verify MD5 checksums:
 python download_cifar.py --data-root data --force
 ```
 
 ---
 
-## 3. Đo lường Hồ sơ Mô hình (Model Profiling - Params & FLOPs)
+## 3. Model Complexity Profiling (Params & FLOPs)
 
-Kiểm tra ràng buộc của đề bài (Tham số $\le 6.000.000$, FLOPs $< 1.000.000.000$):
+Verifies compliance with final examination constraints (Learnable Params $\le 6,000,000$, FLOPs $< 1,000,000,000$):
 
 ```bash
-# Kiểm tra nhanh độ phức tạp mô hình TickNet-L trên CIFAR-10 và CIFAR-100
+# Profile TickNet-L complexity on CIFAR-10 and CIFAR-100
 python -c '
 from models.ticknet_l import build_ticknet_l
 from models.model_profile import profile_model
@@ -45,7 +45,7 @@ print("TickNet-L CIFAR-10:", profile_model(build_ticknet_l(10, cifar=True), 32))
 print("TickNet-L CIFAR-100:", profile_model(build_ticknet_l(100, cifar=True), 32))
 '
 
-# Kiểm tra mô hình gốc tác giả TickNet-Basic trên CIFAR-10 và CIFAR-100
+# Profile author baseline TickNet-Basic on CIFAR-10 and CIFAR-100
 python -c '
 from models.TickNet import build_TickNet
 from models.model_profile import profile_model
@@ -54,77 +54,76 @@ print("TickNet-Basic CIFAR-100:", profile_model(build_TickNet(100, typesize="bas
 '
 ```
 
-*Số liệu kiểm chứng:*
-- **TickNet-L (CIFAR-10):** 1.100.105 tham số ($\le 6M$) | 0.1578 GFLOPs ($< 1G$).
-- **TickNet-L (CIFAR-100):** 1.169.315 tham số ($\le 6M$) | 0.1580 GFLOPs ($< 1G$).
-- **TickNet-Basic (CIFAR-10):** 1.067.348 tham số ($\le 6M$) | 0.1584 GFLOPs ($< 1G$).
-- **TickNet-Basic (CIFAR-100):** 1.159.598 tham số ($\le 6M$) | 0.1586 GFLOPs ($< 1G$).
+*Verified Profile Statistics:*
+- **TickNet-L (CIFAR-10):** 1,100,105 parameters ($\le 6M$) | 0.1578 GFLOPs ($< 1G$).
+- **TickNet-L (CIFAR-100):** 1,169,315 parameters ($\le 6M$) | 0.1580 GFLOPs ($< 1G$).
+- **TickNet-Basic (CIFAR-10):** 1,067,348 parameters ($\le 6M$) | 0.1584 GFLOPs ($< 1G$).
+- **TickNet-Basic (CIFAR-100):** 1,159,598 parameters ($\le 6M$) | 0.1586 GFLOPs ($< 1G$).
 
 ---
 
-## 4. Huấn luyện Mô hình Cuối kỳ (`train_cifar.py`)
+## 4. Final Examination Model Training (`train_cifar.py`)
 
-Huấn luyện chạy 200 epochs với Cosine Annealing LR về 0, hỗ trợ cả `sgd` (kèm Nesterov) và `adam`, tăng cường dữ liệu `Cutout` $16 \times 16$:
+Trains for 200 epochs with Cosine Annealing LR decay to 0, supporting both `sgd` (with Nesterov momentum) and `adam`, along with $16 \times 16$ `Cutout` data augmentation:
 
-### 4.1. Huấn luyện qua file cấu hình JSON (`configs/final/`)
+### 4.1. Training via JSON Configurations (`configs/final/`)
 ```bash
-# CIFAR-10 với SGD lr=0.10 (Nesterov + Cutout)
+# CIFAR-10 with SGD lr=0.10 (Nesterov + Cutout)
 python train_cifar.py --config configs/final/cifar10_sgd_lr010.json --data-root data --output-dir runs/cifar10_sgd_lr010
 
-# CIFAR-10 với Adam lr=0.001 (Cutout)
+# CIFAR-10 with Adam lr=0.001 (Cutout)
 python train_cifar.py --config configs/final/cifar10_adam_lr0001.json --data-root data --output-dir runs/cifar10_adam_lr0001
 
-# CIFAR-100 với SGD lr=0.10 (Nesterov + Cutout)
+# CIFAR-100 with SGD lr=0.10 (Nesterov + Cutout)
 python train_cifar.py --config configs/final/cifar100_sgd_lr010.json --data-root data --output-dir runs/cifar100_sgd_lr010
 
-# Baseline Tác giả TickNet-Basic trên CIFAR-10
+# Author TickNet-Basic baseline on CIFAR-10
 python train_cifar.py --config configs/final/baseline_cifar10_sgd_lr010.json --data-root data --output-dir runs/baseline_cifar10_sgd_lr010
 ```
 
-### 4.2. Huấn luyện trực tiếp qua CLI Flags
+### 4.2. Training via Direct CLI Arguments
 ```bash
-# Chạy TickNet-L trên CIFAR-100 với SGD lr=0.15
+# Run TickNet-L on CIFAR-100 with SGD lr=0.15
 python train_cifar.py --model l --dataset cifar100 --optimizer sgd --learning-rate 0.15 --momentum 0.9 --nesterov --cutout --cutout-length 16 --epochs 200 --batch-size 128 --output-dir runs/cifar100_sgd_lr015
 
-# Chạy TickNet-Basic của tác giả trên CIFAR-100
+# Run author TickNet-Basic on CIFAR-100
 python train_cifar.py --model basic --dataset cifar100 --optimizer sgd --learning-rate 0.10 --momentum 0.9 --nesterov --cutout --cutout-length 16 --epochs 200 --batch-size 128 --output-dir runs/baseline_cifar100_sgd_lr010
 ```
 
-### 4.3. Phục hồi huấn luyện khi bị ngắt quãng (`--resume`)
+### 4.3. Resuming Interrupted Training Runs (`--resume`)
 ```bash
 python train_cifar.py --config configs/final/cifar10_sgd_lr010.json --resume runs/cifar10_sgd_lr010/last.pt --output-dir runs/cifar10_sgd_lr010
 ```
 
-### 4.4. Đánh giá Checkpoint độc lập trên tập Test (`--evaluate`)
+### 4.4. Standalone Test Set Checkpoint Evaluation (`--evaluate`)
 ```bash
 python train_cifar.py --dataset cifar10 --evaluate runs/cifar10_sgd_lr010/best_val.pt --output-dir runs/cifar10_sgd_lr010/eval_test
 ```
 
 ---
 
-## 5. Thực thi Thực nghiệm trên Kaggle GPU (Tesla T4 / P100)
+## 5. Kaggle GPU Execution (Tesla T4 / P100)
 
-Đồ án đã được module hóa thành 5 Notebook độc lập trong [`docs/kaggle/`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle):
+Modularized into 5 standalone, self-contained notebooks located in [`docs/kaggle/`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle):
 
-1. **Baseline Tác giả:** Upload [`docs/kaggle/Kaggle_Author_TickNet_Baseline.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Kaggle_Author_TickNet_Baseline.ipynb) $\to$ Chạy 2 thực nghiệm trên CIFAR-10 & CIFAR-100.
-2. **Phase 1 (CIFAR-10 SGD):** Upload [`docs/kaggle/Phase1_CIFAR10_SGD.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase1_CIFAR10_SGD.ipynb) $\to$ Chạy SGD lr=0.10 & lr=0.15.
-3. **Phase 2 (CIFAR-10 Adam):** Upload [`docs/kaggle/Phase2_CIFAR10_Adam.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase2_CIFAR10_Adam.ipynb) $\to$ Chạy Adam lr=0.001 & lr=0.0003.
-4. **Phase 3 (CIFAR-100 SGD):** Upload [`docs/kaggle/Phase3_CIFAR100_SGD.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase3_CIFAR100_SGD.ipynb) $\to$ Chạy SGD lr=0.10 & lr=0.15.
-5. **Phase 4 (CIFAR-100 Adam):** Upload [`docs/kaggle/Phase4_CIFAR100_Adam.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase4_CIFAR100_Adam.ipynb) $\to$ Chạy Adam lr=0.001 & lr=0.0003.
+1. **Author Baseline:** Upload [`docs/kaggle/Kaggle_Author_TickNet_Baseline.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Kaggle_Author_TickNet_Baseline.ipynb) $\to$ Runs 2 baseline experiments on CIFAR-10 & CIFAR-100.
+2. **Phase 1 (CIFAR-10 SGD):** Upload [`docs/kaggle/Phase1_CIFAR10_SGD.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase1_CIFAR10_SGD.ipynb) $\to$ Runs SGD lr=0.10 & lr=0.15.
+3. **Phase 2 (CIFAR-10 Adam):** Upload [`docs/kaggle/Phase2_CIFAR10_Adam.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase2_CIFAR10_Adam.ipynb) $\to$ Runs Adam lr=0.001 & lr=0.0003.
+4. **Phase 3 (CIFAR-100 SGD):** Upload [`docs/kaggle/Phase3_CIFAR100_SGD.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase3_CIFAR100_SGD.ipynb) $\to$ Runs SGD lr=0.10 & lr=0.15.
+5. **Phase 4 (CIFAR-100 Adam):** Upload [`docs/kaggle/Phase4_CIFAR100_Adam.ipynb`](file:///home/intern-tdkhuong/Desktop/TickNets/docs/kaggle/Phase4_CIFAR100_Adam.ipynb) $\to$ Runs Adam lr=0.001 & lr=0.0003.
 
-Phase 1–4 dùng snapshot mã nguồn nhúng, preflight tests, recovery và kiểm chứng artifact.
-Xem [hướng dẫn hiện hành](../kaggle/README.md). ZIP `results` chỉ xuất sau khi đủ 200 epochs;
-chặng chưa xong xuất ZIP `recovery`.
+Phases 1–4 embed an audited source snapshot, preflight tests, recovery mechanisms, and artifact validation.
+Refer to the current [Kaggle Guide](../kaggle/README.md). A `results.zip` package is exported only after completing all 200 epochs; partial runs export a `recovery.zip` bundle.
 
 ---
 
-## 6. Tổng hợp Kết Quả & Xuất Báo cáo So Sánh (Master Report Aggregation)
+## 6. Master Report & Result Aggregation
 
-Sau khi giải nén các thư mục thực nghiệm vào thư mục `runs/`, chạy script tổng hợp:
+After downloading and extracting experiment runs into the `runs/` directory, execute the aggregation script:
 ```bash
 python scripts/aggregate_grid_search.py --runs-dir runs --output-csv docs/results/grid_search_summary.csv --output-md docs/results/grid_search_summary.md
 ```
-Script sẽ tự động:
-- Đọc đủ 8 folder grid search; thiếu run hoặc artifact sai sẽ báo lỗi. Baseline tổng hợp riêng.
-- Tìm điểm `Best Val Epoch`, `Best Val Acc`, `Test Top-1 Accuracy`, `Test Loss`, `Macro F1`.
-- Xuất bảng Markdown và CSV để đưa thẳng vào báo cáo cuối kỳ.
+The script automatically:
+- Ingests all 8 grid search run directories; flags missing runs or invalid artifacts. Baselines are aggregated separately.
+- Identifies `Best Val Epoch`, `Best Val Acc`, `Test Top-1 Accuracy`, `Test Loss`, and `Macro F1`.
+- Exports Markdown and CSV tables formatted directly for inclusion in the final examination technical report.

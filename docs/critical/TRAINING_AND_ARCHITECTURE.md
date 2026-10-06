@@ -1,14 +1,14 @@
-# 8. Training Pipeline & So sánh Kiến trúc TickNet-L với TickNet gốc của Tác giả
+# 8. Training Pipeline & Architectural Comparison: TickNet-L vs. Author's TickNet Baseline
 
-Tài liệu này ghi nhận chi tiết thiết kế, cơ chế kỹ thuật và bằng chứng mã nguồn thực tế trong đồ án cuối kỳ đối với:
-1. **Pipeline Huấn luyện Cuối kỳ ([`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py))**: Vòng lặp `forward` $\rightarrow$ `loss` $\rightarrow$ `backward` $\rightarrow$ `optimizer.step()`, bảo vệ số học, lập lịch Cosine Annealing, và lưu trữ artifact.
-2. **So sánh Kiến trúc Đối đầu**: Phân tích chi tiết giữa mô hình gốc của tác giả **TickNet-Basic** ([`models/TickNet.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/TickNet.py)) và mô hình cải tiến **TickNet-L v1** ([`models/ticknet_l.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_l.py)) trên CIFAR-10 & CIFAR-100.
+This document details the architectural design, technical mechanics, and source code evidence for:
+1. **Final Examination Training Pipeline ([`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py))**: The `forward` $\rightarrow$ `loss` $\rightarrow$ `backward` $\rightarrow$ `optimizer.step()` execution loop, numerical stability protections, Cosine Annealing learning rate scheduling, and artifact emission.
+2. **Head-to-Head Architectural Comparison**: In-depth analysis comparing the author's original **TickNet-Basic** ([`models/TickNet.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/TickNet.py)) against the proposed **TickNet-L v1** ([`models/ticknet_l.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_l.py)) on CIFAR-10 & CIFAR-100.
 
 ---
 
-## 1. Cơ chế Vòng Lặp Huấn luyện (Training Loop Mechanics)
+## 1. Training Loop Mechanics
 
-Được chuẩn hóa tại hàm `run_epoch` trong [`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py):
+Standardized within the `run_epoch` function in [`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py):
 
 ```python
 def run_epoch(
@@ -55,41 +55,41 @@ def run_epoch(
     }
 ```
 
-### 1.1. Chi tiết Từng Bước Kỹ thuật
-- **`zero_grad(set_to_none=True)`:** Xóa gradient bằng cách gán `None` thay vì tạo tensor số 0, giúp tiết kiệm bộ nhớ đệm và tăng tốc độ xử lý GPU.
-- **`non_blocking=True`:** Truyền tensor bất đồng bộ giữa CPU và GPU qua kênh DMA khi bật `pin_memory=True`.
-- **Bảo vệ số học (`torch.isfinite`):** Chặn đứng ngay lập tức nếu xuất hiện `NaN` hoặc `Inf` loss, bảo vệ checkpoint không bị sai lệch trọng số.
-- **Tính toán Metric có trọng số mẫu:** Đảm bảo batch cuối cùng (batch lẻ) không làm lệch trung bình loss và accuracy của epoch.
-- **Lập lịch học Cosine Annealing:** `scheduler = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=0)` giảm dần tốc độ học về 0 theo chu kỳ trơn tru.
+### 1.1. Step-by-Step Technical Design
+- **`zero_grad(set_to_none=True)`:** Clears gradients by setting tensors to `None` rather than allocating zero-filled tensors, saving GPU memory allocation overhead and speeding up iteration cycles.
+- **`non_blocking=True`:** Transfers tensors asynchronously between host memory and GPU VRAM via direct memory access (DMA) when `pin_memory=True`.
+- **Numerical Stability Guard (`torch.isfinite`):** Immediately raises an exception if `NaN` or `Inf` loss is encountered, preventing corrupted weights from propagating into checkpoints.
+- **Sample-Weighted Metric Aggregation:** Ensures remainder trailing batches do not distort epoch-level loss or accuracy calculations.
+- **Cosine Annealing Learning Rate Schedule:** `scheduler = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=0)` smoothly decays learning rates toward zero across training epochs.
 
 ---
 
-## 2. So sánh Đối đầu Kiến trúc: TickNet-L v1 vs TickNet-Basic
+## 2. Head-to-Head Architectural Comparison: TickNet-L v1 vs. TickNet-Basic
 
-Mã nguồn hỗ trợ cả hai mô hình thông qua cờ `--model {l, basic}`:
+The codebase supports both architectures via the `--model {l, basic}` CLI flag:
 
-| Đặc tính Kỹ thuật | TickNet-Basic (Tác giả) | TickNet-L v1 (Đề xuất cuối kỳ) |
+| Technical Feature | TickNet-Basic (Author Baseline) | TickNet-L v1 (Proposed Final Exam Model) |
 | :--- | :--- | :--- |
-| **Tệp mã nguồn** | [`models/TickNet.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/TickNet.py) | [`models/ticknet_l.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_l.py) |
-| **Kênh Stem Conv** | 32 kênh | **24 kênh** (tiết kiệm chi phí ở độ phân giải lớn) |
-| **Cấu hình Kênh 5 Stages** | [128, 64, 128, 256, 512] | **[112, 64, 144, 288, 512]** (chuyển trọng tâm về stage 3 & 4) |
-| **Số khối Blocks mỗi Stage** | [1, 1, 1, 1, 1] (5 blocks) | **[1, 1, 2, 2, 1] (7 blocks sâu hơn)** |
-| **Cơ chế Pointwise Conv** | Không nén ($C_{in} \rightarrow C_{in}$) | **Thắt cổ chai (Bottleneck $0.75 \times C_{in}$)** |
-| **Cơ chế Depthwise Conv** | Thuần $3 \times 3$ trên mọi kênh | **Mixed DW (chia đôi kênh chạy song song $3 \times 3$ và $5 \times 5$)** |
-| **Kênh Conv trước Pooling** | 1024 kênh | **768 kênh** |
-| **Số tham số trên CIFAR-10** | **1.067.348** ($\le 6\text{M}$) | **1.100.105** ($\le 6\text{M}$) |
-| **Chi phí FLOPs trên CIFAR-10**| **0.1584 GFLOPs** ($< 1\text{G}$) | **0.1578 GFLOPs** ($< 1\text{G}$) |
-| **Số tham số trên CIFAR-100**| **1.159.598** ($\le 6\text{M}$) | **1.169.315** ($\le 6\text{M}$) |
-| **Chi phí FLOPs trên CIFAR-100**| **0.1586 GFLOPs** ($< 1\text{G}$) | **0.1580 GFLOPs** ($< 1\text{G}$) |
+| **Source File** | [`models/TickNet.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/TickNet.py) | [`models/ticknet_l.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/ticknet_l.py) |
+| **Stem Conv Channels** | 32 channels | **24 channels** (conserves FLOPs at native resolution) |
+| **5-Stage Elasticity Config** | [128, 64, 128, 256, 512] | **[112, 64, 144, 288, 512]** (shifts representational focus to stages 3 & 4) |
+| **Blocks per Stage** | [1, 1, 1, 1, 1] (5 blocks) | **[1, 1, 2, 2, 1] (7 deeper blocks)** |
+| **Pointwise Conv Scheme** | Uncompressed ($C_{in} \rightarrow C_{in}$) | **Bottleneck compression ($0.75 \times C_{in}$)** |
+| **Depthwise Conv Scheme** | Uniform $3 \times 3$ across all channels | **Mixed DW (parallel $3 \times 3$ and $5 \times 5$ branches)** |
+| **Pre-Pooling Conv Layer** | 1024 channels | **768 channels** |
+| **Parameters on CIFAR-10** | **1,067,348** ($\le 6\text{M}$) | **1,100,105** ($\le 6\text{M}$) |
+| **FLOPs on CIFAR-10** | **0.1584 GFLOPs** ($< 1\text{G}$) | **0.1578 GFLOPs** ($< 1\text{G}$) |
+| **Parameters on CIFAR-100** | **1,159,598** ($\le 6\text{M}$) | **1,169,315** ($\le 6\text{M}$) |
+| **FLOPs on CIFAR-100** | **0.1586 GFLOPs** ($< 1\text{G}$) | **0.1580 GFLOPs** ($< 1\text{G}$) |
 
 ---
 
-## 3. Hệ thống Lưu trữ Artifacts Hoàn chỉnh
+## 3. Comprehensive Artifact Emission System
 
-Sau mỗi thực nghiệm huấn luyện, pipeline [`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py) tự động xuất 6 artifacts phục vụ nghiệm thu và báo cáo khoa học:
-1. `config.json`: Toàn bộ siêu tham số, phiên bản code, ngày giờ, số tham số, và số FLOPs.
-2. `epochs.csv`: Nhật ký từng epoch gồm Learning Rate, Train Loss, Train Top-1 Acc, Val Loss, Val Top-1 Acc.
-3. `best_val.pt`: Checkpoint trọng số đạt kết quả validation tốt nhất (dùng để nộp và evaluate).
-4. `last.pt`: Checkpoint epoch cuối cùng (có đầy đủ state của optimizer và scheduler để phục vụ `--resume`).
-5. `test_metrics.json`: Độ chính xác Top-1 (%), Loss trung bình, và điểm Macro F1 trên tập Test độc lập.
-6. `confusion_matrix.csv`: Ma trận nhầm lẫn kích thước $10 \times 10$ hoặc $100 \times 100$.
+Upon completion of each training run, [`train_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/train_cifar.py) automatically generates 6 standardized artifacts for auditability and technical reporting:
+1. `config.json`: Complete snapshot of hyperparameters, git version, timestamp, parameter count, and FLOP budget.
+2. `epochs.csv`: Per-epoch logging of Learning Rate, Train Loss, Train Top-1 Accuracy, Val Loss, and Val Top-1 Accuracy.
+3. `best_val.pt`: Checkpoint weights achieving highest validation performance (for submission and final evaluation).
+4. `last.pt`: Final epoch checkpoint (includes optimizer and scheduler state for `--resume` continuity).
+5. `test_metrics.json`: Final evaluated Top-1 Accuracy (%), Mean Loss, and Macro F1 score on the independent test set.
+6. `confusion_matrix.csv`: Full confusion matrix ($10 \times 10$ or $100 \times 100$).

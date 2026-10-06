@@ -1,45 +1,45 @@
-# CIFAR-10 & CIFAR-100: Mô Tả Dữ Liệu và Phân Chia Tập Train / Val / Test
+# CIFAR-10 & CIFAR-100: Dataset Specification and Train / Val / Test Partitioning
 
-Tài liệu này ghi nhận đặc tả cấu trúc dữ liệu, nguồn gốc tải từ Đại học Toronto, mã băm kiểm định MD5, và phương pháp phân chia tập **Train (45.000) / Validation (5.000) / Test (10.000)** cho đồ án cuối kỳ.
+This document records the dataset structure, official University of Toronto distribution sources, MD5 verification checksums, and the partitioning methodology for **Train (45,000) / Validation (5,000) / Test (10,000)** splits in the final examination project.
 
 ---
 
-## 1. Nguồn Dữ liệu & Tính Toàn Vẹn Chuẩn Quốc tế
+## 1. Data Sources & Integrity Standards
 
-Hai bộ dữ liệu chuẩn quốc tế được tải tự động qua script [`scripts/download_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/scripts/download_cifar.py):
+Both benchmark datasets are downloaded and verified automatically via [`scripts/download_cifar.py`](file:///home/intern-tdkhuong/Desktop/TickNets/scripts/download_cifar.py):
 1. **CIFAR-10 (`cifar-10-python.tar.gz`):**
-   - URL chính: `https://cave.cs.toronto.edu/kriz/cifar-10-python.tar.gz`
-   - URL phụ: `https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz`
-   - Mã băm MD5: `c58f30108f718f92721af3b95e74349a`
-   - Kích thước ảnh: $32 \times 32$ pixels, 3 kênh màu RGB.
-   - 10 lớp: *airplane, automobile, bird, cat, deer, dog, frog, horse, ship, truck*.
+   - Primary URL: `https://cave.cs.toronto.edu/kriz/cifar-10-python.tar.gz`
+   - Fallback URL: `https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz`
+   - MD5 Checksum: `c58f30108f718f92721af3b95e74349a`
+   - Spatial Resolution: $32 \times 32$ pixels, 3 RGB color channels.
+   - 10 classes: *airplane, automobile, bird, cat, deer, dog, frog, horse, ship, truck*.
 2. **CIFAR-100 (`cifar-100-python.tar.gz`):**
-   - URL chính: `https://cave.cs.toronto.edu/kriz/cifar-100-python.tar.gz`
-   - URL phụ: `https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz`
-   - Mã băm MD5: `eb9058c3a382ffc7106e4002c42a8d85`
-   - Kích thước ảnh: $32 \times 32$ pixels, 3 kênh màu RGB.
-   - 100 lớp chi tiết (fine classes), nhóm trong 20 siêu lớp (coarse superclasses).
+   - Primary URL: `https://cave.cs.toronto.edu/kriz/cifar-100-python.tar.gz`
+   - Fallback URL: `https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz`
+   - MD5 Checksum: `eb9058c3a382ffc7106e4002c42a8d85`
+   - Spatial Resolution: $32 \times 32$ pixels, 3 RGB color channels.
+   - 100 fine-grained classes grouped into 20 coarse superclasses.
 
 ---
 
-## 2. Phương Pháp Phân Chia Dữ Liệu (Stratified Random Hold-Out)
+## 2. Dataset Partitioning Methodology (Stratified Random Hold-Out)
 
-Quy trình phân chia dữ liệu tuân thủ chuẩn mực học máy thực nghiệm nghiêm ngặt:
-- **Tập Test (10.000 ảnh):** Giữ nguyên bản 100% tập Test chính thức của CIFAR do Alex Krizhevsky công bố. Tập này được bảo vệ nguyên vẹn, **tuyệt đối không tham gia vào quá trình huấn luyện hay tinh chỉnh siêu tham số**.
-- **Tập Train gốc (50.000 ảnh):** Được phân chia phân tầng (Stratified Split) với tỷ lệ $9 : 1$ bằng hạt giống ngẫu nhiên `seed=42`:
-  - **Tập Train thực nghiệm:** $45.000$ ảnh ($90\%$).
-  - **Tập Validation:** $5.000$ ảnh ($10\%$).
+The partitioning protocol adheres strictly to empirical machine learning standards:
+- **Test Set (10,000 images):** Retains 100% of the official CIFAR test set published by Alex Krizhevsky. This set is strictly isolated—**never involved in training updates, loss computation, or hyperparameter selection**.
+- **Original Training Set (50,000 images):** Stratified split into a $9 : 1$ ratio using fixed random seed `seed=42`:
+  - **Experimental Training Split:** $45,000$ images ($90\%$).
+  - **Validation Split:** $5,000$ images ($10\%$).
 
 ---
 
-## 3. Bảng Thống kê Phân Bổ Mẫu Chi Tiết
+## 3. Sample Allocation Statistics
 
-| Bộ Dữ liệu | Số Lớp | Train Sub-set (90%) | Validation Set (10%) | Held-Out Test Set | Tổng số mẫu |
+| Dataset | Class Count | Training Split (90%) | Validation Split (10%) | Held-Out Test Set | Total Samples |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **CIFAR-10** | 10 lớp | **45.000 ảnh** (4.500 / lớp) | **5.000 ảnh** (500 / lớp) | **10.000 ảnh** (1.000 / lớp) | 60.000 ảnh |
-| **CIFAR-100**| 100 lớp| **45.000 ảnh** (450 / lớp) | **5.000 ảnh** (50 / lớp) | **10.000 ảnh** (100 / lớp) | 60.000 ảnh |
+| **CIFAR-10** | 10 classes | **45,000 images** (4,500 / class) | **5,000 images** (500 / class) | **10,000 images** (1,000 / class) | 60,000 images |
+| **CIFAR-100** | 100 classes | **45,000 images** (450 / class) | **5,000 images** (50 / class) | **10,000 images** (100 / class) | 60,000 images |
 
-### Vai trò Chức năng của Từng Tập:
-1. **Train (45.000 ảnh):** Cập nhật trọng số mạng nơ-ron qua thuật toán tối ưu (SGD + Nesterov hoặc Adam) kèm tăng cường dữ liệu `RandomCrop`, `RandomHorizontalFlip` và `Cutout (16x16)`.
-2. **Validation (5.000 ảnh):** Đo lường năng lực học sau mỗi epoch, làm tiêu chuẩn để lưu lại checkpoint tốt nhất `best_val.pt`.
-3. **Test (10.000 ảnh):** Hộp đen đánh giá khách quan cuối cùng; được kiểm thử 1 lần duy nhất trên checkpoint `best_val.pt` để báo cáo điểm thi và trả lời vấn đáp Oral Exam.
+### Functional Roles of Each Partition:
+1. **Train (45,000 images):** Drives model parameter updates via gradient descent optimization (SGD + Nesterov momentum or Adam) augmented with `RandomCrop`, `RandomHorizontalFlip`, and `Cutout (16x16)`.
+2. **Validation (5,000 images):** Evaluates generalization performance at the close of every epoch to checkpoint the best-performing model weights (`best_val.pt`).
+3. **Test (10,000 images):** Provides unbiased black-box evaluation; assessed exactly once using `best_val.pt` to compute official final metrics for the written technical report and oral defense.

@@ -1,16 +1,16 @@
-# 4. Dataset Splitting: Cơ Chế Phân Tầng và Phòng Chống Rò Rỉ Dữ Liệu Cuối Kỳ
+# 4. Dataset Splitting: Stratification Mechanics and Zero Data Leakage Guarantees
 
-Tài liệu này tổng hợp phương pháp luận, cơ sở toán học và bằng chứng mã nguồn của thuật toán phân chia phân tầng (Stratified Splitting) trên hai tập dữ liệu **CIFAR-10** và **CIFAR-100**.
+This document synthesizes the methodology, mathematical foundations, and source code evidence for the stratified splitting algorithm deployed across **CIFAR-10** and **CIFAR-100**.
 
 ---
 
-## 1. Phương pháp Phân tầng theo Lớp (Per-Class Stratification)
+## 1. Per-Class Stratification Methodology
 
-### 1.1. Tại sao phải Phân tầng?
-Nếu chia 50.000 ảnh train ngẫu nhiên không điều kiện, xác suất xuất hiện độ lệch số lượng mẫu giữa các lớp là rất lớn. Với CIFAR-100 (mỗi lớp chỉ có 500 ảnh trong tập train gốc), sự chênh lệch ngẫu nhiên này có thể làm một số lớp có ít hơn 40 ảnh validation, khiến tín hiệu đánh giá mô hình bị nhiễu động nghiêm trọng.
+### 1.1. Why Stratification is Essential
+If the 50,000 training images are partitioned randomly without constraint, significant class frequency skew is virtually guaranteed. On CIFAR-100 (where each class only has 500 images in the original training split), unconstrained random sampling could leave some classes with fewer than 40 validation samples, introducing severe statistical variance into checkpoint evaluation.
 
-### 1.2. Thuật toán Triển khai trong Mã nguồn
-Triển khai tại hàm `stratified_split_indices` trong [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py):
+### 1.2. Implementation Algorithm in Source Code
+Implemented via `stratified_split_indices` in [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py):
 
 ```python
 def stratified_split_indices(
@@ -42,24 +42,24 @@ def stratified_split_indices(
     return train_indices, val_indices
 ```
 
-### 1.3. Đặc tính Kỹ thuật của Thuật toán:
-1. **Cố định Seed Khử Nhiễu Hệ điều hành:** Sử dụng `random.Random(42)`, đảm bảo thứ tự phân tách độc lập hoàn toàn với nền tảng (Linux, Windows, macOS, Kaggle).
-2. **Cân Bằng Phân Bố Tuyệt Đối:**
-   - Trên CIFAR-10: Mỗi lớp có chính xác 4.500 ảnh Train và 500 ảnh Validation.
-   - Trên CIFAR-100: Mỗi lớp có chính xác 450 ảnh Train và 50 ảnh Validation.
-3. **Không Giao Thoa (Disjoint Sets):**
+### 1.3. Algorithmic Properties & Guarantees:
+1. **Isolated OS-Independent Random State:** Uses a localized `random.Random(42)` instance, ensuring partitioning order is deterministic across platforms (Linux, Windows, macOS, Kaggle).
+2. **Strict Class Distribution Balance:**
+   - On CIFAR-10: Exactly 4,500 Train images and 500 Validation images per class.
+   - On CIFAR-100: Exactly 450 Train images and 50 Validation images per class.
+3. **Disjoint Index Sets (Zero Overlap):**
    $$\text{Train}_{\text{indices}} \cap \text{Val}_{\text{indices}} = \emptyset$$
-   Được chứng thực qua unit test `test_stratified_split_indices_proportions_and_disjoint`.
+   Verified by unit test `test_stratified_split_indices_proportions_and_disjoint`.
 
 ---
 
-## 2. Nguyên Tắc Vàng: Chống Rò Rỉ Dữ Liệu (Zero Data Leakage)
+## 2. Core Protocol: Preventing Data Leakage (Zero Data Leakage)
 
-1. **Cô lập Tuyệt Đối Tập Test:**
-   - Tập Test (10.000 ảnh) không hề tham gia vào quá trình tính toán thống kê hay chọn lọc siêu tham số.
-   - Hằng số chuẩn hóa Mean và Std được tính toán trên toàn bộ không gian ảnh chuẩn, không bị rò rỉ nhãn phân loại.
-2. **Tách Biến đổi Giữa Train và Val:**
-   - Lớp `TransformedSubset` trong [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py) nhận mảng ảnh gốc (raw numpy arrays) và chỉ áp dụng các phép biến đổi riêng biệt khi một batch được nạp:
-     - Tập Train nhận `train_transform` (gồm RandomCrop, Flip, Cutout).
-     - Tập Val nhận `eval_transform` (chỉ ToTensor và Normalize).
-   - Đảm bảo dữ liệu Validation luôn phản ánh ảnh thực tế không bị che mờ hay cắt xén nhân tạo.
+1. **Strict Isolation of the Held-Out Test Set:**
+   - The official 10,000-image test set is isolated from training loops, statistical parameter estimations, and validation-based model selection.
+   - Normalization constants (mean and standard deviation) are standard benchmarks computed globally without target leakage.
+2. **Decoupled Transformations Between Train and Val:**
+   - The `TransformedSubset` wrapper in [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py) holds raw underlying arrays and dynamically applies targeted transforms during batch loading:
+     - Training samples receive `train_transform` (RandomCrop, Flip, Cutout).
+     - Validation samples receive `eval_transform` (ToTensor and Normalize only).
+   - This ensures validation accuracy reflects unbiased performance on clean, unaugmented inputs.

@@ -1,27 +1,27 @@
 # 5. Preprocessing: CIFAR-10 & CIFAR-100 (Resize / Normalize / Data Augmentation & Cutout)
 
-Tài liệu này ghi nhận chi tiết thiết kế, cơ chế kỹ thuật và bằng chứng mã nguồn thực tế trong đồ án cuối kỳ đối với mục **Preprocessing** (tiền xử lý dữ liệu) và **Data Augmentation** cho hai tập dữ liệu **CIFAR-10** và **CIFAR-100**.
+This document details the architectural design, technical mechanics, and source code evidence for **Preprocessing** and **Data Augmentation** on the **CIFAR-10** and **CIFAR-100** benchmark datasets.
 
 ---
 
-## 1. Bảng Tổng Hợp Kỹ Thuật Tiền Xử Lý Dữ Liệu Cuối Kỳ
+## 1. Final Examination Data Preprocessing Summary
 
-| Hạng mục | Tập Train | Tập Validation & Test | Căn cứ thiết kế & Triển khai trong code |
+| Category | Training Set | Validation & Test Sets | Design Rationale & Code Reference |
 | :--- | :--- | :--- | :--- |
-| **Kích thước ảnh** | Nguyên bản $32 \times 32$ | Nguyên bản $32 \times 32$ | Dữ liệu gốc CIFAR là $32 \times 32$, bảo toàn 100% pixel gốc, không nội suy phóng đại |
-| **Data Augmentation 1** | **RandomCrop(32, pad=4, reflect)** | Không áp dụng | Đệm phản xạ 4 pixel xung quanh rồi cắt ngẫu nhiên $32 \times 32$, tạo tính bất biến dịch chuyển |
-| **Data Augmentation 2** | **RandomHorizontalFlip(p=0.5)** | Không áp dụng | Lật ngang ngẫu nhiên $50\%$ số ảnh, tăng gấp đôi tính đa dạng đối xứng |
-| **Data Augmentation 3** | **Cutout(1 hole, length=16)** | Không áp dụng | Che ngẫu nhiên mảng $16 \times 16$ pixel (DeVries & Taylor, 2017), ép mô hình học đặc trưng toàn cục |
-| **Chuyển đổi Tensor** | `transforms.ToTensor()` | `transforms.ToTensor()` | Chuyển mảng điểm ảnh $[0, 255]$ sang tensor float32 $[0.0, 1.0]$ |
-| **Chuẩn hóa (Normalize)** | `transforms.Normalize(mean, std)` | `transforms.Normalize(mean, std)` | Chuẩn hóa theo hằng số phân bố chuẩn xác của từng tập dữ liệu (CIFAR-10 vs CIFAR-100) |
-| **Tính Tái Lập** | Generator cố định + `seed_worker` | Độc lập, cố định | Đảm bảo kết quả huấn luyện có thể tái lập bit-for-bit |
+| **Image Resolution** | Native $32 \times 32$ | Native $32 \times 32$ | Native CIFAR resolution is $32 \times 32$; preserves 100% original pixel data without distortion or artificial upsampling |
+| **Data Augmentation 1** | **RandomCrop(32, pad=4, reflect)** | Not applied | 4-pixel reflection padding followed by random $32 \times 32$ crop, providing spatial translation invariance |
+| **Data Augmentation 2** | **RandomHorizontalFlip(p=0.5)** | Not applied | Randomly flips 50% of images horizontally, doubling symmetric pose diversity |
+| **Data Augmentation 3** | **Cutout(1 hole, length=16)** | Not applied | Randomly masks a $16 \times 16$ pixel patch (DeVries & Taylor, 2017), forcing the network to attend to global contextual cues |
+| **Tensor Conversion** | `transforms.ToTensor()` | `transforms.ToTensor()` | Converts pixel values from $[0, 255]$ uint8 to $[0.0, 1.0]$ float32 tensors |
+| **Normalization** | `transforms.Normalize(mean, std)` | `transforms.Normalize(mean, std)` | Normalizes using official per-channel dataset statistics for CIFAR-10 vs CIFAR-100 |
+| **Reproducibility** | Fixed Generator + `seed_worker` | Independent, deterministic | Ensures bit-for-bit reproducible training and evaluation runs |
 
 ---
 
-## 2. Chi tiết Kỹ thuật & Bằng chứng Mã nguồn ([`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py))
+## 2. Technical Details & Source Code Evidence ([`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py))
 
-### 2.1. Hằng số Chuẩn hóa Chuẩn Quốc tế
-Mỗi tập dữ liệu sở hữu đặc trưng màu sắc và ánh sáng riêng biệt:
+### 2.1. Standard Per-Channel Dataset Statistics
+Each dataset features distinctive illumination and color distributions:
 ```python
 CIFAR10_MEAN = (0.4914, 0.4822, 0.4465)
 CIFAR10_STD  = (0.2470, 0.2435, 0.2616)
@@ -29,10 +29,10 @@ CIFAR10_STD  = (0.2470, 0.2435, 0.2616)
 CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
 CIFAR100_STD  = (0.2675, 0.2565, 0.2761)
 ```
-Chuẩn hóa giúp đưa phân bố dữ liệu về kỳ vọng $\approx 0$ và phương sai $\approx 1$, giúp gradient truyền ngược ở các lớp đầu không bị tiêu biến (vanishing) hay phát nổ (exploding).
+Standard normalization centers the input distribution around mean $\approx 0$ and variance $\approx 1$, preventing gradient vanishing or explosion during early backpropagation passes.
 
-### 2.2. Kỹ thuật Điều hòa Cutout (DeVries & Taylor, 2017)
-Được triển khai trong class `Cutout` tại [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py):
+### 2.2. Cutout Regularization (DeVries & Taylor, 2017)
+Implemented in the `Cutout` class within [`models/cifar_data.py`](file:///home/intern-tdkhuong/Desktop/TickNets/models/cifar_data.py):
 ```python
 class Cutout(object):
     def __init__(self, n_holes: int = 1, length: int = 16):
@@ -57,10 +57,10 @@ class Cutout(object):
         mask_tensor = torch.from_numpy(mask).to(dtype=img.dtype, device=img.device).expand_as(img)
         return img * mask_tensor
 ```
-* **Nguyên lý hoạt động:** Trong mỗi ảnh huấn luyện sau khi chuẩn hóa, chọn ngẫu nhiên một tâm $(x, y)$ và che một vùng vuông $16 \times 16$ pixel thành giá trị 0 (tương ứng với giá trị trung bình sau normalize).
-* **Hiệu quả thực nghiệm:** Ngăn chặn hiện tượng mô hình phụ thuộc vào một chi tiết nhỏ mang tính "học vẹt" (ví dụ: chỉ nhìn thấy mỏ chim là đoán chim, nếu che mỏ thì mô hình buộc phải học thêm hình thái cánh và lông).
+* **Operational Mechanism:** For each normalized training image, selects a random center coordinate $(x, y)$ and masks a square patch of $16 \times 16$ pixels to zero (corresponding to the mean normalized pixel value).
+* **Empirical Benefit:** Prevents the network from overfitting to isolated minor visual cues (e.g., memorizing only a bird's beak instead of learning holistic wing and body morphology).
 
-### 2.3. Pipeline Biến đổi Hoàn chỉnh (`get_cifar_transforms`)
+### 2.3. Unified Transformation Pipeline (`get_cifar_transforms`)
 ```python
 def get_cifar_transforms(dataset_name: str, *, augment: bool = True, cutout: bool = True, cutout_length: int = 16) -> transforms.Compose:
     canon_name = normalize_dataset_name(dataset_name)
@@ -85,7 +85,7 @@ def get_cifar_transforms(dataset_name: str, *, augment: bool = True, cutout: boo
 
 ---
 
-## 3. Bằng chứng Kiểm thử (Verification Evidence)
-Quy trình tiền xử lý được kiểm định bằng unit test:
-1. `tests/test_cifar_data.py::test_get_cifar_transforms_shape_and_type`: Xác nhận ảnh sau tiền xử lý luôn có kích thước `(3, 32, 32)`, kiểu dữ liệu `torch.float32`, và giá trị chuẩn hóa vượt ra ngoài khoảng $[0, 1]$.
-2. `tests/test_cifar_data.py::test_cutout_transform`: Xác nhận vùng pixel $16 \times 16$ bị che triệt để về 0.0 trong khi phần còn lại của ảnh được giữ nguyên vẹn.
+## 3. Verification Evidence
+The preprocessing pipeline is verified via comprehensive unit tests:
+1. `tests/test_cifar_data.py::test_get_cifar_transforms_shape_and_type`: Confirms transformed outputs maintain tensor dimensions `(3, 32, 32)`, data type `torch.float32`, and appropriate normalized values outside $[0, 1]$.
+2. `tests/test_cifar_data.py::test_cutout_transform`: Confirms the $16 \times 16$ pixel region is masked to 0.0 while preserving unmasked regions intact.
