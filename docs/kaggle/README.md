@@ -1,5 +1,11 @@
 # Chạy Phase 1–4 với mã nguồn đã được kiểm tra
 
+Bốn notebook **đã chạy trên Kaggle** được giữ nguyên tại [experiments/notebooks](../experiments/notebooks/),
+và [báo cáo đủ 8 run](../experiments/README.md) đã có. Các file `Phase*.ipynb`
+ở thư mục này là template mới từ source đã dọn, dùng để train mới.
+Không dùng template mới để resume checkpoint thuộc snapshot cũ: hãy dùng lại notebook đã chạy
+và đúng runtime/GPU. Xem [evaluate sau refactor](../../checkpoints/README.md).
+
 Bốn notebook `Phase1_CIFAR10_SGD.ipynb`, `Phase2_CIFAR10_Adam.ipynb`,
 `Phase3_CIFAR100_SGD.ipynb`, `Phase4_CIFAR100_Adam.ipynb` chứa cùng một snapshot
 mã nguồn và test, có SHA-256. Upload trực tiếp notebook lên Kaggle; không cần push

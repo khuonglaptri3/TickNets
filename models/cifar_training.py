@@ -18,7 +18,7 @@ from .cifar_experiment import (RECIPE_FIELDS, atomic_checkpoint, atomic_json, ca
 from .ticknet_l import ARCHITECTURE_REVISION
 
 
-def _check_checkpoint(checkpoint, evidence):
+def _check_checkpoint(checkpoint, evidence, *, allow_source_change=False):
     from train_cifar import TRAINER_REVISION
     config = checkpoint.get("config", {})
     if config.get("trainer_revision") != TRAINER_REVISION:
@@ -26,7 +26,7 @@ def _check_checkpoint(checkpoint, evidence):
     revision = "ticknet-basic-author" if config.get("model") == "basic" else ARCHITECTURE_REVISION
     if config.get("architecture_revision") != revision:
         raise ValueError("Checkpoint architecture revision changed")
-    if config.get("source_sha256") != evidence["source_sha256"]:
+    if config.get("source_sha256") != evidence["source_sha256"] and not allow_source_change:
         raise ValueError("Source code changed since the checkpoint")
 
 
@@ -55,7 +55,8 @@ def execute(args, build_loaders, build_l, build_basic, run_epoch, evaluate, prof
     checkpoint = None
     if checkpoint_path:
         checkpoint = torch.load(Path(checkpoint_path).resolve(), map_location="cpu", weights_only=False)
-        _check_checkpoint(checkpoint, evidence)
+        _check_checkpoint(checkpoint, evidence,
+                          allow_source_change=bool(args.evaluate and args.allow_eval_source_change))
     if args.evaluate:
         recorded = checkpoint["config"]
         for name in ("dataset", "model"):
@@ -101,6 +102,8 @@ def execute(args, build_loaders, build_l, build_basic, run_epoch, evaluate, prof
 
     output_dir = (Path(args.output_dir).resolve() if args.output_dir else
                   Path(args.evaluate).resolve().parent)
+    if args.allow_eval_source_change and output_dir.exists():
+        raise FileExistsError("Source-change evaluation requires a fresh output directory; preserve archived artifacts")
     if not args.evaluate and output_dir.exists() and not args.resume:
         raise FileExistsError(f"Output exists; choose a fresh directory or resume: {output_dir}")
     if args.resume and (output_dir / "last.pt").exists() and file_sha256(output_dir / "last.pt") != file_sha256(args.resume):
@@ -139,7 +142,10 @@ def execute(args, build_loaders, build_l, build_basic, run_epoch, evaluate, prof
         result = evaluate(model, test_loader, device, output_dir, num_classes)
         result.update(checkpoint_epoch=checkpoint["epoch"], checkpoint_sha256=file_sha256(args.evaluate),
                       dataset=args.dataset, model=args.model,
-                      test_data_sha256=datasets["test"]["sha256"])
+                      test_data_sha256=datasets["test"]["sha256"],
+                      training_source_sha256=checkpoint["config"]["source_sha256"],
+                      evaluation_source_sha256=evidence["source_sha256"],
+                      source_change_accepted=bool(args.allow_eval_source_change))
         atomic_json(output_dir / "test_metrics.json", result)
         return result
 

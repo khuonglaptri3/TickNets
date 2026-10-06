@@ -1,3 +1,0 @@
-variant,test_top1_percent,macro_f1,parameters,flops,epochs,batch_size,learning_rate,momentum,weight_decay,final_test_loss
-Mid32,89.6,0.8955977027728828,1062223,158428160,200,64,0.1,0.9,0.0001,0.4814788098335266
-Mid224,92.4,0.923955195519552,1062223,988342784,200,64,0.1,0.9,0.0001,0.3365764226913452

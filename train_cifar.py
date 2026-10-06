@@ -177,6 +177,8 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--resume", type=Path, help="Path to last.pt checkpoint to resume")
     parser.add_argument("--stop-after-epoch", type=int, help="Stop after specific epoch (smoke testing)")
     parser.add_argument("--evaluate", type=Path, help="Evaluate a saved checkpoint on test set")
+    parser.add_argument("--allow-eval-source-change", action="store_true",
+                        help="Explicitly evaluate compatible weights after a source-only refactor; never permits resume")
 
     # If --config is passed, read JSON defaults
     raw_args, _ = parser.parse_known_args(argv)
@@ -212,7 +214,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         value = getattr(args, key)
         if type(value) not in (float, int) or not math.isfinite(value):
             parser.error(f"Invalid finite number {key}")
-    for key in ("nesterov", "cutout", "download", "skip_test"):
+    for key in ("nesterov", "cutout", "download", "skip_test", "allow_eval_source_change"):
         if type(getattr(args, key)) is not bool:
             parser.error(f"Invalid boolean {key}")
     for key in ("data_root", "output_dir", "resume", "evaluate"):
@@ -232,6 +234,10 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         parser.error("stop-after-epoch must be between 1 and epochs")
     if args.resume and args.evaluate:
         parser.error("resume and evaluate are mutually exclusive")
+    if args.allow_eval_source_change and not args.evaluate:
+        parser.error("--allow-eval-source-change requires --evaluate; resume remains source-strict")
+    if args.allow_eval_source_change and args.output_dir is None:
+        parser.error("--allow-eval-source-change requires a fresh --output-dir")
 
     if args.evaluate is None and args.output_dir is None:
         parser.error("--output-dir is required when training")

@@ -75,6 +75,29 @@ def assert_state_equal(a, b):
         assert a == b
 
 
+def test_source_refactor_evaluation_is_explicit_and_records_provenance(tiny_pipeline, tmp_path, monkeypatch):
+    from models import cifar_training
+    output = tmp_path / "original"
+    train_cifar.main(command(output))
+    checkpoint = output / "best_val.pt"
+    before_hash = file_sha256(checkpoint)
+    original_source = json.loads((output / "config.json").read_text())["source_sha256"]
+    evidence = cifar_training.source_evidence()
+    monkeypatch.setattr(cifar_training, "source_evidence", lambda: {**evidence, "source_sha256": "refactored-source"})
+    evaluation = ["--evaluate", str(checkpoint), "--output-dir", str(tmp_path / "eval"), "--device", "cpu", "--num-workers", "0"]
+    with pytest.raises(ValueError, match="Source code changed"):
+        train_cifar.main(evaluation)
+    result = train_cifar.main(evaluation + ["--allow-eval-source-change"])
+    assert result["evaluation_source_sha256"] == "refactored-source"
+    assert result["training_source_sha256"] == original_source
+    assert result["source_change_accepted"] is True
+    assert file_sha256(checkpoint) == before_hash
+    with pytest.raises(SystemExit):
+        train_cifar.parse_args(command(tmp_path / "resume") + ["--resume", str(output / "last.pt"), "--allow-eval-source-change"])
+    with pytest.raises(ValueError, match="Source code changed"):
+        train_cifar.main(command(output) + ["--resume", str(output / "last.pt")])
+
+
 @pytest.mark.parametrize("dataset", ("cifar10", "cifar100"))
 @pytest.mark.parametrize("optimizer", ("sgd", "adam"))
 def test_resume_matches_weights_optimizer_scheduler_history_and_best(tiny_pipeline, tmp_path, dataset, optimizer):

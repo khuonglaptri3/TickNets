@@ -11,7 +11,7 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
 
-from .mid_data import seed_everything, seed_worker
+from .reproducibility import seed_everything, seed_worker
 
 # Standard normalization constants for CIFAR-10 and CIFAR-100
 CIFAR10_MEAN: Tuple[float, float, float] = (0.4914, 0.4822, 0.4465)

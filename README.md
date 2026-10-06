@@ -3,7 +3,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 [![TorchVision](https://img.shields.io/badge/TorchVision-0.15%2B-red.svg)](https://pytorch.org/)
 [![Tests](https://img.shields.io/badge/Tests-CIFAR%20recovery%20%26%20metrics-blue.svg)](tests/)
-[![Branch](https://img.shields.io/badge/Branch-feature%2Ffinal--exam--model--l-blue.svg)](https://github.com/khuonglaptri3/TickNets/tree/feature/final-exam-model-l)
+[![Branch](https://img.shields.io/badge/Branch-feature%2Ffinal--exam--model--l--cleaned-blue.svg)](https://github.com/khuonglaptri3/TickNets/tree/feature/final-exam-model-l-cleaned)
 [![DOI](https://img.shields.io/badge/DOI-10.1016%2Fj.neucom.2024.127942-blue.svg)](https://doi.org/10.1016/j.neucom.2024.127942)
 [![License](https://img.shields.io/badge/License-Academic%20Final%20Exam-green.svg)](LICENSE)
 
@@ -14,6 +14,11 @@
 ---
 
 ## 1. Project Overview & Final Exam Objectives
+
+Final Kaggle results: **CIFAR-10 94.97%** and **CIFAR-100 75.28%** test Top-1,
+both with validation-selected **SGD lr=0.15**. See the [8-run report and figures](docs/experiments/README.md)
+and [complete output/checkpoint archive](checkpoints/README.md). These are single-seed TickNet-L results;
+the final TickNet-Basic baseline has not been measured in this archive.
 
 This repository contains the official codebase and experimental framework for the **Deep Learning Final Examination**. The project focuses on designing, training, and benchmarking a lightweight Convolutional Neural Network architecture—designated as **TickNet-L v1**—and comparing it directly against the author's original **TickNet-Basic** baseline.
 
@@ -148,11 +153,11 @@ The experiments are divided into 4 modular training phases for `TickNet-L` plus 
 ### 5.1. Environment Setup
 ```bash
 # Clone the repository on the final exam branch
-git clone -b feature/final-exam-model-l https://github.com/khuonglaptri3/TickNets.git
+git clone -b feature/final-exam-model-l-cleaned https://github.com/khuonglaptri3/TickNets.git
 cd TickNets
 
 # Install dependencies
-pip install torch torchvision numpy pillow pandas scipy pytest
+pip install torch torchvision numpy pillow pandas scipy matplotlib pytest
 ```
 
 ### 5.2. Run Full Unit Test Suite (Verification)
@@ -193,13 +198,19 @@ python train_cifar.py --dataset cifar10 --evaluate runs/cifar10_sgd_lr010/best_v
 2. Upload the notebook to [Kaggle](https://www.kaggle.com/code) $\to$ **New Notebook** $\to$ **Import Notebook**.
 3. In Kaggle Notebook Settings: Set **Accelerator = GPU T4 x2 (or P100)** and **Internet = Always On**.
 4. Click **Save Version** $\to$ **Save & Run All (Commit)**.
-5. Phase 1?4 contain an embedded, verified source snapshot and run preflight tests before training. They export results only after checking both complete runs; segmented sessions export recovery checkpoints. See [Kaggle execution and recovery](docs/kaggle/README.md). The older baseline notebook still clones the GitHub branch.
+5. Phase 1–4 contain an embedded, verified source snapshot and run preflight tests before training. They export results only after checking both complete runs; segmented sessions export recovery checkpoints. See [Kaggle execution and recovery](docs/kaggle/README.md). The older baseline notebook still clones the GitHub branch.
 
 ### 5.6. Aggregate Results for Final Report
 Once all runs are placed in the `runs/` directory, aggregate all metrics into summary Markdown and CSV tables:
 ```bash
-python scripts/aggregate_grid_search.py --runs-dir runs --output-csv docs/results/grid_search_summary.csv --output-md docs/results/grid_search_summary.md
+python scripts/build_final_report.py --runs-dir runs --archive-dir checkpoints
 ```
+
+This preserves all run outputs and generates validated CSV/PNG assets in `docs/experiments/report_assets/`.
+To rebuild from the committed archive, use `python scripts/build_final_report.py --runs-dir checkpoints`.
+The [executed notebooks](docs/experiments/notebooks/) retain their original source snapshot and outputs;
+fresh templates in `docs/kaggle/` use the cleaned source. For old checkpoint evaluation after refactoring,
+follow the explicit source-change procedure in [checkpoints/README.md](checkpoints/README.md).
 
 ---
 
@@ -231,7 +242,7 @@ For in-depth mathematical derivations and design rationale, consult the dedicate
 * [`TRAINING_AND_ARCHITECTURE.md`](docs/critical/TRAINING_AND_ARCHITECTURE.md): Head-to-head architectural comparison and training loop mechanics.
 * [`VALIDATION_AND_METRICS.md`](docs/critical/VALIDATION_AND_METRICS.md): Mathematical formulations for Top-1, Loss, Macro-F1, and Confusion Matrix.
 * [`DATASET_SPLIT.md`](docs/critical/DATASET_SPLIT.md) & [`DATASET_SPLITTING.md`](docs/critical/DATASET_SPLITTING.md): Data split manifest and zero-leakage guarantee.
-* [`DATASET_CLEANING.md`](docs/critical/DATASET_CLEANING.md): Transition from raw image audit to official CIFAR integrity verification.
+* [`DATASET_CLEANING.md`](docs/critical/DATASET_CLEANING.md): Official CIFAR integrity verification and its scope.
 
 ---
 

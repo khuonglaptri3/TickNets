@@ -2,15 +2,15 @@
 
 Derived from this repository's TickNet-Basic, including its existing SE gate.
 Mixed depthwise kernels follow the idea in MixConv (arXiv:1907.09595).
-This is an untrained architecture candidate, not an accuracy claim.
+Final CIFAR experiment evidence is recorded in docs/experiments/.
 """
 from collections import OrderedDict
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 
 from .common import Classifier, conv1x1_block, conv3x3_block
-from .SE_Attention import SE
 
 
 STAGE_CHANNELS = (112, 64, 144, 288, 512)
@@ -18,6 +18,40 @@ STAGE_DEPTHS = (1, 1, 2, 2, 1)
 STEM_CHANNELS = 24
 HEAD_CHANNELS = 768
 ARCHITECTURE_REVISION = "ticknet-l-v1"
+
+
+class Flatten(nn.Module):
+    def forward(self, x):
+        return x.view(x.size(0), -1)
+
+
+class ChannelGate(nn.Module):
+    """Original SE gate, with identical parameter names for saved checkpoints."""
+
+    def __init__(self, gate_channels, reduction_ratio=16):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            Flatten(),
+            nn.Linear(gate_channels, gate_channels // reduction_ratio),
+            nn.ReLU(),
+            nn.Linear(gate_channels // reduction_ratio, gate_channels),
+        )
+
+    def forward(self, x):
+        squeeze_avg = F.avg_pool2d(x, (x.size(2), x.size(3)),
+                                   stride=(x.size(2), x.size(3)))
+        channel_att = self.mlp(squeeze_avg)
+        scale = torch.sigmoid(channel_att).unsqueeze(2).unsqueeze(3).expand_as(x)
+        return x * scale
+
+
+class SE(nn.Module):
+    def __init__(self, gate_channels, reduction_ratio=16):
+        super().__init__()
+        self.ChannelGate = ChannelGate(gate_channels, reduction_ratio)
+
+    def forward(self, x):
+        return self.ChannelGate(x)
 
 
 class MixedDepthwise(nn.Module):

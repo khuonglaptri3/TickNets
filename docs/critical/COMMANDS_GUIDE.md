@@ -122,9 +122,15 @@ chặng chưa xong xuất ZIP `recovery`.
 
 Sau khi giải nén các thư mục thực nghiệm vào thư mục `runs/`, chạy script tổng hợp:
 ```bash
-python scripts/aggregate_grid_search.py --runs-dir runs --output-csv docs/results/grid_search_summary.csv --output-md docs/results/grid_search_summary.md
+python scripts/build_final_report.py --runs-dir runs --archive-dir checkpoints
 ```
 Script sẽ tự động:
 - Đọc đủ 8 folder grid search; thiếu run hoặc artifact sai sẽ báo lỗi. Baseline tổng hợp riêng.
 - Tìm điểm `Best Val Epoch`, `Best Val Acc`, `Test Top-1 Accuracy`, `Test Loss`, `Macro F1`.
 - Xuất bảng Markdown và CSV để đưa thẳng vào báo cáo cuối kỳ.
+
+Thêm learning curves, confusion matrix PNG và classification report CSV theo từng run
+tại [report_assets](../experiments/report_assets/). Đọc [báo cáo 4 phase](../experiments/README.md).
+Có thể dựng lại từ bản lưu bằng `python scripts/build_final_report.py --runs-dir checkpoints`.
+Đánh giá checkpoint Kaggle cũ sau refactor cần `--allow-eval-source-change` và output mới;
+xem [hướng dẫn checkpoint](../../checkpoints/README.md). Resume vẫn yêu cầu nguồn/runtime gốc.

@@ -63,8 +63,8 @@ def aggregate_results(runs_dir: Path, output_csv: Optional[Path] = None,
 def main() -> int:
     parser = argparse.ArgumentParser(description="Aggregate Grid Search results.")
     parser.add_argument("--runs-dir", type=Path, default=Path("runs"), help="Path to runs directory (default: runs)")
-    parser.add_argument("--output-csv", type=Path, default=Path("docs/results/grid_search_summary.csv"), help="Output CSV path")
-    parser.add_argument("--output-md", type=Path, default=Path("docs/results/grid_search_summary.md"), help="Output Markdown path")
+    parser.add_argument("--output-csv", type=Path, default=Path("docs/experiments/grid_search_summary.csv"), help="Output CSV path")
+    parser.add_argument("--output-md", type=Path, default=Path("docs/experiments/grid_search_summary.md"), help="Output Markdown path")
     parser.add_argument("--allow-partial", action="store_true")
     args = parser.parse_args()
 

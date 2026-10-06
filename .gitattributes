@@ -2,7 +2,6 @@
 data/** -text
 
 # Preserve generated experiment evidence byte-for-byte (including CSV/JSON line endings).
-docs/results/experiment_midterm_smoothing_lr/** -text
-docs/results/experiment_midterm_smoothing_lr/checkpoints/** -diff
-docs/results/experiment_midterm_smoothing_lr/provenance/source_split_manifest_*.csv -diff
-docs/results/experiment_midterm_smoothing_lr/selection/selection_lock.json -diff
+checkpoints/** -text
+checkpoints/**/*.pt -diff
+docs/experiments/** -text

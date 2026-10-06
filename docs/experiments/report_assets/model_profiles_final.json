@@ -1,0 +1,36 @@
+{
+  "CIFAR10": {
+    "num_classes": 10,
+    "learnable_parameters": 1100105,
+    "flops_forward": 157828544,
+    "gflops_forward": 0.157828544,
+    "counting_convention": "1 MAC = 2 FLOPs; Conv2d and Linear only; batch size 1; eval forward",
+    "excluded_operations": [
+      "bias additions",
+      "batch normalization",
+      "activations",
+      "pooling",
+      "residual additions",
+      "SE elementwise scaling",
+      "data movement"
+    ],
+    "architecture_revision": "ticknet-l-v1"
+  },
+  "CIFAR100": {
+    "num_classes": 100,
+    "learnable_parameters": 1169315,
+    "flops_forward": 157966784,
+    "gflops_forward": 0.157966784,
+    "counting_convention": "1 MAC = 2 FLOPs; Conv2d and Linear only; batch size 1; eval forward",
+    "excluded_operations": [
+      "bias additions",
+      "batch normalization",
+      "activations",
+      "pooling",
+      "residual additions",
+      "SE elementwise scaling",
+      "data movement"
+    ],
+    "architecture_revision": "ticknet-l-v1"
+  }
+}
