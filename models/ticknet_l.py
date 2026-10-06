@@ -83,6 +83,7 @@ class TickNetL(nn.Module):
             ("init_conv", conv3x3_block(3, STEM_CHANNELS, stride=1 if cifar else 2)),
         ])
         in_channels = STEM_CHANNELS
+        
         for stage_index, (out_channels, depth, stride) in enumerate(
                 zip(STAGE_CHANNELS, STAGE_DEPTHS, strides)):
             blocks = OrderedDict()
@@ -97,6 +98,34 @@ class TickNetL(nn.Module):
                 in_channels = out_channels
             layers[f"stage{stage_index + 1}"] = nn.Sequential(blocks)
         layers["final_conv"] = conv1x1_block(in_channels, HEAD_CHANNELS)
+        """
+        # Mixed kernels (3, 5) require an even hidden_channels value.
+        layers["stage1"] = nn.Sequential(OrderedDict([
+            # Block 1
+            ("unit1", CompressedPDPBlock( in_channels=STEM_CHANNELS, out_channels=112, stride=1, hidden_channels=24, kernels=(3,),)),]))
+        
+        layers["stage2"] = nn.Sequential(OrderedDict([
+            # Block 2
+            ("unit1", CompressedPDPBlock( in_channels=112, out_channels=64, stride=1 if cifar else 2, hidden_channels=88, kernels=(3,),)),]))
+    
+        layers["stage3"] = nn.Sequential(OrderedDict([
+            # Block 3
+            ("unit1", CompressedPDPBlock( in_channels=64, out_channels=144, stride=2, hidden_channels=48, kernels=(3, 5),)),
+            # Block 4
+            ("unit2", CompressedPDPBlock( in_channels=144, out_channels=144, stride=1, hidden_channels=112, kernels=(3, 5),)),]))
+        
+        layers["stage4"] = nn.Sequential(OrderedDict([
+            # Block 5
+            ("unit1", CompressedPDPBlock( in_channels=144, out_channels=288, stride=2, hidden_channels=112, kernels=(3, 5),)),
+            # Block 6
+            ("unit2", CompressedPDPBlock( in_channels=288, out_channels=288, stride=1, hidden_channels=216, kernels=(3, 5),)),]))
+
+        layers["stage5"] = nn.Sequential(OrderedDict([
+            # Block 7
+            ("unit1", CompressedPDPBlock( in_channels=288, out_channels=512, stride=2, hidden_channels=216, kernels=(3, 5),)),]))
+        
+        layers["final_conv"] = conv1x1_block(512, HEAD_CHANNELS)
+    """
         layers["global_pool"] = nn.AdaptiveAvgPool2d(1)
         self.backbone = nn.Sequential(layers)
         self.classifier = Classifier(HEAD_CHANNELS, num_classes)
