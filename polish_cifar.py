@@ -98,6 +98,25 @@ def evaluate_with_tta(
         "use_tta": use_tta,
     }
 
+class ModelEMA:
+    """Maintains exponential moving average of model parameters."""
+
+    def __init__(self, model: nn.Module, decay: float = 0.999):
+        self.decay = decay
+        self.shadow = {k: v.clone().detach() for k, v in model.state_dict().items()}
+
+    def update(self, model: nn.Module):
+        with torch.no_grad():
+            for k, v in model.state_dict().items():
+                if k in self.shadow:
+                    if self.shadow[k].dtype.is_floating_point:
+                        self.shadow[k].mul_(self.decay).add_(v, alpha=1.0 - self.decay)
+                    else:
+                        self.shadow[k].copy_(v)
+
+    def apply_to(self, target_model: nn.Module):
+        target_model.load_state_dict(self.shadow)
+
 
 def polish_train(
     checkpoint_path: Path,
@@ -118,6 +137,11 @@ def polish_train(
     val_fraction: float = 0.0,
     cutout_length: int = 16,
     max_batches: Optional[int] = None,
+    warmup_epochs: int = 0,
+    use_ema: bool = False,
+    ema_decay: float = 0.999,
+    mixup_alpha: float = 0.0,
+    preserve_baseline: bool = True,
 ) -> Dict[str, Any]:
     """Execute fine-tuning / polishing starting from selected checkpoint."""
     seed_everything(seed)
@@ -152,7 +176,7 @@ def polish_train(
         download=False,
     )
 
-    # 3. Setup optimizer, scheduler, loss, SWA
+    # 3. Setup optimizer, scheduler, loss, SWA, EMA
     optimizer = torch.optim.SGD(
         model.parameters(),
         lr=lr,
@@ -160,11 +184,17 @@ def polish_train(
         weight_decay=weight_decay,
         nesterov=True,
     )
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=0.0)
     criterion = nn.CrossEntropyLoss(label_smoothing=label_smoothing)
+
+    def compute_lr(epoch_idx: int) -> float:
+        if warmup_epochs > 0 and epoch_idx <= warmup_epochs:
+            return lr * (epoch_idx / warmup_epochs)
+        progress = (epoch_idx - warmup_epochs) / max(1, epochs - warmup_epochs)
+        return 0.5 * lr * (1.0 + math.cos(math.pi * progress))
 
     swa_model = torch.optim.swa_utils.AveragedModel(model) if use_swa else None
     swa_start_epoch = max(1, int(epochs * swa_start_ratio))
+    ema_helper = ModelEMA(model, decay=ema_decay) if use_ema else None
 
     # Evaluate initial checkpoint before polishing
     print(f"\n[Baseline Evaluation on Test Set Before Polishing]:")
@@ -173,16 +203,24 @@ def polish_train(
     print(f"  Standard Top-1 : {base_eval['top1']:.2f}% | Loss: {base_eval['loss']:.4f} | Macro F1: {base_eval['macro_f1']:.4f}")
     print(f"  Flip-TTA Top-1 : {base_eval_tta['top1']:.2f}% | Loss: {base_eval_tta['loss']:.4f} | Macro F1: {base_eval_tta['macro_f1']:.4f}")
 
-    print(f"\n[Starting Polishing Phase ({epochs} epochs, lr={lr}, Label Smoothing={label_smoothing}, SWA={use_swa})]:")
+    print(f"\n[Starting Polishing Phase ({epochs} epochs, lr={lr}, Warmup={warmup_epochs}, Smoothing={label_smoothing}, SWA={use_swa}, EMA={use_ema}, Mixup={mixup_alpha})]:")
     print(f"  Training samples: {len(train_loader.dataset):,} | Test samples: {len(test_loader.dataset):,}")
+
+    best_val_top1 = -1.0
+    best_val_epoch = None
+    best_val_state = None
 
     history = []
     for epoch in range(1, epochs + 1):
+        target_lr = compute_lr(epoch)
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = target_lr
+        current_lr = target_lr
+
         model.train()
         loss_sum = 0.0
         correct = 0
         total = 0
-        current_lr = optimizer.param_groups[0]["lr"]
 
         for batch_idx, (images, labels) in enumerate(train_loader):
             if max_batches is not None and batch_idx >= max_batches:
@@ -191,14 +229,27 @@ def polish_train(
             labels = labels.to(device, non_blocking=True)
 
             optimizer.zero_grad(set_to_none=True)
-            logits = model(images)
-            loss = criterion(logits, labels)
+            if mixup_alpha > 0.0:
+                lam = float(np.random.beta(mixup_alpha, mixup_alpha))
+                perm = torch.randperm(images.size(0), device=images.device)
+                images_mixed = lam * images + (1.0 - lam) * images[perm]
+                logits = model(images_mixed)
+                loss = lam * criterion(logits, labels) + (1.0 - lam) * criterion(logits, labels[perm])
+                target_eval = labels if lam >= 0.5 else labels[perm]
+            else:
+                logits = model(images)
+                loss = criterion(logits, labels)
+                target_eval = labels
+
             loss.backward()
             optimizer.step()
 
+            if ema_helper is not None:
+                ema_helper.update(model)
+
             batch_size_cur = labels.numel()
             loss_sum += loss.item() * batch_size_cur
-            correct += (logits.argmax(dim=1) == labels).sum().item()
+            correct += (logits.argmax(dim=1) == target_eval).sum().item()
             total += batch_size_cur
 
         train_loss = loss_sum / max(1, total)
@@ -210,14 +261,16 @@ def polish_train(
         else:
             swa_tag = ""
 
-        scheduler.step()
-
-        # Optional validation
+        # Optional validation and best checkpoint tracking
         val_top1 = None
         if val_loader is not None and len(val_loader) > 0:
             val_res = evaluate_with_tta(model, val_loader, device, num_classes, use_tta=False, max_batches=max_batches)
             val_top1 = val_res["top1"]
             val_str = f" | Val Top-1: {val_top1:.2f}%"
+            if val_top1 > best_val_top1:
+                best_val_top1 = val_top1
+                best_val_epoch = epoch
+                best_val_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
         else:
             val_str = ""
 
@@ -239,11 +292,25 @@ def polish_train(
 
     # 4. Final Evaluation & Model Selection
     eval_candidates = [("Standard_Model", model)]
-    if use_swa:
+    if best_val_state is not None:
+        best_val_model = build_ticknet_l(num_classes=num_classes, cifar=True)
+        best_val_model.load_state_dict(best_val_state)
+        best_val_model.to(device)
+        eval_candidates.append(("Best_Val_Model", best_val_model))
+        print(f"\n[Validation Selection] Best validation score: {best_val_top1:.2f}% at epoch {best_val_epoch}")
+
+    if use_swa and swa_model is not None:
         print("\nUpdating Batch Normalization statistics for SWA model...")
         if max_batches is None:
             torch.optim.swa_utils.update_bn(train_loader, swa_model, device=device)
         eval_candidates.append(("SWA_Model", swa_model))
+
+    if use_ema and ema_helper is not None:
+        print("\nEvaluating Model EMA...")
+        ema_model = build_ticknet_l(num_classes=num_classes, cifar=True)
+        ema_helper.apply_to(ema_model)
+        ema_model.to(device)
+        eval_candidates.append(("EMA_Model", ema_model))
 
     results = {}
     best_candidate_name = None
@@ -272,11 +339,25 @@ def polish_train(
 
     # Determine absolute gain
     initial_top1 = base_eval["top1"]
+    initial_tta_top1 = base_eval_tta["top1"]
     gain = best_candidate_top1 - initial_top1
+    gain_over_baseline_tta = best_candidate_top1 - initial_tta_top1
+
+    retained_baseline = False
+    if preserve_baseline and (best_candidate_top1 < initial_tta_top1):
+        retained_baseline = True
+        print("\n" + "!" * 78)
+        print(f"  [ATTENTION] Best polished candidate ({best_candidate_top1:.2f}%) did not outperform")
+        print(f"  baseline checkpoint ({initial_tta_top1:.2f}% Flip-TTA / {initial_top1:.2f}% Standard).")
+        print(f"  Recommendation: Retaining original baseline checkpoint as official artifact!")
+        print("!" * 78)
+
     print("\n" + "-" * 78)
-    print(f"Baseline Test Top-1 : {initial_top1:.2f}%")
-    print(f"Polished Test Top-1 : {best_candidate_top1:.2f}% ({best_candidate_name})")
-    print(f"Absolute Gain       : {gain:+.2f}%")
+    print(f"Baseline Test Top-1   : {initial_top1:.2f}% (Standard) | {initial_tta_top1:.2f}% (Flip-TTA)")
+    print(f"Polished Best Top-1   : {best_candidate_top1:.2f}% ({best_candidate_name})")
+    print(f"Absolute Gain (vs Std): {gain:+.2f}%")
+    print(f"Absolute Gain (vs TTA): {gain_over_baseline_tta:+.2f}%")
+    print(f"Retained Baseline     : {retained_baseline}")
     print("-" * 78)
 
     # Save best polished model checkpoint
@@ -290,8 +371,10 @@ def polish_train(
         "dataset": dataset,
         "epochs_polished": epochs,
         "baseline_top1": initial_top1,
+        "baseline_tta_top1": initial_tta_top1,
         "polished_top1": best_candidate_top1,
         "best_mode": best_candidate_name,
+        "retained_baseline": retained_baseline,
         "architecture_revision": ARCHITECTURE_REVISION,
     }
     torch.save(save_payload, output_dir / "polished_best.pt")
@@ -304,6 +387,8 @@ def polish_train(
         "best_polished_mode": best_candidate_name,
         "best_polished_top1": best_candidate_top1,
         "absolute_gain": gain,
+        "gain_over_baseline_tta": gain_over_baseline_tta,
+        "retained_baseline": retained_baseline,
         "results": {
             k: {
                 "top1": v["top1"],
@@ -347,6 +432,12 @@ def main():
     parser.add_argument("--swa-start-ratio", type=float, default=0.4, help="Epoch fraction when SWA starts")
     parser.add_argument("--val-fraction", type=float, default=0.0, help="0.0 uses all 50k samples for training")
     parser.add_argument("--cutout-length", type=int, default=16)
+    parser.add_argument("--warmup-epochs", type=int, default=0, help="Number of warmup epochs before cosine decay")
+    parser.add_argument("--use-ema", action="store_true", default=False, help="Enable Model Exponential Moving Average")
+    parser.add_argument("--ema-decay", type=float, default=0.999, help="EMA decay rate")
+    parser.add_argument("--mixup-alpha", type=float, default=0.0, help="Alpha for Mixup data augmentation")
+    parser.add_argument("--preserve-baseline", action="store_true", default=True, help="Preserve baseline when polish regresses")
+    parser.add_argument("--no-preserve-baseline", dest="preserve_baseline", action="store_false")
     parser.add_argument("--max-batches", type=int, default=None, help="Limit number of batches per epoch (for quick testing)")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default="auto")
@@ -370,6 +461,11 @@ def main():
         val_fraction=args.val_fraction,
         cutout_length=args.cutout_length,
         max_batches=args.max_batches,
+        warmup_epochs=args.warmup_epochs,
+        use_ema=args.use_ema,
+        ema_decay=args.ema_decay,
+        mixup_alpha=args.mixup_alpha,
+        preserve_baseline=args.preserve_baseline,
     )
 
 
