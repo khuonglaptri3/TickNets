@@ -49,8 +49,41 @@ EXTRACTED_CHECKSUMS = {
 
 def extracted_dataset_valid(name: str, data_root: Path) -> bool:
     folder = data_root / DATASET_METADATA[name]["extracted_dir"]
-    return all((folder / filename).is_file() and compute_md5(folder / filename) == expected
-               for filename, expected in EXTRACTED_CHECKSUMS[name].items())
+    return not extracted_file_problems(name, folder)
+
+
+def extracted_file_problems(name: str, folder: Path) -> List[str]:
+    problems = []
+    for filename, expected in EXTRACTED_CHECKSUMS[name].items():
+        path = folder / filename
+        if not path.is_file():
+            problems.append(f"{filename}: missing")
+        else:
+            actual = compute_md5(path)
+            if actual != expected:
+                problems.append(f"{filename}: MD5 expected {expected}, got {actual}")
+    return problems
+
+
+def attached_candidates(source_root: Path, target_name: str) -> List[Path]:
+    """Find attached data, including directories mounted through Kaggle links."""
+    if source_root.name == target_name:
+        return [source_root]
+    if not source_root.is_dir():
+        return []
+    found = []
+    visited = set()
+    for current, directories, files in os.walk(source_root, followlinks=True):
+        resolved = Path(current).resolve()
+        if resolved in visited:
+            directories[:] = []
+            continue
+        visited.add(resolved)
+        if target_name in directories:
+            found.append(Path(current) / target_name)
+        if target_name in files:
+            found.append(Path(current) / target_name)
+    return found
 
 
 def compute_md5(file_path: Path, chunk_size: int = 1024 * 1024) -> str:
@@ -137,7 +170,8 @@ def extract_tar_gz(archive_path: Path, extract_dir: Path) -> Path:
     return extract_dir
 
 
-def ensure_cifar_dataset(name: str, data_root: Path, force: bool = False) -> Dict[str, str]:
+def ensure_cifar_dataset(name: str, data_root: Path, force: bool = False,
+                         source_root: Optional[Path] = None) -> Dict[str, str]:
     if name not in DATASET_METADATA:
         raise ValueError(f"Unknown dataset {name!r}. Choices: {list(DATASET_METADATA.keys())}")
 
@@ -150,11 +184,58 @@ def ensure_cifar_dataset(name: str, data_root: Path, force: bool = False) -> Dic
         print(f"[✓] {name.upper()} already extracted and present at: {extracted_path}")
         return {"dataset": name, "status": "already_present", "path": str(extracted_path)}
 
+    # Kaggle can mount official CIFAR files under /kaggle/input even when Internet is off.
+    if source_root is not None:
+        source_root = Path(source_root)
+        if source_root.exists():
+            rejected = []
+            folders = attached_candidates(source_root, meta["extracted_dir"])
+            for folder in folders:
+                if folder.is_dir():
+                    problems = extracted_file_problems(name, folder)
+                    if problems:
+                        rejected.append(f"{folder}: {', '.join(problems)}")
+                        continue
+                    extracted_path.mkdir(parents=True, exist_ok=True)
+                    for filename in EXTRACTED_CHECKSUMS[name]:
+                        shutil.copy2(folder / filename, extracted_path / filename)
+                    if not extracted_dataset_valid(name, data_root):
+                        raise ValueError(f"Attached {name} files changed during copying")
+                    print(f"[+] Verified attached {name} files from: {folder}")
+                    return {"dataset": name, "status": "attached_extracted", "path": str(extracted_path)}
+            archives = attached_candidates(source_root, meta["filename"])
+            for attached_archive in archives:
+                if attached_archive.is_file():
+                    actual = compute_md5(attached_archive)
+                    if actual != meta["md5"]:
+                        rejected.append(f"{attached_archive}: archive MD5 expected {meta['md5']}, got {actual}")
+                        continue
+                    archive_file.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(attached_archive, archive_file)
+                    if compute_md5(archive_file) != meta["md5"]:
+                        raise ValueError(f"Attached {name} archive changed during copying")
+                    extract_tar_gz(archive_file, data_root)
+                    if not extracted_dataset_valid(name, data_root):
+                        raise ValueError(f"Attached {name} files failed official MD5 verification")
+                    print(f"[+] Verified attached {name} archive from: {attached_archive}")
+                    return {"dataset": name, "status": "attached_archive", "path": str(extracted_path)}
+            if rejected:
+                raise ValueError("Attached CIFAR data failed official verification:\n" + "\n".join(rejected))
+
     urls = [meta["primary_url"], meta["fallback_url"]]
 
     # Download archive if not present or corrupt
     if force or not archive_file.is_file() or compute_md5(archive_file) != meta["md5"]:
-        download_file_with_fallback(urls, archive_file, expected_md5=meta["md5"])
+        try:
+            download_file_with_fallback(urls, archive_file, expected_md5=meta["md5"])
+        except RuntimeError as error:
+            if source_root is not None:
+                raise RuntimeError(
+                    f"{error}\nNo verified official {name} data found under {source_root}. "
+                    "Enable Kaggle Internet or attach a Kaggle Dataset containing the official "
+                    f"{meta['filename']} archive or {meta['extracted_dir']} folder."
+                ) from error
+            raise
 
     # Extract archive
     extract_tar_gz(archive_file, data_root)
@@ -169,6 +250,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--data-root", type=Path, default=Path("data"), help="Directory to save datasets (default: data)")
     parser.add_argument("--dataset", choices=("all", "cifar10", "cifar100"), default="all", help="Dataset to download")
     parser.add_argument("--force", action="store_true", help="Force redownload even if present")
+    parser.add_argument("--source-root", type=Path,
+                        help="Attached dataset folder or official archive to verify before using the network")
     args = parser.parse_args(argv)
 
     data_root = args.data_root.resolve()
@@ -180,7 +263,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"Target datasets: {targets}\n")
 
     for target in targets:
-        ensure_cifar_dataset(target, data_root, force=args.force)
+        ensure_cifar_dataset(target, data_root, force=args.force, source_root=args.source_root)
 
     print("\n[✓] All target CIFAR datasets are verified and ready for training!")
     return 0
