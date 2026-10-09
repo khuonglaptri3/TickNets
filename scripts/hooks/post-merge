@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Git post-merge hook: Automatically downloads/ensures CIFAR datasets after git pull
+
+echo "[Git Hook] post-merge triggered: checking CIFAR-10 & CIFAR-100 datasets..."
+
+PYTHON_CMD="python3"
+if command -v python &>/dev/null; then
+    PYTHON_CMD="python"
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+
+if [ -f "$REPO_ROOT/download_cifar.py" ]; then
+    "$PYTHON_CMD" "$REPO_ROOT/download_cifar.py" --data-root "$REPO_ROOT/data"
+else
+    echo "[Git Hook] download_cifar.py not found, skipping dataset sync."
+fi

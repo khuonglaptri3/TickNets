@@ -1,6 +1,12 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.env
+.venv/
+.uv-cache/
 data.building-*/
 runs/
 .superpowers/
+data/cifar-10*
+data/cifar-100*
+data/*.tar.gz

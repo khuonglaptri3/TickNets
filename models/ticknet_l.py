@@ -2,15 +2,15 @@
 
 Derived from this repository's TickNet-Basic, including its existing SE gate.
 Mixed depthwise kernels follow the idea in MixConv (arXiv:1907.09595).
-This is an untrained architecture candidate, not an accuracy claim.
+Final CIFAR experiment evidence is recorded in docs/experiments/.
 """
 from collections import OrderedDict
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 
 from .common import Classifier, conv1x1_block, conv3x3_block
-from .SE_Attention import SE
 
 
 STAGE_CHANNELS = (112, 64, 144, 288, 512)
@@ -18,6 +18,40 @@ STAGE_DEPTHS = (1, 1, 2, 2, 1)
 STEM_CHANNELS = 24
 HEAD_CHANNELS = 768
 ARCHITECTURE_REVISION = "ticknet-l-v1"
+
+
+class Flatten(nn.Module):
+    def forward(self, x):
+        return x.view(x.size(0), -1)
+
+
+class ChannelGate(nn.Module):
+    """Original SE gate, with identical parameter names for saved checkpoints."""
+
+    def __init__(self, gate_channels, reduction_ratio=16):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            Flatten(),
+            nn.Linear(gate_channels, gate_channels // reduction_ratio),
+            nn.ReLU(),
+            nn.Linear(gate_channels // reduction_ratio, gate_channels),
+        )
+
+    def forward(self, x):
+        squeeze_avg = F.avg_pool2d(x, (x.size(2), x.size(3)),
+                                   stride=(x.size(2), x.size(3)))
+        channel_att = self.mlp(squeeze_avg)
+        scale = torch.sigmoid(channel_att).unsqueeze(2).unsqueeze(3).expand_as(x)
+        return x * scale
+
+
+class SE(nn.Module):
+    def __init__(self, gate_channels, reduction_ratio=16):
+        super().__init__()
+        self.ChannelGate = ChannelGate(gate_channels, reduction_ratio)
+
+    def forward(self, x):
+        return self.ChannelGate(x)
 
 
 class MixedDepthwise(nn.Module):
@@ -83,6 +117,7 @@ class TickNetL(nn.Module):
             ("init_conv", conv3x3_block(3, STEM_CHANNELS, stride=1 if cifar else 2)),
         ])
         in_channels = STEM_CHANNELS
+        
         for stage_index, (out_channels, depth, stride) in enumerate(
                 zip(STAGE_CHANNELS, STAGE_DEPTHS, strides)):
             blocks = OrderedDict()
@@ -97,6 +132,34 @@ class TickNetL(nn.Module):
                 in_channels = out_channels
             layers[f"stage{stage_index + 1}"] = nn.Sequential(blocks)
         layers["final_conv"] = conv1x1_block(in_channels, HEAD_CHANNELS)
+        """
+        # Mixed kernels (3, 5) require an even hidden_channels value.
+        layers["stage1"] = nn.Sequential(OrderedDict([
+            # Block 1
+            ("unit1", CompressedPDPBlock( in_channels=STEM_CHANNELS, out_channels=112, stride=1, hidden_channels=24, kernels=(3,),)),]))
+        
+        layers["stage2"] = nn.Sequential(OrderedDict([
+            # Block 2
+            ("unit1", CompressedPDPBlock( in_channels=112, out_channels=64, stride=1 if cifar else 2, hidden_channels=88, kernels=(3,),)),]))
+    
+        layers["stage3"] = nn.Sequential(OrderedDict([
+            # Block 3
+            ("unit1", CompressedPDPBlock( in_channels=64, out_channels=144, stride=2, hidden_channels=48, kernels=(3, 5),)),
+            # Block 4
+            ("unit2", CompressedPDPBlock( in_channels=144, out_channels=144, stride=1, hidden_channels=112, kernels=(3, 5),)),]))
+        
+        layers["stage4"] = nn.Sequential(OrderedDict([
+            # Block 5
+            ("unit1", CompressedPDPBlock( in_channels=144, out_channels=288, stride=2, hidden_channels=112, kernels=(3, 5),)),
+            # Block 6
+            ("unit2", CompressedPDPBlock( in_channels=288, out_channels=288, stride=1, hidden_channels=216, kernels=(3, 5),)),]))
+
+        layers["stage5"] = nn.Sequential(OrderedDict([
+            # Block 7
+            ("unit1", CompressedPDPBlock( in_channels=288, out_channels=512, stride=2, hidden_channels=216, kernels=(3, 5),)),]))
+        
+        layers["final_conv"] = conv1x1_block(512, HEAD_CHANNELS)
+    """
         layers["global_pool"] = nn.AdaptiveAvgPool2d(1)
         self.backbone = nn.Sequential(layers)
         self.classifier = Classifier(HEAD_CHANNELS, num_classes)

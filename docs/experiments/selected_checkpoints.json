@@ -1,0 +1,22 @@
+{
+  "CIFAR10": {
+    "experiment": "cifar10_sgd_lr015",
+    "checkpoint": "cifar10_sgd_lr015/best_val.pt",
+    "checkpoint_sha256": "7815db48e792cbaf57d063a262c977b13a01c72fe542c1e1dd077f81416ff204",
+    "best_epoch": 188,
+    "validation_top1": 95.7,
+    "validation_loss": 0.16780399214627686,
+    "test_top1": 94.97,
+    "selection_rule": "Highest validation top1; ties use lowest validation loss, then run name"
+  },
+  "CIFAR100": {
+    "experiment": "cifar100_sgd_lr015",
+    "checkpoint": "cifar100_sgd_lr015/best_val.pt",
+    "checkpoint_sha256": "74b5b1c6a997451af4613b387c4b79b949bb0726a49c7019392d35d7949279ab",
+    "best_epoch": 190,
+    "validation_top1": 74.34,
+    "validation_loss": 1.1066755764007568,
+    "test_top1": 75.28,
+    "selection_rule": "Highest validation top1; ties use lowest validation loss, then run name"
+  }
+}

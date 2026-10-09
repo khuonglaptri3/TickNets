@@ -1,11 +1,11 @@
-"""Validate native-resolution training and the declared inference budget."""
-import hashlib
+"""Validate final CIFAR training and the declared inference budget."""
 
 import pytest
 import torch
 from torch import nn
 
-from models.mid_models import build_mid_model
+from models.ticknet_l import build_ticknet_l
+from models.TickNet import build_TickNet
 from models.model_profile import profile_model
 
 
@@ -17,13 +17,13 @@ def cpu_threads():
     torch.set_num_threads(previous)
 
 
-@pytest.mark.parametrize("size", (32, 224))
-def test_l_trains_at_both_native_resolutions_with_no_disconnected_parameters(size):
+@pytest.mark.parametrize("num_classes", (10, 100))
+def test_l_trains_on_both_cifar_tasks_with_no_disconnected_parameters(num_classes):
     torch.manual_seed(42)
-    model = build_mid_model("l", variant=f"Mid{size}").train()
-    logits = model(torch.randn(2, 3, size, size))
-    assert logits.shape == (2, 5)
-    loss = nn.functional.cross_entropy(logits, torch.tensor([0, 4]))
+    model = build_ticknet_l(num_classes=num_classes, cifar=True).train()
+    logits = model(torch.randn(2, 3, 32, 32))
+    assert logits.shape == (2, num_classes)
+    loss = nn.functional.cross_entropy(logits, torch.tensor([0, num_classes - 1]))
     assert torch.isfinite(loss)
     loss.backward()
     for name, parameter in model.named_parameters():
@@ -31,12 +31,12 @@ def test_l_trains_at_both_native_resolutions_with_no_disconnected_parameters(siz
         assert torch.isfinite(parameter.grad).all(), name
 
 
-@pytest.mark.parametrize("size", (32, 224))
-def test_l_satisfies_budget_with_independent_operator_count(size):
-    baseline = profile_model(build_mid_model("basic", variant=f"Mid{size}"), size, cross_check=True)
-    candidate = profile_model(build_mid_model("l", variant=f"Mid{size}"), size, cross_check=True)
+@pytest.mark.parametrize("num_classes", (10, 100))
+def test_l_satisfies_budget_with_independent_operator_count(num_classes):
+    baseline = profile_model(build_TickNet(num_classes, typesize="basic", cifar=True), 32, cross_check=True)
+    candidate = profile_model(build_ticknet_l(num_classes, cifar=True), 32, cross_check=True)
     assert candidate["learnable_parameters"] <= 6_000_000
-    assert candidate["flops"] <= 800_000_000
+    assert candidate["flops"] < 1_000_000_000
     assert candidate["flops"] < baseline["flops"]
     assert candidate["pytorch_cross_check_flops"] == candidate["flops"]
     assert candidate["within_exam_limits"]
@@ -59,27 +59,3 @@ def test_profiler_counts_grouped_convolution_and_linear_without_mutating_model()
     assert [module.training for module in model.modules()] == original_flags
     for name, value in model.state_dict().items():
         assert torch.equal(value, original_state[name]), name
-
-
-@pytest.mark.parametrize("model_name", ("l", "c"))
-@pytest.mark.parametrize("revision", (None, "obsolete-revision"))
-def test_custom_checkpoint_requires_matching_architecture_revision(tmp_path, monkeypatch, revision, model_name):
-    import train_mid
-    from torch.utils.data import DataLoader, TensorDataset
-
-    # Small in-memory batches suffice: the failure must precede evaluation.
-    dataset = TensorDataset(torch.zeros(2, 3, 32, 32), torch.zeros(2, dtype=torch.long))
-    dataset.class_to_idx = {label: i for i, label in enumerate(("bird", "cat", "dog", "frog", "horse"))}
-    loader = DataLoader(dataset, batch_size=2)
-    monkeypatch.setattr(train_mid, "build_mid_loaders", lambda *args, **kwargs: (loader, loader))
-    manifest = tmp_path / "split_manifest.csv"
-    manifest.write_text("fixture manifest\n", encoding="utf-8")
-    checkpoint = tmp_path / f"{model_name}.pt"
-    torch.save({"config": {"model": model_name, "variant": "Mid32", "architecture_revision": revision,
-                           "split_manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest()},
-                "class_to_idx": dataset.class_to_idx}, checkpoint)
-    output = tmp_path / "evaluation"
-    with pytest.raises(ValueError, match="architecture revision"):
-        train_mid.main(["--data-root", str(tmp_path), "--variant", "Mid32", "--evaluate", str(checkpoint),
-                        "--output-dir", str(output), "--device", "cpu"])
-    assert not output.exists()

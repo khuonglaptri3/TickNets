@@ -1,0 +1,71 @@
+name: TickNet CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - 'release/**'
+      - 'feature/**'
+
+jobs:
+  build-and-test:
+    name: Test & Verify CIFAR Pipeline
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch torchvision numpy pillow pandas scipy matplotlib pytest
+
+      - name: Cache CIFAR Datasets
+        id: cache-cifar
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/cifar-10-batches-py
+            data/cifar-100-python
+            data/cifar-10-python.tar.gz
+            data/cifar-100-python.tar.gz
+          key: cifar-datasets-v1-${{ hashFiles('scripts/download_cifar.py') }}
+          restore-keys: |
+            cifar-datasets-v1-
+
+      - name: Download & Verify CIFAR-10 & CIFAR-100
+        run: |
+          python download_cifar.py --data-root data
+
+      - name: Run Unit Tests
+        run: |
+          OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 python -m pytest tests -v
+
+      - name: Verify embedded Kaggle source matches the checkout
+        run: |
+          python scripts/generate_kaggle_phase_notebooks.py
+          git diff --exit-code -- docs/kaggle/Phase1_CIFAR10_SGD.ipynb docs/kaggle/Phase2_CIFAR10_Adam.ipynb docs/kaggle/Phase3_CIFAR100_SGD.ipynb docs/kaggle/Phase4_CIFAR100_Adam.ipynb
+
+      - name: Verify TickNet-L Exam Limits (Params <= 6M, FLOPs < 1G)
+        run: |
+          python -c "
+          from models.ticknet_l import build_ticknet_l
+          from models.model_profile import profile_model
+
+          for nc in (10, 100):
+              m = build_ticknet_l(num_classes=nc, cifar=True)
+              prof = profile_model(m, 32, cross_check=True)
+              assert prof['within_exam_limits'], f'CIFAR-{nc} exceeds exam constraints!'
+              print(f'[✓] TickNet-L (CIFAR-{nc}): Params={prof[\"learnable_parameters\"]:,} <= 6M, FLOPs={prof[\"flops\"]:,} < 1G')
+          "
