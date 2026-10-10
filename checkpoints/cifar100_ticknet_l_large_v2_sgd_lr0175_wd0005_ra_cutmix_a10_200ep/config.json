@@ -1,0 +1,108 @@
+{
+  "config": "/kaggle/working/TickNets_LLargeV2CutMix200/configs/final/cifar100_ticknet_l_large_v2_cutmix_a10_200.json",
+  "model": "l_large_v2",
+  "dataset": "cifar100",
+  "data_root": "/kaggle/working/data",
+  "optimizer": "sgd",
+  "learning_rate": 0.175,
+  "momentum": 0.9,
+  "nesterov": true,
+  "cutout": false,
+  "cutout_length": 16,
+  "adam_beta1": 0.9,
+  "adam_beta2": 0.999,
+  "adam_eps": 1e-08,
+  "eta_min": 0.0,
+  "weight_decay": 0.0005,
+  "epochs": 200,
+  "batch_size": 128,
+  "val_fraction": 0.1,
+  "seed": 42,
+  "num_workers": 2,
+  "threads": 2,
+  "download": false,
+  "skip_test": false,
+  "device": "cuda:0",
+  "output_dir": "/kaggle/working/runs/cifar100_ticknet_l_large_v2_sgd_lr0175_wd0005_ra_cutmix_a10_200ep",
+  "resume": null,
+  "stop_after_epoch": null,
+  "evaluate": null,
+  "allow_eval_source_change": false,
+  "augmentation": "randaugment_cutmix_large_v2",
+  "randaugment_num_ops": 2,
+  "randaugment_magnitude": 7,
+  "cutmix_alpha": 1.0,
+  "cutmix_probability": 0.5,
+  "cutmix_train_sha256": "1310b8921bb2cd607d2384663fd7bb00c6b7c65618d5d1e0d72167ce8b70b82f",
+  "base_cutmix_train_sha256": "773c9a4d5b393ce232306fa858fc128b92e2fc89dd087cde93fa059ad303d780",
+  "randaugment_train_sha256": "f4c826168b73296dc852780758e5e9b98f529d8c1e3c2b085fddaf2b6bd6df33",
+  "source_sha256": {
+    "train_cifar.py": "075bcd24d83ded5744f95b5d6189af4d3cdeed78e8c8ebd998d5f0c5fa99dc0b",
+    "models/SE_Attention.py": "ad846e099c82ea91892ed27b5ac08ccdb07b77f3ca9aaab7c418b0a6eeeaf7a0",
+    "models/TickNet.py": "e68bf944f43834d821c79e56bf27a996a1d96bbfe44b1477315c1f3acbfa737c",
+    "models/cifar_data.py": "bf185c8b2c34e996c9dc9b95c41117be0c16f3467339db56ab77b8e162564dc1",
+    "models/cifar_experiment.py": "3d8b83824e09fa332a360536f6b16f69154458ce88e45534f258fc4b08ca635c",
+    "models/cifar_training.py": "05924d6a3c62aa5bf54065e678e1bb7e4c77f70dfce291a213b296806dd0dcc7",
+    "models/cifar_training_large_v2.py": "e73af2356f406cba3d4a1653f9ec248cee15a74c43cf3296d1f636cfc77c13d8",
+    "models/common.py": "32167c61dd55f9b75a644766e093ddb765412ade646006236843203ebc5655e7",
+    "models/datasets.py": "8e548e9ca4a6e7a1f32733eb15c471c886e4b2bef858af6a4be46bb87a4cb14a",
+    "models/model_profile.py": "c246b5bbedb237202f6d97dde5a9fa06438d200ccf30570f250dafceebb14057",
+    "models/reproducibility.py": "edae62c0737ab8a1c41dafae31839126732fc1e32c0b387778ba728b4c2a7179",
+    "models/ticknet_l.py": "558c692568bca676e1c9abf0032c9b4074b03e823f87bc6d4e71909f0a544a72",
+    "models/ticknet_l_large_v2.py": "0e88626e4ff83f94229e4d3eec12e37e0f8237c7b771ea09f8e123d10e91d55d"
+  },
+  "git_commit": null,
+  "trainer_revision": "cifar-trainer-v2",
+  "architecture_revision": "ticknet-l-large-v2",
+  "runtime": {
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "numpy": "2.1.3",
+    "pillow": "12.3.0",
+    "cuda": "12.8",
+    "device_type": "cuda",
+    "device_name": "Tesla T4"
+  },
+  "python_version": "3.13.15",
+  "num_classes": 100,
+  "learnable_parameters": 4545900,
+  "flops_forward": 788785408,
+  "gflops_forward": 0.788785408,
+  "within_exam_limits": true,
+  "counting_convention": "1 MAC = 2 FLOPs; Conv2d and Linear only; batch size 1; eval forward",
+  "excluded_operations": [
+    "bias additions",
+    "batch normalization",
+    "activations",
+    "pooling",
+    "residual additions",
+    "SE elementwise scaling",
+    "data movement"
+  ],
+  "data_evidence": {
+    "train": {
+      "samples": 45000,
+      "sha256": "de3ac09d1667244a6eebdd736ce0f471023a6c4a82403e91e207a7cb4a32e667"
+    },
+    "validation": {
+      "samples": 5000,
+      "sha256": "911fbda0b685f2f90693fe5b80803ddddc947f2645dfc64dc9216eeeea9a2870"
+    },
+    "test": {
+      "samples": 10000,
+      "sha256": "5bb47b33dbb643e23afd56c44bd8fe1c67fc37aac41c64106b64a99766e104e7"
+    }
+  },
+  "normalization": {
+    "mean": [
+      0.5071,
+      0.4867,
+      0.4408
+    ],
+    "std": [
+      0.2675,
+      0.2565,
+      0.2761
+    ]
+  }
+}
