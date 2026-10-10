@@ -1,0 +1,17 @@
+{
+  "model": "l",
+  "dataset": "cifar100",
+  "optimizer": "adam",
+  "learning_rate": 0.001,
+  "adam_beta1": 0.9,
+  "adam_beta2": 0.999,
+  "adam_eps": 1e-8,
+  "weight_decay": 0.0005,
+  "epochs": 200,
+  "batch_size": 128,
+  "val_fraction": 0.1,
+  "seed": 42,
+  "cutout": false,
+  "cutout_length": 16,
+  "nesterov": false
+}

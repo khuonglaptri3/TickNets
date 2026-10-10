@@ -1,100 +1,56 @@
-# Kết quả final — TickNet-L trên CIFAR-10 và CIFAR-100
+# Kết quả final — TickNet-L Large v2 (14 khối)
 
-Đã tổng hợp **4 phase / 8 run**, mỗi run 200 epochs. Các số liệu dưới đây được
-đối chiếu từ output Kaggle trong `runs/`, không phải kết quả train mới trong lần dọn repo.
-Bản sao đầy đủ nằm tại [checkpoints](../../checkpoints/README.md).
+Bộ báo cáo này dùng **một kiến trúc 14 khối** cho CIFAR-10 và CIFAR-100. Mỗi dataset được train riêng bằng SGD và Adam, thành bốn checkpoint. Số liệu đến từ bốn run Kaggle đã hoàn tất trong [runs](../../runs/); bước tạo báo cáo không train lại mô hình. Các figure và CSV của TickNet-L 7 khối cũ đã được thay khỏi [report_assets](report_assets/).
 
-## Kết quả và lựa chọn
+## Kết quả bốn run
 
-| Phase | Dataset | Optimizer | LR | Best epoch | Val Top-1 (%) | Test Top-1 (%) | Test loss | Macro F1 |
-| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | CIFAR-10 | SGD | 0.10 | 193 | 95.56 | 94.52 | 0.226801 | 0.945148 |
-| 1 | CIFAR-10 | **SGD** | **0.15** | **188** | **95.70** | **94.97** | **0.197835** | **0.949716** |
-| 2 | CIFAR-10 | Adam | 0.001 | 191 | 94.58 | 93.38 | 0.259598 | 0.933801 |
-| 2 | CIFAR-10 | Adam | 0.0003 | 152 | 91.52 | 89.73 | 0.358073 | 0.897082 |
-| 3 | CIFAR-100 | SGD | 0.10 | 186 | 73.72 | 74.07 | 1.132403 | 0.739847 |
-| 3 | CIFAR-100 | **SGD** | **0.15** | **190** | **74.34** | **75.28** | **1.080919** | **0.751867** |
-| 4 | CIFAR-100 | Adam | 0.001 | 177 | 71.02 | 70.79 | 1.303312 | 0.707075 |
-| 4 | CIFAR-100 | Adam | 0.0003 | 164 | 63.46 | 63.81 | 1.652653 | 0.638118 |
+| Dataset | Optimizer | LR | Weight decay | Best val epoch | Val Top-1 (%) | Test Top-1 (%) | Test loss | Macro F1 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| CIFAR-10 | **SGD** | 0.175 | 0.0001 | 187 | **96.90** | **96.04** | 0.172538 | 0.960355 |
+| CIFAR-10 | Adam | 0.001 | 0.0001 | 199 | 95.66 | 95.01 | 0.202167 | 0.950145 |
+| CIFAR-100 | **SGD** | 0.175 | 0.0005 | 198 | **80.58** | **81.23** | 0.700414 | 0.812142 |
+| CIFAR-100 | Adam | 0.001 | 0.0005 | 200 | 77.20 | 78.04 | 0.827812 | 0.780109 |
 
-**Chọn SGD, learning rate 0.15 cho cả hai dataset.** Cả hai đều dẫn đầu validation;
-test chỉ dùng để báo cáo sau lựa chọn. CIFAR-10 dùng `cifar10_sgd_lr015/best_val.pt`
-(epoch 188); CIFAR-100 dùng `cifar100_sgd_lr015/best_val.pt` (epoch 190).
+SGD dẫn đầu **validation** trên cả hai dataset, nên checkpoint SGD được chọn cho mỗi dataset. Test chỉ dùng để báo cáo kết quả sau lựa chọn; không dùng để chọn epoch hay optimizer. Đường dẫn và SHA-256 của hai checkpoint được chọn ở [selected_checkpoints.json](selected_checkpoints.json).
 
-- CIFAR-10: SGD 0.15 cao hơn SGD 0.10 **0.14 điểm % validation / 0.45 điểm % test**;
-  cao hơn Adam 0.001 **1.12 / 1.59 điểm %**.
-- CIFAR-100: SGD 0.15 cao hơn SGD 0.10 **0.62 / 1.21 điểm %**;
-  cao hơn Adam 0.001 **3.32 / 4.49 điểm %**.
-- Adam 0.0003 thấp nhất trong grid ở cả hai dataset. Đây là kết luận cho recipe,
-  seed và ngân sách đang xét, không chứng minh Adam nói chung kém SGD.
-- Chỉ có **một seed (42)** mỗi cấu hình: chưa đủ để khẳng định chênh lệch có ý nghĩa
-  qua nhiều lần train. Không dùng kết quả midterm để so sánh với final.
-- Chưa có run TickNet-Basic final trong bộ này; chưa thể kết luận L hơn Basic về accuracy CIFAR.
+![So sánh optimizer trên CIFAR-10](report_assets/cifar10_optimizer_comparison.png)
 
-![CIFAR-10 optimizer comparison](report_assets/cifar10_optimizer_comparison.png)
-![CIFAR-100 optimizer comparison](report_assets/cifar100_optimizer_comparison.png)
+![So sánh optimizer trên CIFAR-100](report_assets/cifar100_optimizer_comparison.png)
 
-## Bộ figure và CSV
+## Phân tích
 
-[report_assets/](report_assets/) dùng phong cách bộ báo cáo Basic cũ: learning curves
-hai ô Loss/Accuracy, confusion matrix xanh, bảng classification report và bảng tổng hợp.
+- **CIFAR-10:** SGD cao hơn Adam 1,24 điểm phần trăm trên validation và 1,03 điểm trên test. Trong confusion matrix của SGD, hai lỗi nổi bật là ảnh *cat* bị đoán *dog* 53 lần và ảnh *dog* bị đoán *cat* 46 lần; recall của *cat* là 90,0%, thấp nhất trong 10 lớp. Chi tiết từng lớp nằm ở [cifar10_per_class_comparison.csv](report_assets/cifar10_per_class_comparison.csv).
+- **CIFAR-100:** SGD cao hơn Adam 3,38 điểm phần trăm trên validation và 3,19 điểm trên test, đạt mục tiêu **Test Top-1 ≥80%**. SGD vượt Adam nhiều nhất về recall ở class_098 (+19 điểm), class_018 (+17 điểm); Adam vẫn hơn ở một số lớp, ví dụ class_085 (+5 điểm so với SGD). Các lớp khó nhất của SGD gồm class_046 (56% recall), class_035 (57%) và class_072 (58%). Dataset có 100 ảnh test mỗi lớp, nên 1 ảnh tương ứng 1 điểm phần trăm recall. Xem [cifar100_per_class_comparison.csv](report_assets/cifar100_per_class_comparison.csv).
+- Hai run SGD và Adam trong cùng dataset dùng cùng kiến trúc, split, seed, augmentation, batch size, weight decay và 200 epochs. **Learning rate khác nhau** (0.175 so với 0.001), nên kết quả so sánh hai *cấu hình train* đã chạy, không tách riêng tác động nhân quả của optimizer. Mỗi cấu hình mới có một seed; chưa có độ lệch chuẩn qua nhiều lần train.
 
-Mỗi run có:
+![Chênh lệch recall theo lớp trên CIFAR-10](report_assets/cifar10_per_class_comparison.png)
 
-- `<run>_learning_curves.png`: train/validation loss và Top-1, đánh dấu epoch được chọn.
-- `<run>_epochs.csv`: log 200 epochs giữ nguyên byte từ run.
-- `<run>_confusion_matrix.png` và `.csv`: hình trực quan và ma trận đếm gốc.
-- `<run>_classification_report.csv`: precision, recall, F1, support từng lớp;
-  accuracy, macro average và weighted average. Tỷ lệ không xác định được đặt bằng 0.
+![Các chênh lệch recall lớn nhất trên CIFAR-100](report_assets/cifar100_per_class_comparison.png)
 
-CIFAR-10 dùng tên 10 lớp và hiển thị số đếm. CIFAR-100 dùng **fine-label ID 0–99**
-(`class_000`…`class_099`), không suy đoán tên lớp từ output không có metadata tên.
-Hình CIFAR-100 chuẩn hóa theo hàng thành %, CSV vẫn là số đếm.
-[class_mapping.csv](report_assets/class_mapping.csv) ghi thứ tự hàng/cột.
+## Kiến trúc và cách train
 
-[final_required_summary.csv](report_assets/final_required_summary.csv) chứa đủ 8 run,
-phase, best validation loss, số tham số/FLOPs và cờ `Selected`.
-[grid_search_summary.csv](grid_search_summary.csv) giữ precision số đầy đủ.
+- TickNet-L Large v2 có độ sâu theo stage (1, 2, 5, 5, 1), tổng **14 khối**. CIFAR-10: **4.453.650 tham số**, **0,788601088 GFLOPs**; CIFAR-100: **4.545.900 tham số**, **0,788785408 GFLOPs**. Cả hai nằm dưới giới hạn 6 triệu tham số và 1 GFLOP của đề bài.
+- FLOPs tính trên một lần forward, batch 1, theo quy ước **1 MAC = 2 FLOPs**, chỉ tính Conv2d và Linear. Phép BN, activation, pooling, cộng residual, nhân SE, bias và di chuyển dữ liệu không nằm trong số này. Chi tiết ở [model_profiles_final.json](report_assets/model_profiles_final.json).
+- Mỗi dataset: 50.000 ảnh train gốc được chia phân tầng thành 45.000 train và 5.000 validation; test chính thức gồm 10.000 ảnh. Seed 42, batch size 128, 200 epochs, cosine learning rate giảm đến 0. SGD dùng momentum 0.9 và Nesterov; Adam dùng β₁=0.9, β₂=0.999, ε=1e-8.
+- CIFAR-10 dùng random crop, horizontal flip và Cutout độ dài 16; CIFAR-100 dùng RandAugment (2 phép, magnitude 7) và CutMix (α=1, xác suất 0,5). Validation và test không dùng augmentation train.
+- Epoch tốt nhất được chọn bằng validation Top-1; nếu hòa, chọn validation loss thấp hơn. SGD và Adam trên cùng dataset dùng cùng split theo SHA-256 ghi trong config.json. Thông tin runtime trong config là GPU Tesla T4.
 
-## Protocol và tài nguyên
+## Figure, CSV và bằng chứng
 
-- Official train 50.000 ảnh → phân tầng 45.000 train / 5.000 validation; test 10.000 ảnh.
-- 200 epochs, batch size 128, seed 42, weight decay 0.0001, CosineAnnealingLR đến 0.
-- SGD: momentum 0.9, Nesterov. Adam: betas 0.9/0.999, eps 1e-8.
-- Train có crop, flip, Cutout 16; validation/test không augmentation.
-- Mỗi run chọn epoch bằng validation Top-1, hòa thì validation loss thấp hơn;
-  nếu vẫn hòa giữ epoch sớm hơn. Chọn run cùng dataset theo cùng tiêu chí validation.
-- Runtime được ghi trong config: Tesla T4, torch 2.11.0+cu128, torchvision 0.26.0+cu128;
-  FP32, deterministic algorithms, không TF32.
-- CIFAR-10: **1.100.105 parameters / 157.828.544 FLOPs**.
-- CIFAR-100: **1.169.315 parameters / 157.966.784 FLOPs**.
-- FLOPs tính Conv2d/Linear, batch 1, `1 MAC = 2 FLOPs`; không bao gồm BN,
-  activation, pooling, residual add, bias add, SE scaling và di chuyển dữ liệu.
-  Cả hai đạt giới hạn ≤6M parameters và <1G FLOPs theo quy ước này.
+[report_assets](report_assets/) có **31 file** dành riêng cho bốn run 14 khối:
 
-Train loss/accuracy có augmentation và model ở train mode, nên không so trực tiếp
-với validation để kết luận bất thường chỉ vì validation tốt hơn train.
+- Mỗi run có ảnh learning curves, CSV 200 epochs, confusion matrix dạng ảnh và CSV, cùng classification report theo lớp. Ma trận CIFAR-10 thể hiện số ảnh; ma trận CIFAR-100 thể hiện tỷ lệ theo hàng trên hình, còn CSV luôn là số ảnh gốc.
+- Mỗi dataset có bảng so sánh SGD/Adam, hình so sánh optimizer, bảng per-class và hình so sánh recall theo lớp.
+- [final_required_summary.csv](report_assets/final_required_summary.csv), [class_mapping.csv](report_assets/class_mapping.csv) và [model_profiles_final.json](report_assets/model_profiles_final.json) là ba file chung. [large_v2_14block_summary.csv](large_v2_14block_summary.csv) ở thư mục này là bảng tổng hợp cùng số liệu đầy đủ.
 
-## Bảo toàn bằng chứng
+CIFAR-100 dùng nhãn số class_000 đến class_099, vì output được lưu không có bảng tên fine label. Không suy đoán tên lớp. Bốn notebook đã chạy cùng log được giữ trong [notebooks](notebooks/). Bốn thư mục run hoàn chỉnh nằm tại [runs](../../runs/); [checkpoints_experiment](checkpoints_experiment/) hiện chỉ có một bản sao run CIFAR-100 SGD và bản sao đó khớp từng file với runs. [archive_manifest.json](archive_manifest.json) chứa SHA-256 của 36 file gốc trong bốn run.
 
-- [notebooks/](notebooks/) giữ nguyên bốn notebook đã chạy, bao gồm output và snapshot nguồn cũ.
-- [checkpoints/](../../checkpoints/) chứa **84 file gốc**: 9 file × 8 run và 12 file phase summary/manifest.
-- [archive_manifest.json](archive_manifest.json) ghi SHA-256 toàn bộ 84 file đã copy;
-  mỗi run giữ nguyên `completion.json` và hash mã nguồn/data trong `config.json`.
-- [selected_checkpoints.json](selected_checkpoints.json) ghi đường dẫn, epoch, metric và hash best checkpoint.
-- Validator đối chiếu checksum, 200 dòng epoch, 45.000/5.000 mẫu mỗi epoch,
-  10.000 dự đoán test, ma trận nhầm lẫn, Top-1, Macro-F1 và trung bình NLL.
-  Đây là xác thực tính nhất quán output; lần cleanup này không chạy lại full inference CIFAR.
+## Mức độ xác thực và tái tạo
 
-## Tái tạo
+Script đã kiểm tra checksum các output, đủ 200 epoch, checkpoint tốt nhất theo validation, kiến trúc và tensor của best_val.pt khớp trạng thái tốt nhất lưu trong last.pt. Nó cũng đối chiếu **10.000 dự đoán test mỗi run**, confusion matrix, Top-1, macro F1 và test loss. Checkpoint của cả bốn run load nghiêm ngặt vào mô hình 14 khối hiện tại. Đây là xác thực output và khả năng load checkpoint; **chưa chạy lại full inference** từ ảnh CIFAR-100 trong lần tạo báo cáo này vì dữ liệu ảnh CIFAR-100 không có sẵn trong workspace. Do đó, số liệu test là kết quả Kaggle đã lưu và được kiểm tra tính nhất quán, không phải một lần đánh giá độc lập mới.
 
-```bash
-pip install torch torchvision numpy pillow pandas scipy matplotlib pytest
-# Từ bản lưu đã có (không train lại):
-python scripts/build_final_report.py --runs-dir checkpoints
-# Hoặc copy toàn bộ output gốc rồi tạo báo cáo; file khác nội dung sẽ bị từ chối ghi đè:
-python scripts/build_final_report.py --runs-dir runs --archive-dir checkpoints
-```
+Từ thư mục gốc repo, chạy lại bước xác thực và dựng báo cáo bằng:
 
-Hướng dẫn evaluate checkpoint sau refactor: [checkpoints/README.md](../../checkpoints/README.md).
-Notebook mới để train từ đầu: [docs/kaggle](../kaggle/README.md).
+    python scripts/build_large_v2_experiment_report.py
+
+Script yêu cầu bốn thư mục run có đủ file trong runs; nó không huấn luyện lại. Báo cáo này không dùng kết quả của mô hình L cũ để lựa chọn checkpoint.
