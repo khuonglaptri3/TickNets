@@ -1,9 +1,17 @@
 {
   "CIFAR10": {
+    "architecture_revision": "ticknet-l-large-v2",
+    "stage_depths": [
+      1,
+      2,
+      5,
+      5,
+      1
+    ],
     "num_classes": 10,
-    "learnable_parameters": 1100105,
-    "flops_forward": 157828544,
-    "gflops_forward": 0.157828544,
+    "learnable_parameters": 4453650,
+    "flops_forward": 788601088,
+    "gflops_forward": 0.788601088,
     "counting_convention": "1 MAC = 2 FLOPs; Conv2d and Linear only; batch size 1; eval forward",
     "excluded_operations": [
       "bias additions",
@@ -13,14 +21,21 @@
       "residual additions",
       "SE elementwise scaling",
       "data movement"
-    ],
-    "architecture_revision": "ticknet-l-v1"
+    ]
   },
   "CIFAR100": {
+    "architecture_revision": "ticknet-l-large-v2",
+    "stage_depths": [
+      1,
+      2,
+      5,
+      5,
+      1
+    ],
     "num_classes": 100,
-    "learnable_parameters": 1169315,
-    "flops_forward": 157966784,
-    "gflops_forward": 0.157966784,
+    "learnable_parameters": 4545900,
+    "flops_forward": 788785408,
+    "gflops_forward": 0.788785408,
     "counting_convention": "1 MAC = 2 FLOPs; Conv2d and Linear only; batch size 1; eval forward",
     "excluded_operations": [
       "bias additions",
@@ -30,7 +45,6 @@
       "residual additions",
       "SE elementwise scaling",
       "data movement"
-    ],
-    "architecture_revision": "ticknet-l-v1"
+    ]
   }
 }

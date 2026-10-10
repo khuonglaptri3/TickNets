@@ -1,0 +1,11 @@
+{
+  "status": "complete",
+  "completed_epochs": 200,
+  "target_epochs": 200,
+  "best_validation": {
+    "loss": 0.8421935710906983,
+    "top1": 77.2,
+    "samples": 5000,
+    "epoch": 200
+  }
+}

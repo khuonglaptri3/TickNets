@@ -1,0 +1,13 @@
+{
+  "status": "complete",
+  "checkpoint_epoch": 187,
+  "artifact_sha256": {
+    "config.json": "96880715d101cf91f646c03d08a724a0fe2783ec94aba05742b11bb02aea4bd8",
+    "epochs.csv": "2050d558a94130574ac2da3dcc3dfa0505e65c5960d267379a242bca467edbee",
+    "last.pt": "b9ff5e3d3cede5e8874538680e4cb336df7dade6af961c8ce3e7528929a569af",
+    "best_val.pt": "b95051a69dbf1f415ceab9f87b0b6012d15c3e51ac198df22ca25d665b7ae8b7",
+    "test_metrics.json": "1df9cefee7b7e1c897abb61d2509d953df83fb86e9eb85c88c23dfae58f3f093",
+    "confusion_matrix.csv": "57b78eed5012a4dcbb691e4ecd6d4dbd69cdfee059f547f09d68c5f64066898b",
+    "test_predictions.csv": "2bc544fe7a1c16f48971855a14d2fa3d5245f3da8bd101cbab267c3483f9d26d"
+  }
+}
