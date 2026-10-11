@@ -95,25 +95,31 @@ class MixedDepthwise(nn.Module):
 class CompressedPDPBlock(nn.Module):
     """Linear channel compression -> depthwise -> pointwise -> SE + shortcut."""
 
-    def __init__(self, in_channels, out_channels, stride, hidden_channels, kernels):
+    # def __init__(self, in_channels, out_channels, stride, hidden_channels, kernels):
+    def __init__(self, in_channels, out_channels, stride, hidden_channels, kernels, use_se=True, use_shortcut=True):
         super().__init__()
         # Like Basic's first pointwise layer, the narrow projection is linear.
         self.pw1 = conv1x1_block(in_channels, hidden_channels,
                                 use_bn=False, activation=None)
         self.dw = MixedDepthwise(hidden_channels, stride, kernels)
         self.pw2 = conv1x1_block(hidden_channels, out_channels)
-        self.se = SE(out_channels, 16)
+        self.se = SE(out_channels, 16) if use_se else nn.Identity()
+        # self.se = SE(out_channels, 16)
+        self.use_shortcut = use_shortcut
         self.shortcut = (
             nn.Identity() if stride == 1 and in_channels == out_channels
             else conv1x1_block(in_channels, out_channels, stride=stride)
-        )
+        # )
+        ) if use_shortcut else None
 
     def forward(self, x):
-        residual = self.shortcut(x)
+        # residual = self.shortcut(x)
+        residual = self.shortcut(x) if self.use_shortcut else None
         x = self.pw1(x)
         x = self.dw(x)
         x = self.pw2(x)
-        return self.se(x) + residual
+        x = self.se(x)
+        return x if residual is None else x + residual
 
 
 class TickNetL(nn.Module):
@@ -134,21 +140,21 @@ class TickNetL(nn.Module):
         
         """
         in_channels = STEM_CHANNELS
-                for stage_index, (out_channels, depth, stride) in enumerate(
-                        zip(STAGE_CHANNELS, STAGE_DEPTHS, strides)):
-                    blocks = OrderedDict()
-                    for block_index in range(depth):
-                        ratio = 1.0 if stage_index == 0 else 0.75
-                        hidden = max(16, int(in_channels * ratio + 4) // 8 * 8)
-                        kernels = (3,) if stage_index < 2 else (3, 5)
-                        blocks[f"unit{block_index + 1}"] = CompressedPDPBlock(
-                            in_channels, out_channels, stride if block_index == 0 else 1,
-                            hidden, kernels)
-                        in_channels = out_channels
-                    layers[f"stage{stage_index + 1}"] = nn.Sequential(blocks)
+        for stage_index, (out_channels, depth, stride) in enumerate(
+                zip(STAGE_CHANNELS, STAGE_DEPTHS, strides)):
+            blocks = OrderedDict()
+            for block_index in range(depth):
+                ratio = 1.0 if stage_index == 0 else 0.75
+                hidden = max(16, int(in_channels * ratio + 4) // 8 * 8)
+                kernels = (3,) if stage_index < 2 else (3, 5)
+                blocks[f"unit{block_index + 1}"] = CompressedPDPBlock(
+                    in_channels, out_channels, stride if block_index == 0 else 1,
+                    hidden, kernels)
+                in_channels = out_channels
+            layers[f"stage{stage_index + 1}"] = nn.Sequential(blocks)
         layers["final_conv"] = conv1x1_block(in_channels, HEAD_CHANNELS)
         """
-        
+        # """"""
         # STAGE 1: 1 block, đầu ra 160 kênh.
         # CIFAR: 32x32 -> 32x32; ảnh 224: 112x112 -> 112x112.
         layers["stage1"] = nn.Sequential(OrderedDict([
@@ -182,6 +188,8 @@ class TickNetL(nn.Module):
             ("unit1", CompressedPDPBlock(
                 in_channels=128, out_channels=256, stride=2,
                 hidden_channels=96, kernels=(3, 5),
+                # hidden_channels=96, kernels=(3, 5), use_se=False, use_shortcut=False
+                # hidden_channels=96, kernels=(3, 5), use_shortcut=False
             )),
             # Block 5
             ("unit2", CompressedPDPBlock(
