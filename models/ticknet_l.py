@@ -125,6 +125,7 @@ class TickNetL(nn.Module):
             raise ValueError("num_classes must be positive")
         self.in_size = (32, 32) if cifar else (224, 224)
         self.architecture_revision = ARCHITECTURE_REVISION
+        strides = (1, 1, 2, 2, 2) if cifar else (1, 2, 2, 2, 2)
         layers = OrderedDict([
             ("data_bn", nn.BatchNorm2d(3)),
             ("init_conv", conv3x3_block(3, STEM_CHANNELS, stride=1 if cifar else 2)),
