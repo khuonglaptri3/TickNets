@@ -13,6 +13,13 @@ Cách chỉnh khi vấn đáp:
 Các số hidden_channels dưới đây đã được tính theo bản cũ:
 max(16, int(in_channels * ratio + 4) // 8 * 8), với ratio=1.0 ở stage1,
 ratio=0.75 ở các stage sau. Khi sửa block, bạn chủ động sửa hidden_channels.
+
+1. B4 (3,7)-->(3,5),96/2=48 padding 3//2=1, 7//2=3 tính Ho vẫn là 16x16, Ch%Số Kernel = 0 nếu khác 0 thì đổi Ch lại
+2. B4(3,5)-->(3,5,7), 96/3=32 padding 3//2=1, 5//2=2, 7//2=3, Ch%Số Kernel = 0 thì ko cần đổi Ch
+3. B4 Ch 128-->120, Ch mới vẫn % số kernel=0 nên ko đổi, khi đổi Ci thì tính Ch = 0.75Ci
+4. B4 Co 256-->320, đổi STAGES_CHANNELS lại, do Co của block 4 nên block 4 ko đổi, đổi Ci B5-->320, đổi B5 Ch=0.75*320=240, 240% số kernel=0 nên ko đổi
+5. B4 s2-->1, B4-8 ở 32x32, B9 còn 16x16,B14 còn4x4
+6. 
 """
 from __future__ import annotations
 
@@ -79,6 +86,10 @@ class MixedDepthwise(nn.Module):
         self.branches = nn.ModuleList([
             nn.Conv2d(self.split_channels, self.split_channels, kernel_size=kernel,
                       stride=stride, padding=kernel // 2,
+                    #   stride=stride, padding=0, #nếu đổi p ở mọi DW = 0
+                    #   stride=stride, padding=0 if kernel == 3 else kernel // 2, #nếu đổi p ở DW3 = 0
+                    #   stride=stride, padding=0 if kernel == 5 else kernel // 2, #nếu đổi p ở DW5 = 0
+                    #   stride=stride, padding={3: 0, 5: 1}[kernel], #nếu đổi p ở DW5=1,DW3= 0
                       groups=self.split_channels, bias=False)
             for kernel in kernels
         ])
@@ -96,13 +107,15 @@ class CompressedPDPBlock(nn.Module):
     """Linear channel compression -> depthwise -> pointwise -> SE + shortcut."""
 
     # def __init__(self, in_channels, out_channels, stride, hidden_channels, kernels):
-    def __init__(self, in_channels, out_channels, stride, hidden_channels, kernels, use_se=True, use_shortcut=True):
+    def __init__(self, in_channels, out_channels, stride, hidden_channels, kernels, use_se=True, use_shortcut=True,use_pw1=True, use_pw2=True,):
         super().__init__()
         # Like Basic's first pointwise layer, the narrow projection is linear.
+        #Bo Pw1 --> Ch = Ci
         self.pw1 = conv1x1_block(in_channels, hidden_channels,
-                                use_bn=False, activation=None)
+                                use_bn=False, activation=None) if use_pw1 else nn.Identity()
         self.dw = MixedDepthwise(hidden_channels, stride, kernels)
-        self.pw2 = conv1x1_block(hidden_channels, out_channels)
+        #Bo Pw2 --> Ch = Co
+        self.pw2 = conv1x1_block(hidden_channels, out_channels) if use_pw2 else nn.Identity()
         self.se = SE(out_channels, 16) if use_se else nn.Identity()
         # self.se = SE(out_channels, 16)
         self.use_shortcut = use_shortcut
@@ -136,6 +149,12 @@ class TickNetL(nn.Module):
             ("data_bn", nn.BatchNorm2d(3)),
             ("init_conv", conv3x3_block(3, STEM_CHANNELS, stride=1 if cifar else 2)),
         ])
+        #Doi stem p =1 --> 0 hoac 2
+        # if cifar: 
+            #p=0-->stem 32x32-->sau B04 16x16-->sau B09 8x8-->sau B14 4x4
+            # layers["init_conv"].conv.padding = (2, 2) # p = 2-->stem 34x34-->sau B04 17x17-->sau B09 9x9-->sau B14 5x5
+            # layers["init_conv"].conv.padding = (0, 0) # p = 0-->stem 30x30-->sau B04 15x15-->sau B09 8x8-->sau B14 4x4
+            
         
         
         """
@@ -188,8 +207,15 @@ class TickNetL(nn.Module):
             ("unit1", CompressedPDPBlock(
                 in_channels=128, out_channels=256, stride=2,
                 hidden_channels=96, kernels=(3, 5),
+                #Bo Se, shortcut
                 # hidden_channels=96, kernels=(3, 5), use_se=False, use_shortcut=False
                 # hidden_channels=96, kernels=(3, 5), use_shortcut=False
+                # Bo pw1 --> Ch = Ci
+                # in_channels=128, out_channels=256, stride=2,
+                # hidden_channels=128, kernels=(3, 5), use_pw1 = False
+                # Bo pw2 --> Ch = Co
+                # in_channels=128, out_channels=256, stride=2,
+                # hidden_channels=256, kernels=(3, 5), use_pw2 = False
             )),
             # Block 5
             ("unit2", CompressedPDPBlock(
@@ -212,7 +238,13 @@ class TickNetL(nn.Module):
                 hidden_channels=192, kernels=(3, 5),
             )),
         ]))
-
+        # đổi padding riêng DW5 của B04, số 0 là DW3
+        # layers["stage3"].unit1.dw.branches[1].padding = (1, 1) 
+        # layers["stage3"].unit1.dw.branches[1] = nn.Sequential(
+            # dw5,
+            # nn.ZeroPad2d((0, 1, 0, 1)),
+        # )
+           
         # STAGE 4: 5 block, đầu ra 512 kênh.
         # unit1 giảm kích thước: CIFAR 16x16 -> 8x8;
         layers["stage4"] = nn.Sequential(OrderedDict([
