@@ -19,7 +19,18 @@ ratio=0.75 ở các stage sau. Khi sửa block, bạn chủ động sửa hidden
 3. B4 Ch 128-->120, Ch mới vẫn % số kernel=0 nên ko đổi, khi đổi Ci thì tính Ch = 0.75Ci
 4. B4 Co 256-->320, đổi STAGES_CHANNELS lại, do Co của block 4 nên block 4 ko đổi, đổi Ci B5-->320, đổi B5 Ch=0.75*320=240, 240% số kernel=0 nên ko đổi
 5. B4 s2-->1, B4-8 ở 32x32, B9 còn 16x16,B14 còn4x4
-6. 
+6. Thêm Block sau B8 ở cuối stage 3, copy paste block trước, rồi sửa STAGES_DEPTH
+7. Bỏ B6, chỉnh STAGE_DEPTHS = (1, 2, 4, 5, 1) lại
+8. Đổi stage 3 256-->320, B4 đổi Co 256-->320, B5-8 Co->320, Ch->240, cập nhật STAGE_CHANNELS = (160, 128, 320, 512, 768)
+9. Stem 32->40, B01 Ci=Ch=40
+10. B14 xuất 768->640, B14 Co=640,final_conv thành conv1x1_block(640, HEAD_CHANNELS), sửa STAGE_CHANNELS = (160, 128, 320, 512, 640)  
+11. Head 1024->1280, HEADS_CHANNELS=1280
+12. cifar 10 thay cifar 100, 10, num_classes=10
+13. bỏ SE --> use_se=False
+14. bỏ shortcut --> use_shortcut=False
+15. bỏ pw1 --> use_pw1=False, bỏ pw2 --> use_pw2=False
+16. đổi padding 
+
 """
 from __future__ import annotations
 
@@ -149,7 +160,7 @@ class TickNetL(nn.Module):
             ("data_bn", nn.BatchNorm2d(3)),
             ("init_conv", conv3x3_block(3, STEM_CHANNELS, stride=1 if cifar else 2)),
         ])
-        #Doi stem p =1 --> 0 hoac 2
+        #Doi stem p=1 --> 0 hoac 2
         # if cifar: 
             #p=0-->stem 32x32-->sau B04 16x16-->sau B09 8x8-->sau B14 4x4
             # layers["init_conv"].conv.padding = (2, 2) # p = 2-->stem 34x34-->sau B04 17x17-->sau B09 9x9-->sau B14 5x5
@@ -183,7 +194,18 @@ class TickNetL(nn.Module):
                 hidden_channels=32, kernels=(3,),
             )),
         ]))
-
+        """
+        # B1 DW3 p1->0 s1
+        # p3, bu3 = 0, 2
+        # block = layers["stage1"].unit1
+        # dw3 = block.dw.branches[0]
+        # dw3.padding = (p3, p3)
+        # if bu3 > 0:
+        #     block.dw.branches[0] = nn.Sequential(
+        #         dw3,
+        #         nn.ZeroPad2d((0, bu3, 0, bu3)),
+        #     )
+        """
         # STAGE 2: 2 block, đầu ra 128 kênh.
         # CIFAR giữ 32x32
         layers["stage2"] = nn.Sequential(OrderedDict([
@@ -199,7 +221,16 @@ class TickNetL(nn.Module):
                 hidden_channels=96, kernels=(3,),
             )),
         ]))
-
+        # B2 DW3 p1->0 s1
+        # p3, bu3 = 0, 2
+        # block = layers["stage2"].unit1
+        # dw3 = block.dw.branches[0]
+        # dw3.padding = (p3, p3)
+        # if bu3 > 0:
+        #     block.dw.branches[0] = nn.Sequential(
+        #         dw3,
+        #         nn.ZeroPad2d((0, bu3, 0, bu3)),
+        #     )
         # STAGE 3: 5 block, đầu ra 256 kênh.
         # unit1 giảm kích thước: CIFAR 32x32 -> 16x16
         layers["stage3"] = nn.Sequential(OrderedDict([
@@ -207,15 +238,7 @@ class TickNetL(nn.Module):
             ("unit1", CompressedPDPBlock(
                 in_channels=128, out_channels=256, stride=2,
                 hidden_channels=96, kernels=(3, 5),
-                #Bo Se, shortcut
-                # hidden_channels=96, kernels=(3, 5), use_se=False, use_shortcut=False
-                # hidden_channels=96, kernels=(3, 5), use_shortcut=False
-                # Bo pw1 --> Ch = Ci
-                # in_channels=128, out_channels=256, stride=2,
-                # hidden_channels=128, kernels=(3, 5), use_pw1 = False
-                # Bo pw2 --> Ch = Co
-                # in_channels=128, out_channels=256, stride=2,
-                # hidden_channels=256, kernels=(3, 5), use_pw2 = False
+          
             )),
             # Block 5
             ("unit2", CompressedPDPBlock(
@@ -238,13 +261,36 @@ class TickNetL(nn.Module):
                 hidden_channels=192, kernels=(3, 5),
             )),
         ]))
+        """
         # đổi padding riêng DW5 của B04, số 0 là DW3
         # layers["stage3"].unit1.dw.branches[1].padding = (1, 1) 
         # layers["stage3"].unit1.dw.branches[1] = nn.Sequential(
             # dw5,
             # nn.ZeroPad2d((0, 1, 0, 1)),
         # )
-           
+        #DW5 p=2->1 p3,p5 = 1,1 bu3,bu5 = 0,1
+        #DW5 p=2->0 p3,p5 = 1,0 bu3,bu5 = 0,2
+        #DW3 p=1->0 p3,p5 = 0,2 bu3,bu5 = 1,0
+        #DW3 p=1->0,DW5 p=2->1 p3,p5 = 0,1 bu3,bu5 = 1,1
+        #DW3 p=1->0,DW5 p=2->0 p3,p5 = 0,0 bu3,bu5 = 1,2
+        # p3, p5 = 1, 1
+        # bu3, bu5 = 0, 1
+        # b04 = layers["stage3"].unit1
+        # dw3 = b04.dw.branches[0]
+        # dw5 = b04.dw.branches[1]
+        # dw3.padding = (p3, p3)
+        # dw5.padding = (p5, p5)
+        # if bu3 > 0:
+        #     b04.dw.branches[0] = nn.Sequential(
+        #         dw3,
+        #         nn.ZeroPad2d((0, bu3, 0, bu3)),
+        #     )
+        # if bu5 > 0:
+        #     b04.dw.branches[1] = nn.Sequential(
+        #         dw5,
+        #         nn.ZeroPad2d((0, bu5, 0, bu5)),
+        #     )   
+        """
         # STAGE 4: 5 block, đầu ra 512 kênh.
         # unit1 giảm kích thước: CIFAR 16x16 -> 8x8;
         layers["stage4"] = nn.Sequential(OrderedDict([
@@ -284,6 +330,29 @@ class TickNetL(nn.Module):
                 hidden_channels=384, kernels=(3, 5),
             )),
         ]))
+        #Dw3 p=0 p3,p5=0,2
+        #Dw5 p=0 p3,p5=1,0
+        #Dw3p=0,Dw5p=1, p3,p5=0,1
+        #DW3,5 p=0, p3,p5=0,0
+        #DW3p=1,DW5p=1, p3,p5=1,1
+        p3, p5 = 1, 1
+        for stage_name in (
+            "stage1", "stage2", "stage3", "stage4", "stage5"
+        ):
+            for block in layers[stage_name]:
+                for index, dw in enumerate(block.dw.branches):
+                    k = dw.kernel_size[0]
+                    s = dw.stride[0]
+                    p = {3: p3, 5: p5}[k]
+                    # Áp dụng khi s=1 hoặc s=2,
+                    # padding mới nhỏ hơn hoặc bằng padding gốc.
+                    bu = 2 * (k // 2 - p) // s
+                    dw.padding = (p, p)
+                    if bu > 0:
+                        block.dw.branches[index] = nn.Sequential(
+                            dw,
+                            nn.ZeroPad2d((0, bu, 0, bu)),
+                        )
         # Head: 768 -> 1024 kênh; giữ nguyên kích thước không gian.
         layers["final_conv"] = conv1x1_block(768, HEAD_CHANNELS)
         
