@@ -254,7 +254,6 @@ class TickNetL(nn.Module):
         ]))
         # Head: 768 -> 1024 kênh; giữ nguyên kích thước không gian.
         layers["final_conv"] = conv1x1_block(768, HEAD_CHANNELS)
-        
         layers["global_pool"] = nn.AdaptiveAvgPool2d(1)
         self.backbone = nn.Sequential(layers)
         self.classifier = Classifier(HEAD_CHANNELS, num_classes)
@@ -264,10 +263,7 @@ class TickNetL(nn.Module):
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)
         self.classifier.init_params()
-
     def forward(self, x):
         return self.classifier(self.backbone(x))
-
-
 def build_ticknet_l(num_classes=100, *, cifar=True):
     return TickNetL(num_classes, cifar=cifar)
