@@ -1,22 +1,22 @@
 {
   "CIFAR10": {
-    "experiment": "cifar10_sgd_lr015",
-    "checkpoint": "cifar10_sgd_lr015/best_val.pt",
-    "checkpoint_sha256": "7815db48e792cbaf57d063a262c977b13a01c72fe542c1e1dd077f81416ff204",
-    "best_epoch": 188,
-    "validation_top1": 95.7,
-    "validation_loss": 0.16780399214627686,
-    "test_top1": 94.97,
-    "selection_rule": "Highest validation top1; ties use lowest validation loss, then run name"
+    "experiment": "cifar10_ticknet_l_large_v2_14blocks_sgd_lr0175_cutout_200ep",
+    "checkpoint": "runs/cifar10_ticknet_l_large_v2_14blocks_sgd_lr0175_cutout_200ep/best_val.pt",
+    "checkpoint_sha256": "b95051a69dbf1f415ceab9f87b0b6012d15c3e51ac198df22ca25d665b7ae8b7",
+    "best_epoch": 187,
+    "validation_top1": 96.9,
+    "validation_loss": 0.13880514766917912,
+    "test_top1": 96.04,
+    "selection_rule": "Highest validation Top-1; tie: lowest validation loss"
   },
   "CIFAR100": {
-    "experiment": "cifar100_sgd_lr015",
-    "checkpoint": "cifar100_sgd_lr015/best_val.pt",
-    "checkpoint_sha256": "74b5b1c6a997451af4613b387c4b79b949bb0726a49c7019392d35d7949279ab",
-    "best_epoch": 190,
-    "validation_top1": 74.34,
-    "validation_loss": 1.1066755764007568,
-    "test_top1": 75.28,
-    "selection_rule": "Highest validation top1; ties use lowest validation loss, then run name"
+    "experiment": "cifar100_ticknet_l_large_v2_sgd_lr0175_wd0005_ra_cutmix_a10_200ep",
+    "checkpoint": "runs/cifar100_ticknet_l_large_v2_sgd_lr0175_wd0005_ra_cutmix_a10_200ep/best_val.pt",
+    "checkpoint_sha256": "bc68bdcb2749a7ddb22b1ff0ac4377e5d8c62f735ac171ab43b6979bd4ce5338",
+    "best_epoch": 198,
+    "validation_top1": 80.58,
+    "validation_loss": 0.700707430267334,
+    "test_top1": 81.23,
+    "selection_rule": "Highest validation Top-1; tie: lowest validation loss"
   }
 }

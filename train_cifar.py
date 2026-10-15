@@ -275,13 +275,9 @@ def build_optimizer_and_scheduler(
 
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=args.eta_min)
     return optimizer, scheduler
-
-
 def main(argv: Optional[List[str]] = None) -> Dict[str, Any]:
     from models.cifar_training import execute
     return execute(parse_args(argv), build_cifar_loaders, build_ticknet_l, build_TickNet,
                    run_epoch, evaluate, profile_model)
-
-
 if __name__ == "__main__":
     main()

@@ -18,7 +18,7 @@ except ImportError:
     torch_summary = None
 
 
-def pytorch_summary_by_stage(model, input_size=(1, 3, 32, 32), name="Model"):
+def pytorch_summary_by_stage(model, input_size=(1, 3, 32, 32), name="Model", profile=None):
     """Thống kê chi tiết tham số và FLOPs theo từng stage bằng PyTorch thuần."""
     device = next(model.parameters()).device
     x = torch.zeros(input_size, device=device)
@@ -31,7 +31,8 @@ def pytorch_summary_by_stage(model, input_size=(1, 3, 32, 32), name="Model"):
         stages.append(("classifier", model.classifier))
         
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    profile = profile_model(model.cpu(), input_size[2], cross_check=True)
+    if profile is None:
+        profile = profile_model(model.cpu(), input_size[2], cross_check=True)
     total_flops = profile["flops"]
     stage_flops_map = profile["stage_flops"]
     
@@ -64,7 +65,10 @@ def pytorch_summary_by_stage(model, input_size=(1, 3, 32, 32), name="Model"):
         p_count = sum(p.numel() for p in module.parameters() if p.requires_grad)
         p_ratio = (p_count / total_params * 100) if total_params > 0 else 0
         shape_str = str(stage_outputs.get(s_name, "N/A"))
-        s_flops = stage_flops_map.get(s_name, 0)
+        s_flops = stage_flops_map.get(
+            s_name,
+            sum(v for k, v in stage_flops_map.items() if k == s_name or k.startswith(f"{s_name}."))
+        )
         f_ratio = (s_flops / total_flops * 100) if total_flops > 0 else 0
         print(f"{s_name:<24} | {shape_str:<18} | {p_count:>10,} | {p_ratio:>7.2f}% | {s_flops:>12,} | {f_ratio:>7.2f}%")
         
@@ -75,7 +79,6 @@ def pytorch_summary_by_stage(model, input_size=(1, 3, 32, 32), name="Model"):
 
 def inspect_model(name, model, input_size=32, show_layers=False):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = model.to(device)
     
     print("=" * 88)
     print(f"  KIỂM TRA MÔ HÌNH: {name}")
@@ -101,7 +104,8 @@ def inspect_model(name, model, input_size=32, show_layers=False):
     print(f"  - Trạng thái hợp lệ     : {'HỢP LỆ (PASSED)' if pass_limits else 'KHÔNG ĐẠT (FAILED)'}")
 
     # In chi tiết từng stage
-    pytorch_summary_by_stage(model, input_size=(1, 3, input_size, input_size), name=name)
+    model = model.to(device)
+    pytorch_summary_by_stage(model, input_size=(1, 3, input_size, input_size), name=name, profile=profile)
 
     # In bảng tóm tắt nếu có torchsummary
     if torch_summary is not None and torch.cuda.is_available():
@@ -115,8 +119,8 @@ def inspect_model(name, model, input_size=32, show_layers=False):
 
 def main():
     parser = argparse.ArgumentParser(description="Kiểm tra kiến trúc mô hình TickNet")
-    parser.add_argument("--model", choices=("both", "basic", "l"), default="both",
-                        help="Chọn mô hình: 'basic' (Tác giả), 'l' (Đề xuất), hoặc 'both' (cả hai)")
+    parser.add_argument("--model", choices=("l", "basic", "both"), default="l",
+                        help="Chọn mô hình: 'l' (models/ticknet_l.py - mặc định), 'basic' (Tác giả), hoặc 'both' (cả hai)")
     parser.add_argument("--classes", type=int, default=10,
                         help="Số lượng lớp phân loại (mặc định: 10 cho CIFAR-10, 100 cho CIFAR-100)")
     parser.add_argument("--show-layers", action="store_true",
@@ -131,7 +135,7 @@ def main():
         ))
     if args.model in ("both", "l"):
         models_to_check.append((
-            f"TickNet-L v1 (Đề xuất) - CIFAR-{args.classes}",
+            f"TickNet-L (models/ticknet_l.py) - CIFAR-{args.classes}",
             build_ticknet_l(num_classes=args.classes, cifar=True)
         ))
 
