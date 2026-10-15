@@ -22,7 +22,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .common import Classifier, conv1x1_block, conv3x3_block
+from .common import Classifier, ConvBlock, conv1x1_block, conv3x3_block, get_activation
 
 
 STEM_CHANNELS = 32
@@ -71,19 +71,53 @@ class SE(nn.Module):
 class MixedDepthwise(nn.Module):
     """Apply different spatial kernels to disjoint channel groups."""
 
-    def __init__(self, channels, stride, kernels):
+    def __init__(
+        self,
+        channels,
+        stride,
+        kernels,
+        paddings=None,
+        dilation=1,
+        groups=None,
+        bias=False,
+        use_bn=True,
+        activation="relu",
+    ):
         super().__init__()
         if not kernels or channels % len(kernels):
             raise ValueError("Depthwise channels must divide evenly among kernels")
         self.split_channels = channels // len(kernels)
+        if paddings is None:
+            branch_paddings = [kernel // 2 for kernel in kernels]
+        elif isinstance(paddings, int):
+            branch_paddings = [paddings for _ in kernels]
+        else:
+            branch_paddings = list(paddings)
+            if len(branch_paddings) != len(kernels):
+                raise ValueError("Length of paddings must match length of kernels")
+
+        if groups is None:
+            branch_groups = [self.split_channels for _ in kernels]
+        elif isinstance(groups, int):
+            branch_groups = [groups for _ in kernels]
+        else:
+            branch_groups = list(groups)
+
         self.branches = nn.ModuleList([
-            nn.Conv2d(self.split_channels, self.split_channels, kernel_size=kernel,
-                      stride=stride, padding=kernel // 2,
-                      groups=self.split_channels, bias=False)
-            for kernel in kernels
+            nn.Conv2d(
+                self.split_channels,
+                self.split_channels,
+                kernel_size=kernel,
+                stride=stride,
+                padding=pad,
+                dilation=dilation,
+                groups=grp,
+                bias=bias,
+            )
+            for kernel, pad, grp in zip(kernels, branch_paddings, branch_groups)
         ])
-        self.bn = nn.BatchNorm2d(channels)
-        self.activation = nn.ReLU(inplace=True)
+        self.bn = nn.BatchNorm2d(channels) if use_bn else nn.Identity()
+        self.activation = get_activation(activation) if activation is not None else nn.Identity()
 
     def forward(self, x):
         chunks = x.split(self.split_channels, dim=1)
@@ -93,28 +127,59 @@ class MixedDepthwise(nn.Module):
 
 
 class CompressedPDPBlock(nn.Module):
-    """Linear channel compression -> depthwise -> pointwise -> SE + shortcut."""
+    """Linear channel compression -> depthwise -> pointwise -> SE + shortcut.
 
-    # def __init__(self, in_channels, out_channels, stride, hidden_channels, kernels):
-    def __init__(self, in_channels, out_channels, stride, hidden_channels, kernels, use_se=True, use_shortcut=True):
+    Có thể truyền trực tiếp từng sub-block (pw1, dw, pw2, se, shortcut) ở mỗi block
+    để tùy ý chỉnh sửa (S, P, K, groups, ...) hoặc bọc nn.Sequential nối thêm lớp
+    vào riêng 1 block mà không ảnh hưởng các block khác.
+    """
+
+    def __init__(
+        self,
+        in_channels=None,
+        out_channels=None,
+        stride=1,
+        hidden_channels=None,
+        kernels=(3,),
+        use_se=True,
+        use_shortcut=True,
+        *,
+        pw1=None,
+        dw=None,
+        pw2=None,
+        se=None,
+        shortcut=None,
+    ):
         super().__init__()
-        # Like Basic's first pointwise layer, the narrow projection is linear.
-        self.pw1 = conv1x1_block(in_channels, hidden_channels,
-                                use_bn=False, activation=None)
-        self.dw = MixedDepthwise(hidden_channels, stride, kernels)
-        self.pw2 = conv1x1_block(hidden_channels, out_channels)
-        self.se = SE(out_channels, 16) if use_se else nn.Identity()
-        # self.se = SE(out_channels, 16)
+        self.pw1 = pw1 if pw1 is not None else conv1x1_block(
+            in_channels, hidden_channels, use_bn=False, activation=None
+        )
+        self.dw = dw if dw is not None else MixedDepthwise(
+            hidden_channels, stride, kernels
+        )
+        self.pw2 = pw2 if pw2 is not None else conv1x1_block(
+            hidden_channels, out_channels
+        )
+        if not use_se:
+            self.se = nn.Identity()
+        elif se is not None:
+            self.se = se
+        else:
+            self.se = SE(out_channels, 16)
+
         self.use_shortcut = use_shortcut
-        self.shortcut = (
-            nn.Identity() if stride == 1 and in_channels == out_channels
-            else conv1x1_block(in_channels, out_channels, stride=stride)
-        # )
-        ) if use_shortcut else None
+        if not use_shortcut:
+            self.shortcut = None
+        elif shortcut is not None:
+            self.shortcut = shortcut
+        else:
+            self.shortcut = (
+                nn.Identity() if stride == 1 and in_channels == out_channels
+                else conv1x1_block(in_channels, out_channels, stride=stride)
+            )
 
     def forward(self, x):
-        # residual = self.shortcut(x)
-        residual = self.shortcut(x) if self.use_shortcut else None
+        residual = self.shortcut(x) if (self.use_shortcut and self.shortcut is not None) else None
         x = self.pw1(x)
         x = self.dw(x)
         x = self.pw2(x)
@@ -123,7 +188,7 @@ class CompressedPDPBlock(nn.Module):
 
 
 class TickNetL(nn.Module):
-    """14 block PDP; các stage được khai báo trực tiếp, không dùng vòng lặp dựng stage."""
+    """14 block PDP; mọi sub-block (pw1, dw, pw2, se, shortcut) và tham số (K, S, P, groups) được đưa hết ra ngoài từng block."""
 
     def __init__(self, num_classes=100, *, cifar=True):
         super().__init__()
@@ -131,129 +196,388 @@ class TickNetL(nn.Module):
             raise ValueError("num_classes must be positive")
         self.in_size = (32, 32) if cifar else (224, 224)
         self.architecture_revision = ARCHITECTURE_REVISION
-        strides = (1, 1, 2, 2, 2) if cifar else (1, 2, 2, 2, 2)
         layers = OrderedDict([
             ("data_bn", nn.BatchNorm2d(3)),
-            ("init_conv", conv3x3_block(3, STEM_CHANNELS, stride=1 if cifar else 2)),
+            ("init_conv", ConvBlock(
+                in_channels=3, out_channels=STEM_CHANNELS,
+                kernel_size=3, stride=1 if cifar else 2, padding=1,
+                dilation=1, groups=1, bias=False, use_bn=True, activation="relu",
+            )),
         ])
-        
-        
-        """
-        in_channels = STEM_CHANNELS
-        for stage_index, (out_channels, depth, stride) in enumerate(
-                zip(STAGE_CHANNELS, STAGE_DEPTHS, strides)):
-            blocks = OrderedDict()
-            for block_index in range(depth):
-                ratio = 1.0 if stage_index == 0 else 0.75
-                hidden = max(16, int(in_channels * ratio + 4) // 8 * 8)
-                kernels = (3,) if stage_index < 2 else (3, 5)
-                blocks[f"unit{block_index + 1}"] = CompressedPDPBlock(
-                    in_channels, out_channels, stride if block_index == 0 else 1,
-                    hidden, kernels)
-                in_channels = out_channels
-            layers[f"stage{stage_index + 1}"] = nn.Sequential(blocks)
-        layers["final_conv"] = conv1x1_block(in_channels, HEAD_CHANNELS)
-        """
-        # """"""
+
+        # =====================================================================
         # STAGE 1: 1 block, đầu ra 160 kênh.
         # CIFAR: 32x32 -> 32x32; ảnh 224: 112x112 -> 112x112.
+        # =====================================================================
         layers["stage1"] = nn.Sequential(OrderedDict([
-            # Block 1
+            # Block 1 (in=32, hidden=32, out=160, stride=1)
             ("unit1", CompressedPDPBlock(
-                in_channels=32, out_channels=160, stride=1,
-                hidden_channels=32, kernels=(3,),
+                pw1= nn.Sequential(
+                    ConvBlock(
+                        in_channels=32, out_channels=32,
+                        kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                        bias=False, use_bn=False, activation=None,
+                    ),
+                ),
+                dw=MixedDepthwise(
+                    channels=32, stride=1,
+                    kernels=(3,), paddings=(1,), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=32, out_channels=160,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=160, reduction_ratio=16),
+                shortcut=ConvBlock(
+                    in_channels=32, out_channels=160,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                use_se=True,
+                use_shortcut=True,
             )),
         ]))
 
-        # STAGE 2: 2 block, đầu ra 128 kênh.
+        # =====================================================================
+        # STAGE 2: 2 block (+ unitthem), đầu ra 128 kênh.
         # CIFAR giữ 32x32
+        # =====================================================================
         layers["stage2"] = nn.Sequential(OrderedDict([
-            # Block 2
+            # Block 2 (in=160, hidden=120, out=128, stride=1 if cifar else 2)
+            # Ví dụ: muốn nối thêm 1 conv1x1 vào pw1 hoặc shortcut của riêng Block 2,
+            # chỉ cần bọc pw1=nn.Sequential(ConvBlock(...), ConvBlock(...)) ngay tại đây.
             ("unit1", CompressedPDPBlock(
-                in_channels=160, out_channels=128,
-                stride=1 if cifar else 2,
-                hidden_channels=120, kernels=(3,),
+                pw1=ConvBlock(
+                    in_channels=160, out_channels=120,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=120, stride=1 if cifar else 2,
+                    kernels=(3,), paddings=(1,), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=120, out_channels=128,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=128, reduction_ratio=16),
+                shortcut=ConvBlock(
+                    in_channels=160, out_channels=128,
+                    kernel_size=1, stride=1 if cifar else 2, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                use_se=True,
+                use_shortcut=True,
             )),
-            # Block 3
+            # Block 3 (in=128, hidden=96, out=128, stride=1)
             ("unit2", CompressedPDPBlock(
-                in_channels=128, out_channels=128, stride=1,
-                hidden_channels=96, kernels=(3,),
+                pw1=ConvBlock(
+                    in_channels=128, out_channels=96,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=96, stride=1,
+                    kernels=(3,), paddings=(1,), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=96, out_channels=128,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=128, reduction_ratio=16),
+                shortcut=nn.Identity(),
+                use_se=True,
+                use_shortcut=True,
             )),
+            
         ]))
 
+        # =====================================================================
         # STAGE 3: 5 block, đầu ra 256 kênh.
         # unit1 giảm kích thước: CIFAR 32x32 -> 16x16
+        # =====================================================================
         layers["stage3"] = nn.Sequential(OrderedDict([
-            # Block 4
+            # Block 4 (in=128, hidden=96, out=256, stride=2)
             ("unit1", CompressedPDPBlock(
-                in_channels=128, out_channels=256, stride=2,
-                hidden_channels=96, kernels=(3, 5),
-                # hidden_channels=96, kernels=(3, 5), use_se=False, use_shortcut=False
-                # hidden_channels=96, kernels=(3, 5), use_shortcut=False
+                pw1=ConvBlock(
+                    in_channels=128, out_channels=96,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=96, stride=2,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=96, out_channels=256,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=256, reduction_ratio=16),
+                shortcut=ConvBlock(
+                    in_channels=128, out_channels=256,
+                    kernel_size=1, stride=2, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                use_se=True,
+                use_shortcut=True,
             )),
-            # Block 5
+            # Block 5 (in=256, hidden=192, out=256, stride=1)
             ("unit2", CompressedPDPBlock(
-                in_channels=256, out_channels=256, stride=1,
-                hidden_channels=192, kernels=(3, 5),
+                pw1=ConvBlock(
+                    in_channels=256, out_channels=192,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=192, stride=1,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=192, out_channels=256,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=256, reduction_ratio=16),
+                shortcut=nn.Identity(),
+                use_se=True,
+                use_shortcut=True,
             )),
-            # Block 6
+            # Block 6 (in=256, hidden=192, out=256, stride=1)
             ("unit3", CompressedPDPBlock(
-                in_channels=256, out_channels=256, stride=1,
-                hidden_channels=192, kernels=(3, 5),
+                pw1=ConvBlock(
+                    in_channels=256, out_channels=192,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=192, stride=1,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=192, out_channels=256,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=256, reduction_ratio=16),
+                shortcut=nn.Identity(),
+                use_se=True,
+                use_shortcut=True,
             )),
-            # Block 7
+            # Block 7 (in=256, hidden=192, out=256, stride=1)
             ("unit4", CompressedPDPBlock(
-                in_channels=256, out_channels=256, stride=1,
-                hidden_channels=192, kernels=(3, 5),
+                pw1=ConvBlock(
+                    in_channels=256, out_channels=192,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=192, stride=1,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=192, out_channels=256,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=256, reduction_ratio=16),
+                shortcut=nn.Identity(),
+                use_se=True,
+                use_shortcut=True,
             )),
-            # Block 8
+            # Block 8 (in=256, hidden=192, out=256, stride=1)
             ("unit5", CompressedPDPBlock(
-                in_channels=256, out_channels=256, stride=1,
-                hidden_channels=192, kernels=(3, 5),
+                pw1=ConvBlock(
+                    in_channels=256, out_channels=192,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=192, stride=1,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=192, out_channels=256,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=256, reduction_ratio=16),
+                shortcut=nn.Identity(),
+                use_se=True,
+                use_shortcut=True,
             )),
         ]))
 
+        # =====================================================================
         # STAGE 4: 5 block, đầu ra 512 kênh.
         # unit1 giảm kích thước: CIFAR 16x16 -> 8x8;
+        # =====================================================================
         layers["stage4"] = nn.Sequential(OrderedDict([
-            # Block 9
+            # Block 9 (in=256, hidden=192, out=512, stride=2)
             ("unit1", CompressedPDPBlock(
-                in_channels=256, out_channels=512, stride=2,
-                hidden_channels=192, kernels=(3, 5),
+                pw1=ConvBlock(
+                    in_channels=256, out_channels=192,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=192, stride=2,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=192, out_channels=512,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=512, reduction_ratio=16),
+                shortcut=ConvBlock(
+                    in_channels=256, out_channels=512,
+                    kernel_size=1, stride=2, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                use_se=True,
+                use_shortcut=True,
             )),
-            # Block 10
+            # Block 10 (in=512, hidden=384, out=512, stride=1)
             ("unit2", CompressedPDPBlock(
-                in_channels=512, out_channels=512, stride=1,
-                hidden_channels=384, kernels=(3, 5),
+                pw1=ConvBlock(
+                    in_channels=512, out_channels=384,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=384, stride=1,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=384, out_channels=512,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=512, reduction_ratio=16),
+                shortcut=nn.Identity(),
+                use_se=True,
+                use_shortcut=True,
             )),
-            # Block 11
+            # Block 11 (in=512, hidden=384, out=512, stride=1)
             ("unit3", CompressedPDPBlock(
-                in_channels=512, out_channels=512, stride=1,
-                hidden_channels=384, kernels=(3, 5),
+                pw1=ConvBlock(
+                    in_channels=512, out_channels=384,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=384, stride=1,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=384, out_channels=512,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=512, reduction_ratio=16),
+                shortcut=nn.Identity(),
+                use_se=True,
+                use_shortcut=True,
             )),
-            # Block 12
+            # Block 12 (in=512, hidden=384, out=512, stride=1)
             ("unit4", CompressedPDPBlock(
-                in_channels=512, out_channels=512, stride=1,
-                hidden_channels=384, kernels=(3, 5),
+                pw1=ConvBlock(
+                    in_channels=512, out_channels=384,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=384, stride=1,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=384, out_channels=512,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=512, reduction_ratio=16),
+                shortcut=nn.Identity(),
+                use_se=True,
+                use_shortcut=True,
             )),
-            # Block 13
+            # Block 13 (in=512, hidden=384, out=512, stride=1)
             ("unit5", CompressedPDPBlock(
-                in_channels=512, out_channels=512, stride=1,
-                hidden_channels=384, kernels=(3, 5),
+                pw1=ConvBlock(
+                    in_channels=512, out_channels=384,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=384, stride=1,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=384, out_channels=512,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=512, reduction_ratio=16),
+                shortcut=nn.Identity(),
+                use_se=True,
+                use_shortcut=True,
             )),
         ]))
 
+        # =====================================================================
         # STAGE 5: 1 block, đầu ra 768 kênh.
-        # CIFAR 8x8 -> 4x4; 
+        # CIFAR 8x8 -> 4x4;
+        # =====================================================================
         layers["stage5"] = nn.Sequential(OrderedDict([
-            # Block 14
+            # Block 14 (in=512, hidden=384, out=768, stride=2)
             ("unit1", CompressedPDPBlock(
-                in_channels=512, out_channels=768, stride=2,
-                hidden_channels=384, kernels=(3, 5),
+                pw1=ConvBlock(
+                    in_channels=512, out_channels=384,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
+                ),
+                dw=MixedDepthwise(
+                    channels=384, stride=2,
+                    kernels=(3, 5), paddings=(1, 2), dilation=1, groups=None,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                pw2=ConvBlock(
+                    in_channels=384, out_channels=768,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                se=SE(gate_channels=768, reduction_ratio=16),
+                shortcut=ConvBlock(
+                    in_channels=512, out_channels=768,
+                    kernel_size=1, stride=2, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=True, activation="relu",
+                ),
+                use_se=True,
+                use_shortcut=True,
             )),
         ]))
         # Head: 768 -> 1024 kênh; giữ nguyên kích thước không gian.
-        layers["final_conv"] = conv1x1_block(768, HEAD_CHANNELS)
+        layers["final_conv"] = ConvBlock(
+            in_channels=768, out_channels=HEAD_CHANNELS,
+            kernel_size=1, stride=1, padding=0,
+            dilation=1, groups=1, bias=False, use_bn=True, activation="relu",
+        )
         layers["global_pool"] = nn.AdaptiveAvgPool2d(1)
         self.backbone = nn.Sequential(layers)
         self.classifier = Classifier(HEAD_CHANNELS, num_classes)
@@ -263,7 +587,11 @@ class TickNetL(nn.Module):
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)
         self.classifier.init_params()
+
     def forward(self, x):
         return self.classifier(self.backbone(x))
+
+
 def build_ticknet_l(num_classes=100, *, cifar=True):
     return TickNetL(num_classes, cifar=cifar)
+
