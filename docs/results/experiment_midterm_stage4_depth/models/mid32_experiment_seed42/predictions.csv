@@ -35,7 +35,7 @@ Mid32/test/bird/field_falco_sparverius_4665_0d28c1fb5e.jpeg,0,bird,0,bird,True
 Mid32/test/bird/field_fulica_atra_482_0730c0d8b2.jpeg,0,bird,0,bird,True
 Mid32/test/bird/field_fulica_cristata_487_4d6c364306.jpeg,0,bird,0,bird,True
 Mid32/test/bird/field_jacana_spinosa_4578_25d7ca7819.jpeg,0,bird,0,bird,True
-Mid32/test/bird/field_junco_hyemalis_10094_7f91e80981.jpeg,0,bird,3,frog,False
+Mid32/test/bird/field_junco_hyemalis_10094_7f91e80981.jpeg,0,bird,0,bird,True
 Mid32/test/bird/field_lagonosticta_senegala_14051_f9bbae01fe.jpeg,0,bird,0,bird,True
 Mid32/test/bird/field_macronectes_giganteus_4198_9d3d099066.jpeg,0,bird,4,horse,False
 Mid32/test/bird/field_melanerpes_carolinus_18205_0f7f6e69ca.jpeg,0,bird,0,bird,True
@@ -81,7 +81,7 @@ Mid32/test/cat/cat_02371.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_02402.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_02578.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_02585.jpeg,1,cat,1,cat,True
-Mid32/test/cat/cat_02657.jpeg,1,cat,1,cat,True
+Mid32/test/cat/cat_02657.jpeg,1,cat,3,frog,False
 Mid32/test/cat/cat_02911.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_02963.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_02989.jpeg,1,cat,1,cat,True
@@ -92,7 +92,7 @@ Mid32/test/cat/cat_03242.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_03287.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_03715.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_03759.jpeg,1,cat,1,cat,True
-Mid32/test/cat/cat_03787.jpeg,1,cat,2,dog,False
+Mid32/test/cat/cat_03787.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_04090.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_04376.jpeg,1,cat,1,cat,True
 Mid32/test/cat/cat_04563.jpeg,1,cat,1,cat,True
@@ -125,9 +125,9 @@ Mid32/test/dog/dog_02445.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_02787.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_02966.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_03064.jpeg,2,dog,1,cat,False
-Mid32/test/dog/dog_03127.jpeg,2,dog,3,frog,False
+Mid32/test/dog/dog_03127.jpeg,2,dog,4,horse,False
 Mid32/test/dog/dog_03153.jpeg,2,dog,2,dog,True
-Mid32/test/dog/dog_03272.jpeg,2,dog,1,cat,False
+Mid32/test/dog/dog_03272.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_03459.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_03510.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_03562.jpeg,2,dog,2,dog,True
@@ -146,7 +146,7 @@ Mid32/test/dog/dog_04533.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_04599.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_04781.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_04789.jpeg,2,dog,1,cat,False
-Mid32/test/dog/dog_04882.jpeg,2,dog,1,cat,False
+Mid32/test/dog/dog_04882.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_04886.jpeg,2,dog,2,dog,True
 Mid32/test/dog/dog_04989.jpeg,2,dog,2,dog,True
 Mid32/test/frog/canon_dendropsophus_walfordi_65412_168953198.jpeg,3,frog,3,frog,True
@@ -177,7 +177,7 @@ Mid32/test/frog/canon_sclerophrys_tuberosa_517218_81150363.jpeg,3,frog,3,frog,Tr
 Mid32/test/frog/canon_uperodon_globulosus_25217_11948706.jpeg,3,frog,3,frog,True
 Mid32/test/frog/field_anaxyrus_boreas_64970_obs_40529924_64230997.jpeg,3,frog,4,horse,False
 Mid32/test/frog/field_anaxyrus_fowleri_64977_obs_178922567_311426589.jpeg,3,frog,3,frog,True
-Mid32/test/frog/field_anaxyrus_punctatus_64984_obs_38434842_61083251.jpeg,3,frog,0,bird,False
+Mid32/test/frog/field_anaxyrus_punctatus_64984_obs_38434842_61083251.jpeg,3,frog,3,frog,True
 Mid32/test/frog/field_anaxyrus_woodhousii_64989_obs_177084193_307944410.jpeg,3,frog,3,frog,True
 Mid32/test/frog/field_bufo_spinosus_134693_obs_202607569_357852347.jpeg,3,frog,3,frog,True
 Mid32/test/frog/field_bufotes_viridis_1453013_obs_268801967_483213854.jpeg,3,frog,3,frog,True
@@ -196,7 +196,7 @@ Mid32/test/frog/field_pseudacris_crucifer_24268_obs_14246320_21143249.jpeg,3,fro
 Mid32/test/frog/field_pseudacris_crucifer_24268_obs_349539583_637644971.jpeg,3,frog,3,frog,True
 Mid32/test/frog/field_pseudacris_regilla_24259_obs_187782031_328475942.jpeg,3,frog,3,frog,True
 Mid32/test/frog/field_rana_temporaria_25591_obs_334478190_607420909.jpeg,3,frog,3,frog,True
-Mid32/test/frog/field_rana_temporaria_25591_obs_334478190_607420910.jpeg,3,frog,0,bird,False
+Mid32/test/frog/field_rana_temporaria_25591_obs_334478190_607420910.jpeg,3,frog,3,frog,True
 Mid32/test/frog/field_rhinella_horribilis_517119_obs_91648623_151631167.jpeg,3,frog,3,frog,True
 Mid32/test/frog/field_rhinella_marina_553515_obs_64110_98344.jpeg,3,frog,3,frog,True
 Mid32/test/horse/horse_00121.jpeg,4,horse,4,horse,True
@@ -224,7 +224,7 @@ Mid32/test/horse/horse_01937.jpeg,4,horse,4,horse,True
 Mid32/test/horse/horse_01950.jpeg,4,horse,4,horse,True
 Mid32/test/horse/horse_01991.jpeg,4,horse,4,horse,True
 Mid32/test/horse/horse_02037.jpeg,4,horse,4,horse,True
-Mid32/test/horse/horse_02047.jpeg,4,horse,0,bird,False
+Mid32/test/horse/horse_02047.jpeg,4,horse,4,horse,True
 Mid32/test/horse/horse_02282.jpeg,4,horse,4,horse,True
 Mid32/test/horse/horse_02707.jpeg,4,horse,4,horse,True
 Mid32/test/horse/horse_02780.jpeg,4,horse,4,horse,True

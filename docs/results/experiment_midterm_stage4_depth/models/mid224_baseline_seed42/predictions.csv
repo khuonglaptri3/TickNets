@@ -35,7 +35,7 @@ Mid224/test/bird/field_falco_sparverius_4665_0d28c1fb5e.jpeg,0,bird,0,bird,True
 Mid224/test/bird/field_fulica_atra_482_0730c0d8b2.jpeg,0,bird,0,bird,True
 Mid224/test/bird/field_fulica_cristata_487_4d6c364306.jpeg,0,bird,0,bird,True
 Mid224/test/bird/field_jacana_spinosa_4578_25d7ca7819.jpeg,0,bird,0,bird,True
-Mid224/test/bird/field_junco_hyemalis_10094_7f91e80981.jpeg,0,bird,3,frog,False
+Mid224/test/bird/field_junco_hyemalis_10094_7f91e80981.jpeg,0,bird,0,bird,True
 Mid224/test/bird/field_lagonosticta_senegala_14051_f9bbae01fe.jpeg,0,bird,0,bird,True
 Mid224/test/bird/field_macronectes_giganteus_4198_9d3d099066.jpeg,0,bird,4,horse,False
 Mid224/test/bird/field_melanerpes_carolinus_18205_0f7f6e69ca.jpeg,0,bird,0,bird,True
@@ -53,7 +53,7 @@ Mid224/test/cat/cat_00263.jpeg,1,cat,2,dog,False
 Mid224/test/cat/cat_00376.jpeg,1,cat,1,cat,True
 Mid224/test/cat/cat_00459.jpeg,1,cat,1,cat,True
 Mid224/test/cat/cat_00543.jpeg,1,cat,1,cat,True
-Mid224/test/cat/cat_00570.jpeg,1,cat,2,dog,False
+Mid224/test/cat/cat_00570.jpeg,1,cat,1,cat,True
 Mid224/test/cat/cat_00585.jpeg,1,cat,1,cat,True
 Mid224/test/cat/cat_00654.jpeg,1,cat,2,dog,False
 Mid224/test/cat/cat_00828.jpeg,1,cat,1,cat,True
@@ -196,7 +196,7 @@ Mid224/test/frog/field_pseudacris_crucifer_24268_obs_14246320_21143249.jpeg,3,fr
 Mid224/test/frog/field_pseudacris_crucifer_24268_obs_349539583_637644971.jpeg,3,frog,3,frog,True
 Mid224/test/frog/field_pseudacris_regilla_24259_obs_187782031_328475942.jpeg,3,frog,3,frog,True
 Mid224/test/frog/field_rana_temporaria_25591_obs_334478190_607420909.jpeg,3,frog,3,frog,True
-Mid224/test/frog/field_rana_temporaria_25591_obs_334478190_607420910.jpeg,3,frog,0,bird,False
+Mid224/test/frog/field_rana_temporaria_25591_obs_334478190_607420910.jpeg,3,frog,3,frog,True
 Mid224/test/frog/field_rhinella_horribilis_517119_obs_91648623_151631167.jpeg,3,frog,3,frog,True
 Mid224/test/frog/field_rhinella_marina_553515_obs_64110_98344.jpeg,3,frog,3,frog,True
 Mid224/test/horse/horse_00121.jpeg,4,horse,4,horse,True
@@ -224,7 +224,7 @@ Mid224/test/horse/horse_01937.jpeg,4,horse,4,horse,True
 Mid224/test/horse/horse_01950.jpeg,4,horse,4,horse,True
 Mid224/test/horse/horse_01991.jpeg,4,horse,4,horse,True
 Mid224/test/horse/horse_02037.jpeg,4,horse,4,horse,True
-Mid224/test/horse/horse_02047.jpeg,4,horse,0,bird,False
+Mid224/test/horse/horse_02047.jpeg,4,horse,4,horse,True
 Mid224/test/horse/horse_02282.jpeg,4,horse,4,horse,True
 Mid224/test/horse/horse_02707.jpeg,4,horse,4,horse,True
 Mid224/test/horse/horse_02780.jpeg,4,horse,4,horse,True

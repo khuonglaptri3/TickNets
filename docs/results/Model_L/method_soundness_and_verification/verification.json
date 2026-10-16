@@ -4,7 +4,7 @@
   "torchvision": "0.28.0+cu126",
   "device": "cpu",
   "evaluation_batch_size": 16,
-  "canonical_manifest_sha256": "9939a6ee404c6fbbdbe1b07a50763dc6d606497709385708512e1e98d71f2780",
+  "canonical_manifest_sha256": "a71d026f7f2c910da1b1b7c534f72158dc82c62953972e27f6789debaf8db591",
   "canonical_membership_in_l_notebook_schema_sha256": "35bcc76fde54e97d54f7825cdb34376a3732fd79aa829624ea4fc982b4590bdf",
   "local_image_hashes_verified": 50500,
   "scope": "Checkpoint inference on local canonical test; no retraining; historical Kaggle image bytes unavailable.",

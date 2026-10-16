@@ -73,7 +73,7 @@ Thay vì chia độc lập 2 bộ dữ liệu:
    Được ghi nhận tại `docs/DATASET_CLEANING.md`: Sử dụng biến đổi DCT tần số thấp để quét toàn bộ 25.000 ảnh train và 250 ảnh test. Kết quả xác nhận **không có bất kỳ cặp ảnh trùng lặp nhận thức nào xuyên giữa tập Train và Test**.
 4. **Truy vết và tái lập (Provenance & Reproducibility)**:
    Toàn bộ kết quả phân chia được khóa cứng trong file `data/split_manifest.csv` với chữ ký SHA-256:
-   `9939a6ee404c6fbbdbe1b07a50763dc6d606497709385708512e1e98d71f2780`.
+   `a71d026f7f2c910da1b1b7c534f72158dc82c62953972e27f6789debaf8db591`.
    Trong `train_mid.py`, mã nguồn tích hợp bộ kiểm tra mã băm manifest tự động trước khi cho phép huấn luyện mô hình.
 
 ---

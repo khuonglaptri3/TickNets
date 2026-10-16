@@ -74,7 +74,7 @@ của từng phiên bản. **Manifest là danh sách phân chia chính thức** 
 - Cùng tập nguồn, tên tệp, thuật toán và seed sẽ tạo lại cùng danh sách. Lưu
   manifest để tránh phụ thuộc vào thay đổi phiên bản thư viện trong tương lai.
 - Python: 3.11.16; Pillow: 12.3.0.
-- SHA-256 của manifest: `9939a6ee404c6fbbdbe1b07a50763dc6d606497709385708512e1e98d71f2780`.
+- SHA-256 của manifest: `a71d026f7f2c910da1b1b7c534f72158dc82c62953972e27f6789debaf8db591`.
 
 Tái tạo vào một thư mục đích chưa tồn tại:
 
@@ -88,8 +88,8 @@ MB trong bảng = 1.000.000 byte, không phải dung lượng cấp phát trên 
 
 | Bản | Kích thước | Tổng JPEG (MB) | Gói nén (MB) |
 |---|---|---:|---:|
-| Mid32 | 32 x 32 | 19.0571 | 12.3062 |
-| Mid224 | 224 x 224 | 31.8035 | 24.6096 |
+| Mid32 | 32 x 32 | 19.0572 | 12.3064 |
+| Mid224 | 224 x 224 | 31.8035 | 24.6101 |
 
 Gói TAR.XZ chỉ chứa cây thư mục ảnh của từng phiên bản; metadata nằm ngoài gói nén.
 Giới hạn đề bài: Mid224 không quá 25M, Mid32 không quá 20M. Đối chiếu dung lượng

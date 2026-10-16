@@ -34,7 +34,7 @@
   "test_policy": "Evaluate final checkpoint only; never select checkpoints using test",
   "normalization": "ToTensor [0,1]; model has data_bn",
   "top1_unit": "percent",
-  "split_manifest_sha256": "9939a6ee404c6fbbdbe1b07a50763dc6d606497709385708512e1e98d71f2780",
+  "split_manifest_sha256": "a71d026f7f2c910da1b1b7c534f72158dc82c62953972e27f6789debaf8db591",
   "architecture_revision": "ticknet-basic-upstream",
   "complexity": {
     "input_shape": [

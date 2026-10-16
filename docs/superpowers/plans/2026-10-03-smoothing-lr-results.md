@@ -17,7 +17,7 @@
 - Evaluate `best_val.pt`; preserve both `best_val.pt` and `last.pt` in the copied run bundle.
 - Copy every source run file byte-for-byte to `docs/results/experiment_midterm_smoothing_lr/checkpoints/<run_name>/` and verify SHA-256.
 - Rebuild variant-specific source manifests exactly and require the recorded checkpoint/config hash before inference.
-- Require manifest SHA-256 `5e012ceef22d363877407ce7a0ecc2d8b42dcc7cb891f981124eae2523b0ad8e` for Mid32 and `028a2eda6f9c9c385875925e3cadbd83979ad3718df7652e3864a01df01a1929` for Mid224.
+- Require manifest SHA-256 `bdfcbb207b2038a0318f474840fa8d2f742dbc4ba11292f163c8c7e7d0cc6e2d` for Mid32 and `97a8de07f6c3bcbb0e7f4f5f9067c8c81aef61bb04f97ac5bdecd9e7d560e188` for Mid224.
 - Do not modify `train_mid_experiment.py`, models, configs, training recipes, checkpoints, or original `runs/` content.
 - Do not compare training loss across smoothing levels or select/rank recipes from test metrics.
 - Treat the test split as historical and all test metrics as post-selection descriptive evidence.

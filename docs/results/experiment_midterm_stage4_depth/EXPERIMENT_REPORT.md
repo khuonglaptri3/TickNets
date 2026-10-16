@@ -20,23 +20,23 @@ python train_mid_experiment.py --data-root <manifest-compatible-root> --variant 
 
 | Dataset | Mô hình | Epoch | Val Top-1 | Val loss | Test Top-1 | Test loss | Macro-F1 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Mid32 | Baseline | 173 | 90.40% | 0.500445 | 90.40% | 0.405454 | 0.903817 |
-| Mid32 | Stage4-depth3 | 200 | 90.12% | 0.478256 | 91.20% | 0.465283 | 0.911253 |
-| Mid224 | Baseline | 177 | 93.88% | 0.276317 | 95.20% | 0.224384 | 0.951956 |
-| Mid224 | Stage4-depth3 | 154 | 94.12% | 0.294577 | 94.00% | 0.205677 | 0.939903 |
+| Mid32 | Baseline | 173 | 90.40% | 0.500445 | 92.40% | 0.261480 | 0.923003 |
+| Mid32 | Stage4-depth3 | 200 | 90.12% | 0.478256 | 93.60% | 0.262938 | 0.935467 |
+| Mid224 | Baseline | 177 | 93.88% | 0.276317 | 96.80% | 0.083773 | 0.967948 |
+| Mid224 | Stage4-depth3 | 154 | 94.12% | 0.294577 | 96.40% | 0.072042 | 0.963921 |
 
 Delta được tính `Stage4-depth3 - Baseline`:
 
 | Dataset | Δ Val Top-1 (pp) | Δ Test Top-1 (pp) | Δ Macro-F1 | Δ Test loss |
 | --- | --- | --- | --- | --- |
-| Mid32 | -0.28 | +0.80 | +0.007436 | +0.059829 |
-| Mid224 | +0.24 | -1.20 | -0.012053 | -0.018707 |
+| Mid32 | -0.28 | +1.20 | +0.012464 | +0.001458 |
+| Mid224 | +0.24 | -0.40 | -0.004027 | -0.011731 |
 
 ![Test Top-1](comparisons/test_accuracy_top1_comparison.png)
 
 ![Macro-F1](comparisons/macro_f1_comparison.png)
 
-Mid32 có test Top-1 tăng từ 90,40% lên 91,20% (+0,80 điểm %), dù validation Top-1 giảm 0,28 điểm % và test loss tăng. Mid224 có validation Top-1 tăng nhẹ 0,24 điểm %, nhưng test Top-1 giảm 1,20 điểm %; test loss lại thấp hơn. Các tín hiệu trái chiều giữa dataset và giữa accuracy/loss không tạo thành bằng chứng nhất quán cho lợi ích của block mới.
+Mid32 có test Top-1 tăng từ 92,40% lên 93,60% (+1,20 điểm %), dù validation Top-1 giảm 0,28 điểm % và test loss tăng. Mid224 có validation Top-1 tăng nhẹ 0,24 điểm %, nhưng test Top-1 giảm 0,40 điểm %; test loss lại thấp hơn. Các tín hiệu trái chiều giữa dataset và giữa accuracy/loss không tạo thành bằng chứng nhất quán cho lợi ích của block mới.
 
 ## 4. Chi phí mô hình
 

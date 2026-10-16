@@ -49,7 +49,7 @@ from 1 through 200 with the original 200-epoch cosine schedule.
 ## Provenance note
 
 Basic and C share the canonical manifest hash
-`9939a6ee404c6fbbdbe1b07a50763dc6d606497709385708512e1e98d71f2780`.
+`a71d026f7f2c910da1b1b7c534f72158dc82c62953972e27f6789debaf8db591`.
 TickNet-L records a different raw hash because its Kaggle notebook constructed
 a manifest with a different CSV schema. That raw-hash difference is retained
 in the index and is not presented as proof that the test filenames differ.

@@ -7,13 +7,13 @@
 - Best validation epoch: **186**
 - Validation Top-1: **91.04%**
 - Hard-label validation loss: **0.441804**
-- Historical test Top-1: **92.40%**
-- Historical test Macro F1: **0.923933**
-- Historical test loss: **0.305484**
+- Historical test Top-1: **97.20%**
+- Historical test Macro F1: **0.971982**
+- Historical test loss: **0.051278**
 
 ## Class-level observations
 
-The lowest per-class F1 is `dog` at 0.8750. The largest off-diagonal cell is `dog` → `cat` (7 images).
+The lowest per-class F1 is `dog` at 0.9485. The largest off-diagonal cell is `dog` → `cat` (4 images).
 
 These test results are post-selection descriptive evidence. They did not choose this recipe or checkpoint.
 
@@ -25,8 +25,8 @@ These test results are post-selection descriptive evidence. They did not choose 
 - [Confusion matrix CSV](confusion_matrix.csv)
 - [Confusion matrix figure](confusion_matrix.png)
 - [Learning curves](learning_curves.png)
-- [Copied best validation checkpoint](../../checkpoints/l_mid32_lr015/best_val.pt) — SHA-256 `90b7a870ac7a6b709e23fb6cbd88614d69955e6027f81e21e853ebcd803ec33c`
-- [Copied final checkpoint](../../checkpoints/l_mid32_lr015/last.pt) — SHA-256 `e6185294e09949853b6b79fe430ae8e550ce83195bdc537a28a66de93527747b`
+- [Copied best validation checkpoint](../../checkpoints/l_mid32_lr015/best_val.pt) — SHA-256 `95af8cbae09b0a0bee4263558bf4ead81b6df695f5f7884fa85a09825a862b0c`
+- [Copied final checkpoint](../../checkpoints/l_mid32_lr015/last.pt) — SHA-256 `1335aff58a8ce4d501b9f6aaf66ab935b00096ac42732a4966e48ec1f804863a`
 
 ## Limitations
 

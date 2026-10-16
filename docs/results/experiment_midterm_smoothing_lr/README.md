@@ -4,7 +4,7 @@
 
 The **validation-only selection** was frozen before any test inference. It selected `l_mid32_lr015` for Mid32 and `l_mid224_baseline` for Mid224. All ten test evaluations below are post-selection descriptive diagnostics and cannot replace those winners.
 
-Selection-lock SHA-256: `0d8a5e720f511f69442dca303f9a9e9a03dd12e2995d6dc7bec287710d962704`.
+Selection-lock SHA-256: `c20a38bfc7cbd204a5df08832b4bd99a14a76d6a8e7c696ca046f3f203a4d2aa`.
 
 ## Experimental controls
 
@@ -38,23 +38,23 @@ Training loss is not compared across smoothing settings because label smoothing 
 
 | Variant | Recipe | Test Top-1 (%) | Macro F1 | Test loss | Role |
 | --- | --- | --- | --- | --- | --- |
-| Mid32 | baseline | 90.40 | 0.903817 | 0.405454 | post_selection_diagnostic |
-| Mid32 | smoothing005 | 89.60 | 0.895510 | 0.375396 | post_selection_diagnostic |
-| Mid32 | smoothing010 | 91.20 | 0.911626 | 0.347748 | post_selection_diagnostic |
-| Mid32 | lr005 | 92.00 | 0.919466 | 0.340118 | post_selection_diagnostic |
-| Mid32 | lr015 | 92.40 | 0.923933 | 0.305484 | validation_winner |
-| Mid224 | baseline | 95.20 | 0.951956 | 0.224384 | validation_winner |
-| Mid224 | smoothing005 | 96.00 | 0.960132 | 0.169884 | post_selection_diagnostic |
-| Mid224 | smoothing010 | 97.20 | 0.971999 | 0.177574 | post_selection_diagnostic |
-| Mid224 | lr005 | 94.00 | 0.940221 | 0.217440 | post_selection_diagnostic |
-| Mid224 | lr015 | 94.80 | 0.947906 | 0.185778 | post_selection_diagnostic |
+| Mid32 | baseline | 92.40 | 0.923003 | 0.261480 | post_selection_diagnostic |
+| Mid32 | smoothing005 | 92.80 | 0.927688 | 0.273353 | post_selection_diagnostic |
+| Mid32 | smoothing010 | 94.40 | 0.943555 | 0.238940 | post_selection_diagnostic |
+| Mid32 | lr005 | 95.60 | 0.955617 | 0.137503 | post_selection_diagnostic |
+| Mid32 | lr015 | 97.20 | 0.971982 | 0.051278 | validation_winner |
+| Mid224 | baseline | 96.80 | 0.967948 | 0.083773 | validation_winner |
+| Mid224 | smoothing005 | 98.00 | 0.979996 | 0.105370 | post_selection_diagnostic |
+| Mid224 | smoothing010 | 99.20 | 0.992000 | 0.132781 | post_selection_diagnostic |
+| Mid224 | lr005 | 96.00 | 0.960158 | 0.112853 | post_selection_diagnostic |
+| Mid224 | lr015 | 96.80 | 0.967957 | 0.105013 | post_selection_diagnostic |
 
 This table is intentionally descriptive rather than a test-based ranking. The 250-image historical test split was accessed only after the immutable validation lock was written.
 
 ## Class-level behavior
 
-- **Mid32 validation winner `l_mid32_lr015`:** lowest class F1 is `dog` (0.8750); largest confusion is `dog` → `cat` (7/250 images).
-- **Mid224 validation winner `l_mid224_baseline`:** lowest class F1 is `dog` (0.9293); largest confusion is `dog` → `cat` (4/250 images).
+- **Mid32 validation winner `l_mid32_lr015`:** lowest class F1 is `dog` (0.9485); largest confusion is `dog` → `cat` (4/250 images).
+- **Mid224 validation winner `l_mid224_baseline`:** lowest class F1 is `dog` (0.9388); largest confusion is `dog` → `cat` (4/250 images).
 
 Full per-class precision, recall, F1, support, predictions, and confusion matrices are available in each model directory.
 

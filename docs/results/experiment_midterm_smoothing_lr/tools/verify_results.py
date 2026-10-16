@@ -60,8 +60,8 @@ COMPARISON_FILES = {
     "confusion_matrices_mid224.png",
 }
 EXPECTED_MANIFEST_SHA256 = {
-    "Mid32": "5e012ceef22d363877407ce7a0ecc2d8b42dcc7cb891f981124eae2523b0ad8e",
-    "Mid224": "028a2eda6f9c9c385875925e3cadbd83979ad3718df7652e3864a01df01a1929",
+    "Mid32": "bdfcbb207b2038a0318f474840fa8d2f742dbc4ba11292f163c8c7e7d0cc6e2d",
+    "Mid224": "97a8de07f6c3bcbb0e7f4f5f9067c8c81aef61bb04f97ac5bdecd9e7d560e188",
 }
 EXPECTED_WINNERS = {"Mid32": "l_mid32_lr015", "Mid224": "l_mid224_baseline"}
 EXPECTED_SOURCE_FILES = {

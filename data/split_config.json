@@ -19,17 +19,17 @@
   "pillow_version": "12.3.0",
   "paired_samples": 25250,
   "image_bytes": {
-    "Mid32": 19057066,
-    "Mid224": 31803482
+    "Mid32": 19057221,
+    "Mid224": 31803510
   },
   "archive_bytes": {
-    "Mid32": 12306156,
-    "Mid224": 24609568
+    "Mid32": 12306416,
+    "Mid224": 24610144
   },
   "cross_split_identical_pixel_groups": {
     "Mid32": 0,
     "Mid224": 0
   },
-  "manifest_sha256": "9939a6ee404c6fbbdbe1b07a50763dc6d606497709385708512e1e98d71f2780",
+  "manifest_sha256": "a71d026f7f2c910da1b1b7c534f72158dc82c62953972e27f6789debaf8db591",
   "archive_format": "tar.xz"
 }

@@ -6,14 +6,14 @@ Thư mục này là gói bằng chứng đầy đủ cho ablation **TickNet-L v1
 
 | Dataset | Mô hình | Best epoch | Val Top-1 | Test Top-1 | Macro-F1 | GFLOPs |
 | --- | --- | --- | --- | --- | --- | --- |
-| Mid32 | Baseline | 173 | 90.40% | 90.40% | 0.9038 | 0.157821 |
-| Mid32 | Stage4-depth3 | 200 | 90.12% | 91.20% | 0.9113 | 0.174237 |
-| Mid224 | Baseline | 177 | 93.88% | 95.20% | 0.9520 | 0.796760 |
-| Mid224 | Stage4-depth3 | 154 | 94.12% | 94.00% | 0.9399 | 0.846991 |
+| Mid32 | Baseline | 173 | 90.40% | 92.40% | 0.9230 | 0.157821 |
+| Mid32 | Stage4-depth3 | 200 | 90.12% | 93.60% | 0.9355 | 0.174237 |
+| Mid224 | Baseline | 177 | 93.88% | 96.80% | 0.9679 | 0.796760 |
+| Mid224 | Stage4-depth3 | 154 | 94.12% | 96.40% | 0.9639 | 0.846991 |
 
 ![So sánh test Top-1](comparisons/test_accuracy_top1_comparison.png)
 
-Kết quả chưa ủng hộ việc chọn Stage4-depth3 làm mặc định: Mid32 tăng **+0,80 điểm %** test Top-1 nhưng giảm **-0,28 điểm %** validation; Mid224 tăng **+0,24 điểm %** validation nhưng giảm **-1,20 điểm %** test Top-1. Biến thể cũng tăng 139.770 tham số và tăng FLOPs. Với chỉ một seed, đây là bằng chứng định hướng chứ chưa phải kết luận thống kê.
+Kết quả chưa ủng hộ việc chọn Stage4-depth3 làm mặc định: Mid32 tăng **+1,20 điểm %** test Top-1 nhưng giảm **-0,28 điểm %** validation; Mid224 tăng **+0,24 điểm %** validation nhưng giảm **-0,40 điểm %** test Top-1. Biến thể cũng tăng 139.770 tham số và tăng FLOPs. Với chỉ một seed, đây là bằng chứng định hướng chứ chưa phải kết luận thống kê.
 
 Đọc phân tích chi tiết tại [EXPERIMENT_REPORT.md](EXPERIMENT_REPORT.md).
 
