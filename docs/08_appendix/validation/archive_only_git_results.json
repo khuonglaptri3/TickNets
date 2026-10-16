@@ -1,0 +1,16 @@
+{
+  "checked_at_utc": "2026-10-16T17:17:00.036330+00:00",
+  "tracked_data_files": [
+    "data/DATASET_SPLIT.md",
+    "data/Mid224.tar.xz",
+    "data/Mid32.tar.xz",
+    "data/split_config.json",
+    "data/split_manifest.csv",
+    "data/validation_report.json"
+  ],
+  "extracted_files_staged_for_removal_from_git": 50500,
+  "extracted_images_preserved_locally": true,
+  "archive_format": "tar.xz",
+  "commit_or_push_performed": false,
+  "ignore_rules_staged": true
+}

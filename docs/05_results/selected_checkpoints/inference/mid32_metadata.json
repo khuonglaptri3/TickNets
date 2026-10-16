@@ -1,0 +1,14 @@
+{
+  "evaluated_at_utc": "2026-10-16T16:03:03.123753+00:00",
+  "variant": "Mid32",
+  "checkpoint": "checkpoints/l_mid32_lr015/best_val.pt",
+  "checkpoint_sha256": "c6d116d5d66bbded9de745e4f97ea38601049da42ce3fb8c2f6bb2f101105c42",
+  "selected_epoch": 186,
+  "entrypoint": "checkpoint32.py",
+  "batch_size": 16,
+  "device": "cuda",
+  "torch": "2.13.0+cu126",
+  "torchvision": "0.28.0+cu126",
+  "pinned_and_archived_state_dict_equal": true,
+  "ordered_test_paths_and_image_bytes_sha256": "0c16fb2cf0c1a8a3f54b9b40a88ae48b36ea7534ad19648b7735d03e461ee4c3"
+}

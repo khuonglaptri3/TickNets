@@ -1,0 +1,19 @@
+{
+  "checked_at_utc": "2026-10-16T17:04:22.955944+00:00",
+  "results": [
+    {
+      "entrypoint": "checkpoint32.py",
+      "batch_size": 16,
+      "top1": 97.2,
+      "correct": 243,
+      "samples": 250
+    },
+    {
+      "entrypoint": "checkpoint224.py",
+      "batch_size": 16,
+      "top1": 99.2,
+      "correct": 248,
+      "samples": 250
+    }
+  ]
+}

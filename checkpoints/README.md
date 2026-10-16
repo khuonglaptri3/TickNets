@@ -1,13 +1,13 @@
 # Pinned Checkpoints for Midterm Evaluation
 
-This directory contains the verified winning checkpoints for the **TickNet-L v1** architecture ([`models/ticknet_l.py`](../models/ticknet_l.py)), selected based on the midterm ablation study across 4 experiments.
+This directory contains the pinned checkpoints for the **TickNet-L v1** architecture ([`models/ticknet_l.py`](../models/ticknet_l.py)), documented alongside the smoothing/LR and stage 4 depth experiments.
 
 ---
 
 ## 1. Selected Checkpoints
 
 ### A. Mid224 Resolution (224×224)
-* **Directory**: [`checkpoints/l_mid224_smoothing010/`](l_mid224_smoothing010/)
+* **Directory**: [`checkpoints/l_mid224_smoothing010/`](l_mid224_smoothing010)
 * **Weights**: [`checkpoints/l_mid224_smoothing010/best_val.pt`](l_mid224_smoothing010/best_val.pt)
 * **Training Recipe**: `TickNet-L v1` + Label Smoothing `0.10`, SGD (`lr=0.1`, `momentum=0.9`, `weight_decay=1e-4`, CosineAnnealingLR)
 * **Performance**:
@@ -19,7 +19,7 @@ This directory contains the verified winning checkpoints for the **TickNet-L v1*
   * **Parameters**: **1,096,260**
 
 ### B. Mid32 Resolution (32×32)
-* **Directory**: [`checkpoints/l_mid32_lr015/`](l_mid32_lr015/)
+* **Directory**: [`checkpoints/l_mid32_lr015/`](l_mid32_lr015)
 * **Weights**: [`checkpoints/l_mid32_lr015/best_val.pt`](l_mid32_lr015/best_val.pt)
 * **Training Recipe**: `TickNet-L v1` + Learning Rate `0.15`, SGD (`momentum=0.9`, `weight_decay=1e-4`, CosineAnnealingLR)
 * **Performance**:
@@ -42,4 +42,4 @@ python checkpoint224.py
 python checkpoint32.py
 ```
 
-See the full ablation study and rationale in [`docs/experiments/MIDTERM_FINAL_SELECTION_REPORT.md`](../docs/experiments/MIDTERM_FINAL_SELECTION_REPORT.md).
+See the full ablation study and rationale in [`docs/06_discussion/MIDTERM_FINAL_SELECTION_REPORT.md`](../docs/06_discussion/MIDTERM_FINAL_SELECTION_REPORT.md).

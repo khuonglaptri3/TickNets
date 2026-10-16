@@ -107,8 +107,8 @@ def inspect_model(name, model, input_size=32, show_layers=False):
 
 def main():
     parser = argparse.ArgumentParser(description="Kiểm tra kiến trúc mô hình TickNet trên Mid32 & Mid224")
-    parser.add_argument("--model", choices=(*MODEL_NAMES, "all"), default="l_from_final",
-                        help="Chọn mô hình: 'l_from_final' (mặc định), 'l', 'c', 'basic', hoặc 'all'")
+    parser.add_argument("--model", choices=(*MODEL_NAMES, "all"), default="l",
+                        help="Chọn mô hình: 'l_midterm10', 'l' (mặc định), 'basic', hoặc 'all'")
     parser.add_argument("--sizes", nargs="+", type=int, choices=(32, 224), default=(32, 224),
                         help="Độ phân giải kiểm tra: 32 (Mid32), 224 (Mid224)")
     parser.add_argument("--classes", type=int, default=5,
@@ -117,7 +117,7 @@ def main():
                         help="In toàn bộ cấu trúc phân cấp chi tiết các layers của mạng")
     args = parser.parse_args()
 
-    selected = ("basic", "l", "l_from_final") if args.model == "all" else (args.model,)
+    selected = ("basic", "l", "l_midterm10") if args.model == "all" else (args.model,)
     for m_name in selected:
         for size in args.sizes:
             variant = f"Mid{size}"

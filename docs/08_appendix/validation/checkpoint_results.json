@@ -1,0 +1,26 @@
+{
+  "evaluated_on": "2026-10-16",
+  "evaluation": "fresh inference on local test images",
+  "runs": [
+    {
+      "script": "checkpoint32.py",
+      "script_sha256": "370d5c1dfd14a68cd72e18a54a4331089e6cfb14028a64392031bc1b203b8005",
+      "command": "python checkpoint32.py --batch-size 16",
+      "variant": "Mid32",
+      "top1": 97.2,
+      "correct": 243,
+      "samples": 250,
+      "output": "checkpoint32.txt"
+    },
+    {
+      "script": "checkpoint224.py",
+      "script_sha256": "0e301c08de67ccad1ed5c7a6d68ea42b7a0a8c9da6f1feff622b7ca054e53d38",
+      "command": "python checkpoint224.py --batch-size 16",
+      "variant": "Mid224",
+      "top1": 99.2,
+      "correct": 248,
+      "samples": 250,
+      "output": "checkpoint224.txt"
+    }
+  ]
+}

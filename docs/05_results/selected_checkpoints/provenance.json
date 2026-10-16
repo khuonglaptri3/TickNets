@@ -1,0 +1,296 @@
+{
+  "built_at_utc": "2026-10-16T17:01:28.054963+00:00",
+  "report": "docs/MIDTERM_REPORT.md",
+  "training_performed": false,
+  "inference_performed_by_builder": false,
+  "validation": "200 epochs per selected run; predictions, confusion matrices, class metrics and saved pinned-entrypoint inference logs agree",
+  "sources": [
+    {
+      "path": "checkpoints/l_mid224_smoothing010/best_val.pt",
+      "sha256": "7f648504064e442e4974943fd0ea70dce2ebe3a3caf7f9d4e41c054e815b4907"
+    },
+    {
+      "path": "checkpoints/l_mid224_smoothing010/config.json",
+      "sha256": "d8e6c7a6ef71898d5d35f4692380e741adefc71e2abe5d7c0cb0e230dc4dd63e"
+    },
+    {
+      "path": "checkpoints/l_mid224_smoothing010/epochs.csv",
+      "sha256": "d65f9feb39710380bdcc86d133709f194d8e243a048c1f8edd18c96e5b3f63b3"
+    },
+    {
+      "path": "checkpoints/l_mid32_lr015/best_val.pt",
+      "sha256": "c6d116d5d66bbded9de745e4f97ea38601049da42ce3fb8c2f6bb2f101105c42"
+    },
+    {
+      "path": "checkpoints/l_mid32_lr015/config.json",
+      "sha256": "4946307f800380311618b97804709e208b5e8dbb29d93b6df56857c3195d5d11"
+    },
+    {
+      "path": "checkpoints/l_mid32_lr015/epochs.csv",
+      "sha256": "0f1f1dfbe897c4c7783b2bc98e8ee363ca2712759eee6d1cc098b25d24e22646"
+    },
+    {
+      "path": "data/Mid224/test/cat/cat_00263.jpeg",
+      "sha256": "53839bb068ec2f95aa6ef76f34592849978b7304cd0e7fcafad6808dfb00fb45"
+    },
+    {
+      "path": "data/Mid224/test/dog/dog_04043.jpeg",
+      "sha256": "d3685a0e7debb2d3f350252c1d3b0e6db83b19dd52c52121134a12de39d076be"
+    },
+    {
+      "path": "data/Mid224/train/bird/canon_anhinga_anhinga_5063_063cb77ef6.jpeg",
+      "sha256": "c15d4480b182e6c057c71c885ca15a4eff981713f54fe24a78f0471c18eaf47c"
+    },
+    {
+      "path": "data/Mid224/train/cat/cat_00001.jpeg",
+      "sha256": "11b1e8c4141907ca0cb799c30e2085e25ea94764eaeb0b8038c6b9161dbbd2e4"
+    },
+    {
+      "path": "data/Mid224/train/dog/dog_00001.jpeg",
+      "sha256": "966fab85d86e8daaf52a457b511f4de1414a21db852904145e3405b05d0a1789"
+    },
+    {
+      "path": "data/Mid224/train/frog/canon_dendrophryniscus_brevipollicatus_21785_157731550.jpeg",
+      "sha256": "0ed3935ab474b0faf59782f71ced233a4fda7ad50093dbb5da80a06fd7824bd7"
+    },
+    {
+      "path": "data/Mid224/train/horse/horse_00001.jpeg",
+      "sha256": "234b0816fc72f52686e24a73ac7081ea9f6fb53e0b634dc1c9312de435958ce5"
+    },
+    {
+      "path": "data/Mid32/test/bird/field_macronectes_giganteus_4198_9d3d099066.jpeg",
+      "sha256": "f0d884ce49010de710a86b30c2f573d70cfa38314b4b647b15f4ae4013820a91"
+    },
+    {
+      "path": "data/Mid32/test/cat/cat_02585.jpeg",
+      "sha256": "fdc46cb4806372c0c0f2e99c7af334e1d19c5fba18f5638db2af8c36b32e6178"
+    },
+    {
+      "path": "data/Mid32/test/dog/dog_01324.jpeg",
+      "sha256": "2f44495c6ba91c36827277a805bca88d5737c405469cf4b8d1a5b16b0b8f1a46"
+    },
+    {
+      "path": "data/Mid32/test/dog/dog_01797.jpeg",
+      "sha256": "fc982f0a0d05347e7fd42e6abd8a04fd8a8e2111929c431c43bf3d5eb36d5bb8"
+    },
+    {
+      "path": "data/Mid32/test/dog/dog_02405.jpeg",
+      "sha256": "873be759ab963dc2b5bf21bb1ce1c8b86026d08e6e40c655595fb2952faf4cf8"
+    },
+    {
+      "path": "data/Mid32/test/dog/dog_03717.jpeg",
+      "sha256": "e627a392fd7c0f5b1010dcf229fedbc745a366e5a38ea59d6863ed594c0fa6c5"
+    },
+    {
+      "path": "data/Mid32/test/frog/field_fejervarya_limnocharis_26053_obs_147251611_253348851.jpeg",
+      "sha256": "544356940d17647e20eae4857b40d61dd9b6dc676bdda6af2a51fac121f8b0d6"
+    },
+    {
+      "path": "data/Mid32/train/bird/canon_anhinga_anhinga_5063_063cb77ef6.jpeg",
+      "sha256": "cc5d136b21a9b0e7327282524ef6c4606c679a15137bd7efc20f93fc0ef2bc73"
+    },
+    {
+      "path": "data/Mid32/train/cat/cat_00001.jpeg",
+      "sha256": "fd23ba4e0d2d2b2df413c8088fcba050a40f4dff4a54df7c4556011735fd6c1e"
+    },
+    {
+      "path": "data/Mid32/train/dog/dog_00001.jpeg",
+      "sha256": "79e3de24e5f19cac49541344efdedd08829bf9bf8836df70558c72a69afc6ca9"
+    },
+    {
+      "path": "data/Mid32/train/frog/canon_dendrophryniscus_brevipollicatus_21785_157731550.jpeg",
+      "sha256": "89e91323d042a41b26a6f346f4c25edea27df77c211e3ae3eb2fbe60ffdf24bf"
+    },
+    {
+      "path": "data/Mid32/train/horse/horse_00001.jpeg",
+      "sha256": "a7094c035584ffeeb2a1cec5212d583dd90a5a036cc00ba345f822b5c6fce799"
+    },
+    {
+      "path": "docs/05_results/experiment_midterm_smoothing_lr/comparisons/test_metrics.csv",
+      "sha256": "b4c582b40693c88898397f04fe93297bc2e5687bf402ea7f82d403d69d53b1f2"
+    },
+    {
+      "path": "docs/05_results/experiment_midterm_smoothing_lr/selection/validation_summary.csv",
+      "sha256": "fa138aa4450a8105a3df42d8a3bb7277f31b0758faae0c56c3c95959438e41ae"
+    },
+    {
+      "path": "docs/05_results/experiment_midterm_stage4_depth/comparisons/metrics_summary.csv",
+      "sha256": "a6ced9eaaf544d2731495605018a84a2497a678e5818dc86157880dcef922ab9"
+    },
+    {
+      "path": "docs/05_results/experiment_midterm_stage4_depth/comparisons/validation_summary.csv",
+      "sha256": "e6ef93f6d1b9716b55dab55b371044e625784ede0bb96fdad7a3ec967ddc9597"
+    },
+    {
+      "path": "docs/05_results/model_comparison/reported_metrics.csv",
+      "sha256": "bf4750858c2519c38f4ba59362616e704725565a3b93ad51218da0d41769b7db"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/inference/mid224_classification_report.csv",
+      "sha256": "1b13440dea16b9da1845b51d0f3ceb5ac10989aa42d7d5d432e606831ae90be5"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/inference/mid224_confusion_matrix.csv",
+      "sha256": "4749df88329233ad6799a243b0b3f790ab36bbcab17f14f0ae20b96358bc0ee6"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/inference/mid224_metadata.json",
+      "sha256": "0a2c44408546b1fb5976351998dc99380a73de70db496c5698851f1948b0237c"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/inference/mid224_predictions.csv",
+      "sha256": "ea79a38e52d4879274af18896283f50f9150882466cb0599816a1712b5f4c7e9"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/inference/mid224_test_metrics.json",
+      "sha256": "c3b1a6b12155d10465e321b2445ebb5f57aa5db4884dc87b798e4db8978d643e"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/inference/mid32_classification_report.csv",
+      "sha256": "035988c4f8ff643e4d999aa57c23d97601ff387241cb2f1bc79bdf3aad9beb84"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/inference/mid32_confusion_matrix.csv",
+      "sha256": "4ff2c0e635fa30e94affcae7c66d7efbd9b802ac2d88260e2d2f0a0cc7fe09ac"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/inference/mid32_metadata.json",
+      "sha256": "926ddc4e4a93f446cf836105d941d042caa376ad6038bcad6b47aa7588429551"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/inference/mid32_predictions.csv",
+      "sha256": "955544721b07556a29282ed99de6ced020cb2608125c9187ba822d67ef24b36b"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/inference/mid32_test_metrics.json",
+      "sha256": "14a0b4e10fe823924f8da766ae986dada90e7fe88f6ee0e74939cb938eb1b43b"
+    },
+    {
+      "path": "docs/08_appendix/validation/checkpoint224.txt",
+      "sha256": "aefa9def7b8dd73d214ac890c9feddd63bc647f1a497ec88472ee0e50790c331"
+    },
+    {
+      "path": "docs/08_appendix/validation/checkpoint32.txt",
+      "sha256": "b20ebde7617ce2756a9e83b0e8d74a8f143abde7bb6a96633b2d0e6e1da6b21f"
+    },
+    {
+      "path": "scripts/build_midterm_report.py",
+      "sha256": "8cbe5aae61b2c8e7797962c06b0535a541998ff4afcfa276f05eaaaa8ffe1d36"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "docs/05_results/Model_Basic/comparisons/accuracy_by_dataset.png",
+      "sha256": "1c9db58766163f930e381963597c9ebf9177c6170a6b4607530be1e0ca8d2e20"
+    },
+    {
+      "path": "docs/05_results/Model_Basic/comparisons/accuracy_vs_compute_mid224.png",
+      "sha256": "bda88421e15954507c47b525c4b1463ae89b8b3354798df688e9c40cee3fccac"
+    },
+    {
+      "path": "docs/05_results/Model_Basic/comparisons/macro_f1_by_dataset.png",
+      "sha256": "3f7516651a01cc58f6e3bc2d8bd7c484f3e1875a4d238bd46533cdf75a346547"
+    },
+    {
+      "path": "docs/05_results/model_comparison/accuracy_by_dataset.png",
+      "sha256": "1c9db58766163f930e381963597c9ebf9177c6170a6b4607530be1e0ca8d2e20"
+    },
+    {
+      "path": "docs/05_results/model_comparison/accuracy_vs_compute_mid224.png",
+      "sha256": "bda88421e15954507c47b525c4b1463ae89b8b3354798df688e9c40cee3fccac"
+    },
+    {
+      "path": "docs/05_results/model_comparison/macro_f1_by_dataset.png",
+      "sha256": "3f7516651a01cc58f6e3bc2d8bd7c484f3e1875a4d238bd46533cdf75a346547"
+    },
+    {
+      "path": "docs/05_results/Model_L/comparisons/accuracy_by_dataset.png",
+      "sha256": "1c9db58766163f930e381963597c9ebf9177c6170a6b4607530be1e0ca8d2e20"
+    },
+    {
+      "path": "docs/05_results/Model_L/comparisons/accuracy_vs_compute_mid224.png",
+      "sha256": "bda88421e15954507c47b525c4b1463ae89b8b3354798df688e9c40cee3fccac"
+    },
+    {
+      "path": "docs/05_results/Model_L/comparisons/macro_f1_by_dataset.png",
+      "sha256": "3f7516651a01cc58f6e3bc2d8bd7c484f3e1875a4d238bd46533cdf75a346547"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/figures/dataset_examples.png",
+      "sha256": "4689d2f64d279ea8251baba94b8e8d657469f137dd09b68c5b22ccd986765e9d"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/figures/learning_rate_schedule.png",
+      "sha256": "7da128ad45f2a44d67bf9c3210d7ec2ba23d1869347d024eb1b75c32c8c7b060"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/figures/mid224_confusion_matrix.png",
+      "sha256": "5bff545d35c62b5a530d9231fbf27faecc5b0c502eae7c13147735319acc63ae"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/figures/mid224_errors.png",
+      "sha256": "1fd62a20b2247c3f180b40cd8c5d31036f6ef4eabd671b3fb80048c070ab1039"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/figures/mid224_learning_curves.png",
+      "sha256": "e974f850b5cf2439885f5efe9edbb584eba7a6db120d9887e24f0c5303b89974"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/figures/mid32_confusion_matrix.png",
+      "sha256": "1f4612387acb43bcfdb986aa801226f8df3e652dc46ed67f80b7ba3cf71f03f6"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/figures/mid32_errors.png",
+      "sha256": "fc29022750d4e80bf5544b242a1d799fb337d44eee17c085766a41cf5d8e15cb"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/figures/mid32_learning_curves.png",
+      "sha256": "dab24a8da04ce5a612dd74b7b4cbbad306950a4a3181eecca06635400d1c5f53"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/figures/per_class_metrics.png",
+      "sha256": "f17e425914d2ebe8827df1410274df65df5bfef6d76f71ead61cc1131a1c7522"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/figures/validation_comparison.png",
+      "sha256": "67f6609b88102a1beefc78b04a3969c288fc883a5801dfd1eb861416e67de16c"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/tables/mid224_classification_report.csv",
+      "sha256": "1b13440dea16b9da1845b51d0f3ceb5ac10989aa42d7d5d432e606831ae90be5"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/tables/mid224_confusion_matrix.csv",
+      "sha256": "4749df88329233ad6799a243b0b3f790ab36bbcab17f14f0ae20b96358bc0ee6"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/tables/mid224_epochs.csv",
+      "sha256": "d65f9feb39710380bdcc86d133709f194d8e243a048c1f8edd18c96e5b3f63b3"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/tables/mid224_predictions.csv",
+      "sha256": "ea79a38e52d4879274af18896283f50f9150882466cb0599816a1712b5f4c7e9"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/tables/mid32_classification_report.csv",
+      "sha256": "035988c4f8ff643e4d999aa57c23d97601ff387241cb2f1bc79bdf3aad9beb84"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/tables/mid32_confusion_matrix.csv",
+      "sha256": "4ff2c0e635fa30e94affcae7c66d7efbd9b802ac2d88260e2d2f0a0cc7fe09ac"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/tables/mid32_epochs.csv",
+      "sha256": "0f1f1dfbe897c4c7783b2bc98e8ee363ca2712759eee6d1cc098b25d24e22646"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/tables/mid32_predictions.csv",
+      "sha256": "955544721b07556a29282ed99de6ced020cb2608125c9187ba822d67ef24b36b"
+    },
+    {
+      "path": "docs/05_results/selected_checkpoints/tables/selected_checkpoint_metrics.csv",
+      "sha256": "f474f675230f77151d93a893cb7410d1499f1293d607692168c13dc4b9d3c3be"
+    }
+  ],
+  "report_sha256": "23f4b10464ca39066149256eb5e34f1d244d750c896f84791fe9de5381be41fc"
+}

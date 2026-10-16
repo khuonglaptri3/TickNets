@@ -1,0 +1,6 @@
+class_name,precision,recall,f1-score,support
+bird,1.0,1.0,1.0,50
+cat,0.98,0.98,0.98,50
+dog,0.98,0.98,0.98,50
+frog,1.0,1.0,1.0,50
+horse,1.0,1.0,1.0,50

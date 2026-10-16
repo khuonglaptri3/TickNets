@@ -1,0 +1,231 @@
+{
+  "scope": "Remove MixUp and CutMix experiments from the Midterm branch",
+  "status": "completed",
+  "remaining_experiments": [
+    "label smoothing and learning rate",
+    "stage 4 depth"
+  ],
+  "removed_files": [
+    {
+      "path": "docs/05_results/MixUp/source_split_manifest_mid224.csv",
+      "bytes": 1225986,
+      "sha256": "a2b6d7e5fc10bfae796ee8e6f8d9ffd4e752834fd3930056a7b79182c2287c0a"
+    },
+    {
+      "path": "docs/05_results/MixUp/source_split_manifest_mid32.csv",
+      "bytes": 1200736,
+      "sha256": "d2100aa4514b4c434f3924170da19f85fff9fdf5d44e92f3e7923796ccb0bce0"
+    },
+    {
+      "path": "docs/05_results/MixUp/validation_summary_mid224.csv",
+      "bytes": 290,
+      "sha256": "72a4649ee7a16e515fad7ca0f2ce113c2b8ab64b05b8536bdcdfe45f67d21985"
+    },
+    {
+      "path": "docs/05_results/MixUp/validation_summary_mid32.csv",
+      "bytes": 289,
+      "sha256": "a14d374c68faa342ea8ff261009f9a393bdd85c59dcc9c2f7c8ae2c6f5cd7728"
+    },
+    {
+      "path": "docs/05_results/MixUp/mid224_experiment_seed42/best_val.pt",
+      "bytes": 4477553,
+      "sha256": "c302733d441fb445579764a1a503744231de80dbc74889dc11605ff9110c8d4b"
+    },
+    {
+      "path": "docs/05_results/MixUp/mid224_experiment_seed42/config.json",
+      "bytes": 3702,
+      "sha256": "04b180bcb48dc216c3a36d035936b7ad7d20d7a5b61ecf42865ad4d9b84dced7"
+    },
+    {
+      "path": "docs/05_results/MixUp/mid224_experiment_seed42/epochs.csv",
+      "bytes": 19734,
+      "sha256": "2213ca09ede2979adc2e8b23770de9e4a7af064851508d23569b4e4fd1910942"
+    },
+    {
+      "path": "docs/05_results/MixUp/mid224_experiment_seed42/last.pt",
+      "bytes": 13426153,
+      "sha256": "a83004fc5582e5308c39d91fac735a0582885bd25005fdfe8d19674cc7cf3762"
+    },
+    {
+      "path": "docs/05_results/MixUp/mid224_experiment_seed42/validation_split.json",
+      "bytes": 1075407,
+      "sha256": "1e4caefcbb8ab4e7462d090866c4b125a57102f702e611bc61fa421a42d90a8f"
+    },
+    {
+      "path": "docs/05_results/MixUp/mid32_experiment_seed42/best_val.pt",
+      "bytes": 4477553,
+      "sha256": "d773d54042004d694aec1a6bf365137e0aeefb1d47146417f09b02b765713e1d"
+    },
+    {
+      "path": "docs/05_results/MixUp/mid32_experiment_seed42/config.json",
+      "bytes": 3692,
+      "sha256": "dd54337c8c56d6236a8ee5ba7cf93b1c1caaa4f88292162980dc2f7a477aedc0"
+    },
+    {
+      "path": "docs/05_results/MixUp/mid32_experiment_seed42/epochs.csv",
+      "bytes": 19713,
+      "sha256": "2ac024ec0c3887d7f0694d06c206ca22ee2ca392080f2794edb5c5380cb8fea5"
+    },
+    {
+      "path": "docs/05_results/MixUp/mid32_experiment_seed42/last.pt",
+      "bytes": 13426153,
+      "sha256": "a0b0e91dbda5e61b7318f2192060e5005c398414c54966004223022def36f7bc"
+    },
+    {
+      "path": "docs/05_results/MixUp/mid32_experiment_seed42/validation_split.json",
+      "bytes": 1075405,
+      "sha256": "7aa23367a2ebfceedd3815ab513ddc75cc3250ae28e3b5666feeb2b90a7e22a5"
+    },
+    {
+      "path": "docs/05_results/CutMix/source_split_manifest_mid_224.csv",
+      "bytes": 1225986,
+      "sha256": "a2b6d7e5fc10bfae796ee8e6f8d9ffd4e752834fd3930056a7b79182c2287c0a"
+    },
+    {
+      "path": "docs/05_results/CutMix/source_split_manifest_mid_32.csv",
+      "bytes": 1200736,
+      "sha256": "d2100aa4514b4c434f3924170da19f85fff9fdf5d44e92f3e7923796ccb0bce0"
+    },
+    {
+      "path": "docs/05_results/CutMix/validation_summary_mid_224.csv",
+      "bytes": 289,
+      "sha256": "53bb8c00481c4f2517cb83870f51aa66371e82c728854c91c0c3ae260c4bb987"
+    },
+    {
+      "path": "docs/05_results/CutMix/validation_summary_mid_32.csv",
+      "bytes": 290,
+      "sha256": "14f300092d3f4bb78c7ec62c5759b2f4d1e3a679a25c408e415be03a89b9c33e"
+    },
+    {
+      "path": "docs/05_results/CutMix/mid224_experiment_seed42/best_val.pt",
+      "bytes": 4477553,
+      "sha256": "f60618d6db0bd7883457d5c92dc58a6f715bf9221370746a1f25f6075d6a0696"
+    },
+    {
+      "path": "docs/05_results/CutMix/mid224_experiment_seed42/config.json",
+      "bytes": 3705,
+      "sha256": "d87bf64f6b8276c933d1dc180739f454835e705c8f52a1b72136147e3e8cdb55"
+    },
+    {
+      "path": "docs/05_results/CutMix/mid224_experiment_seed42/epochs.csv",
+      "bytes": 19720,
+      "sha256": "481b72d0c514de00bbe67f673507acb368a9f4bd44358c981ab405041b018ad5"
+    },
+    {
+      "path": "docs/05_results/CutMix/mid224_experiment_seed42/last.pt",
+      "bytes": 13426153,
+      "sha256": "7c89c66ceaab07c445ebf56b160a310b1bab9af53cf9db5d6f7d07aa02136453"
+    },
+    {
+      "path": "docs/05_results/CutMix/mid224_experiment_seed42/validation_split.json",
+      "bytes": 1075407,
+      "sha256": "1e4caefcbb8ab4e7462d090866c4b125a57102f702e611bc61fa421a42d90a8f"
+    },
+    {
+      "path": "docs/05_results/CutMix/mid32_experiment_seed42/best_val.pt",
+      "bytes": 4477553,
+      "sha256": "243ee198d71c935d8b28b2e29beee33aa5be91399f6dde5a8e1f2c09e34e305e"
+    },
+    {
+      "path": "docs/05_results/CutMix/mid32_experiment_seed42/config.json",
+      "bytes": 3695,
+      "sha256": "61a7505a786cf2eef9a0cd6400728a0af8b63c9401739ba9fa3ce0c1903bf399"
+    },
+    {
+      "path": "docs/05_results/CutMix/mid32_experiment_seed42/epochs.csv",
+      "bytes": 19537,
+      "sha256": "275ec4cc5e1dec7f03ec75aa442a550108ae8b83623032a81fd4cebdd2cbd993"
+    },
+    {
+      "path": "docs/05_results/CutMix/mid32_experiment_seed42/last.pt",
+      "bytes": 13426153,
+      "sha256": "067ec2e9a8135fdf39b0700b5e26c1191bfc9b95a28fdf95771b561174bb1c5b"
+    },
+    {
+      "path": "docs/05_results/CutMix/mid32_experiment_seed42/validation_split.json",
+      "bytes": 1075405,
+      "sha256": "7aa23367a2ebfceedd3815ab513ddc75cc3250ae28e3b5666feeb2b90a7e22a5"
+    },
+    {
+      "path": "models/mid_mixup.py",
+      "bytes": 1967,
+      "sha256": "93298020997961872a9e262118a37a5b25c02c4e6f0285491d40d477df34d27c"
+    },
+    {
+      "path": "models/mid_cutmix.py",
+      "bytes": 2602,
+      "sha256": "94cca8d26e286bb6c3b0fa6e59405350e0f4c7b76beb34f5d0679301f4b35ca4"
+    },
+    {
+      "path": "configs/midterm/experiment_mixup.json",
+      "bytes": 318,
+      "sha256": "2d5050090f69f333d06c87b4ebfb8ed6c63b6eaa9372417e33853cdb23a6bce2"
+    },
+    {
+      "path": "configs/midterm/experiment_cutmix.json",
+      "bytes": 319,
+      "sha256": "2cdfbb356c53468ac5e7582231b5827726f55b3308243276321b17b06379f03f"
+    },
+    {
+      "path": "tests/test_mid_mixup.py",
+      "bytes": 6956,
+      "sha256": "5f2ce2f7c27d26f74dcf28ad702cc3afb47668bf92d36077a42bd8b3ab1d1c5c"
+    },
+    {
+      "path": "tests/test_mid_cutmix.py",
+      "bytes": 8368,
+      "sha256": "6fbcd72c96dd56c9267fbd0ca69431e225bd44960fa3b1e5c3ee352cf03dab05"
+    },
+    {
+      "path": "tests/test_mid_mixing_training.py",
+      "bytes": 2841,
+      "sha256": "6a2bf86a1125e78ce44ae2bb94d9a03a562f4017fc853d01f97706d33f926b83"
+    },
+    {
+      "path": "docs/08_appendix/development/plans/2026-10-01-four-midterm-experiments.md",
+      "bytes": 5278,
+      "sha256": "2c7275071655a413372912906b700005a403b9986316f1bd70df2119bc9351c7"
+    },
+    {
+      "path": "docs/06_discussion/figures/fig1_all_experiments_comparison.png",
+      "bytes": 243145,
+      "sha256": "d5596a85e1ca86828e7f1c666f329359f89a1d9f9b93fb1eafa7ef167b065186"
+    },
+    {
+      "path": "docs/06_discussion/figures/fig5_efficiency_pareto.png",
+      "bytes": 165345,
+      "sha256": "05127be72efe73ca0740c47516e8b1f2c28ecb417136a0d2d01b09c87f8f055e"
+    },
+    {
+      "path": "docs/06_discussion/figures/fig6_all_techniques_training_curves_mid224.png",
+      "bytes": 832992,
+      "sha256": "9a9132cb827d6209a489b3fbe1d7a9451d7f8d20367de649c5ddea6809d948d2"
+    },
+    {
+      "path": "docs/06_discussion/figures/fig7_all_techniques_training_curves_mid32.png",
+      "bytes": 850692,
+      "sha256": "0ef7adc3a9ce87bfcc8b7d968c22c38e5678814e19ae97533b2efa045c5dde9f"
+    }
+  ],
+  "protected_files": [
+    {
+      "path": "checkpoint32.py",
+      "sha256": "370d5c1dfd14a68cd72e18a54a4331089e6cfb14028a64392031bc1b203b8005"
+    },
+    {
+      "path": "checkpoint224.py",
+      "sha256": "0e301c08de67ccad1ed5c7a6d68ea42b7a0a8c9da6f1feff622b7ca054e53d38"
+    },
+    {
+      "path": "checkpoints/l_mid32_lr015/best_val.pt",
+      "sha256": "c6d116d5d66bbded9de745e4f97ea38601049da42ce3fb8c2f6bb2f101105c42"
+    },
+    {
+      "path": "checkpoints/l_mid224_smoothing010/best_val.pt",
+      "sha256": "7f648504064e442e4974943fd0ea70dce2ebe3a3caf7f9d4e41c054e815b4907"
+    }
+  ],
+  "historical_metadata_policy": "Existing checkpoint metadata and historical source hashes remain unchanged; restructure_manifest.json records an earlier snapshot.",
+  "completed_at_utc": "2026-10-16T16:45:35.467706+00:00",
+  "bytecode_cache_files_removed": 8
+}

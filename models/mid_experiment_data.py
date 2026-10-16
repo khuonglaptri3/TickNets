@@ -1,4 +1,4 @@
-"""Shared, paired validation splits for the four midterm experiments."""
+"""Shared, paired validation splits for controlled midterm experiments."""
 from __future__ import annotations
 
 import copy

@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TickNet-Basic Baseline Architecture",
+    "output": "docs/architectures/ticknet_basic.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "macro-flow",
+        "label": "End-to-End Pipeline",
+        "focus": ["input", "data_bn", "stem", "stage1", "stage2", "stage3", "stage4", "stage5", "head", "gap", "classifier"],
+        "note": "Follow the complete forward propagation path from raw 224x224 image to 5-class logits."
+      },
+      {
+        "id": "bottleneck",
+        "label": "Stage 2 Compute Bottleneck",
+        "focus": ["stage1", "stage2", "stage3"],
+        "note": "Stage 2 processes 112x112 feature maps with 128 input channels, consuming 52.7% of total FLOPs."
+      },
+      {
+        "id": "classifier-head",
+        "label": "Head and Classification",
+        "focus": ["stage5", "head", "gap", "classifier"],
+        "note": "1024-channel expansion followed by AdaptiveAvgPool2d and 1x1 classification convolution."
+      }
+    ]
+  },
+  "components": [
+    { "id": "input", "type": "external", "label": "Input Image", "sublabel": "RGB 224x224 (3ch)", "pos": [40, 140], "size": [130, 60] },
+    { "id": "data_bn", "type": "cloud", "label": "Data BatchNorm", "sublabel": "nn.BatchNorm2d(3)", "tag": "Adaptive Norm", "pos": [220, 140], "size": [140, 60] },
+    { "id": "stem", "type": "backend", "label": "Stem Conv", "sublabel": "Conv 3x3, 32ch, s=2", "pos": [410, 140], "size": [140, 60] },
+    { "id": "stage1", "type": "backend", "label": "Stage 1 (PDP)", "sublabel": "1 block, 128ch, s=1", "pos": [600, 140], "size": [140, 60] },
+    { "id": "stage2", "type": "backend", "label": "Stage 2 (PDP)", "sublabel": "1 block, 64ch, s=2", "tag": "52.7% FLOPs (0.52G)", "pos": [790, 140], "size": [140, 60] },
+    { "id": "stage3", "type": "backend", "label": "Stage 3 (PDP)", "sublabel": "1 block, 128ch, s=2", "pos": [980, 140], "size": [140, 60] },
+    { "id": "stage4", "type": "backend", "label": "Stage 4 (PDP)", "sublabel": "1 block, 256ch, s=2", "pos": [980, 290], "size": [140, 60] },
+    { "id": "stage5", "type": "backend", "label": "Stage 5 (PDP)", "sublabel": "1 block, 512ch, s=2", "pos": [790, 290], "size": [140, 60] },
+    { "id": "head", "type": "backend", "label": "Head Conv", "sublabel": "Conv 1x1, 1024ch, ReLU", "pos": [600, 290], "size": [140, 60] },
+    { "id": "gap", "type": "backend", "label": "Global AvgPool", "sublabel": "AdaptivePool2d (1x1)", "pos": [410, 290], "size": [140, 60] },
+    { "id": "classifier", "type": "external", "label": "Classifier", "sublabel": "Conv 1x1, 5 classes", "tag": "5 Class Logits", "pos": [220, 290], "size": [140, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Input Normalization & Stem", "wraps": ["input", "data_bn", "stem"] },
+    { "kind": "security-group", "label": "FR_PDP Backbone Stages (5 Blocks)", "wraps": ["stage1", "stage2", "stage3", "stage4", "stage5"] },
+    { "kind": "region", "label": "Classification Head", "wraps": ["head", "gap", "classifier"] }
+  ],
+  "connections": [
+    { "from": "input", "to": "data_bn" },
+    { "from": "data_bn", "to": "stem" },
+    { "from": "stem", "to": "stage1" },
+    { "from": "stage1", "to": "stage2" },
+    { "from": "stage2", "to": "stage3" },
+    { "from": "stage3", "to": "stage4", "fromSide": "bottom", "toSide": "top" },
+    { "from": "stage4", "to": "stage5", "fromSide": "left", "toSide": "right" },
+    { "from": "stage5", "to": "head", "fromSide": "left", "toSide": "right" },
+    { "from": "head", "to": "gap", "fromSide": "left", "toSide": "right" },
+    { "from": "gap", "to": "classifier", "fromSide": "left", "toSide": "right" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Input & Normalization", "items": ["Data BatchNorm dynamically tracks running statistics of Mid dataset", "Stem Conv 3x3 downsamples 224x224 to 112x112 with 32 channels"] },
+    { "dot": "amber", "title": "Backbone Bottleneck", "items": ["5 stages each containing 1 FR_PDP_block with SE Attention", "Stage 2 consumes 52.7% (0.521 GFLOPs) due to unreduced 112x112 spatial resolution"] },
+    { "dot": "emerald", "title": "Complexity Budget", "items": ["Total Parameters: 1,062,223 (~1.06M)", "Total FLOPs (224x224): 0.988 GFLOPs (98.8% of the 1.0G limit)"] }
+  ]
+}

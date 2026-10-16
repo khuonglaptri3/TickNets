@@ -1,8 +1,12 @@
 # Preserve dataset bytes and recorded checksums on every platform.
 data/** -text
 
-# Preserve generated experiment evidence byte-for-byte (including CSV/JSON line endings).
-docs/results/experiment_midterm_smoothing_lr/** -text
-docs/results/experiment_midterm_smoothing_lr/checkpoints/** -diff
-docs/results/experiment_midterm_smoothing_lr/provenance/source_split_manifest_*.csv -diff
-docs/results/experiment_midterm_smoothing_lr/selection/selection_lock.json -diff
+# Preserve generated evidence and pinned checkpoints byte-for-byte on every platform.
+docs/05_results/** -text
+checkpoints/** -text
+docs/08_appendix/validation/** -text
+docs/03_model/model_profiles.json -text
+docs/03_model/architectures/*.json -text
+docs/05_results/experiment_midterm_smoothing_lr/checkpoints/** -diff
+docs/05_results/experiment_midterm_smoothing_lr/provenance/source_split_manifest_*.csv -diff
+docs/05_results/experiment_midterm_smoothing_lr/selection/selection_lock.json -diff

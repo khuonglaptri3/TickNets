@@ -1,0 +1,11 @@
+{
+  "checked_at_utc": "2026-10-16T17:05:04.059350+00:00",
+  "scope": "Model registration, historical trainer/pipeline, L architecture and result tools after candidate cleanup",
+  "exit_code": 0,
+  "tests": 43,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "passed": 43,
+  "duration_seconds": 80.474
+}

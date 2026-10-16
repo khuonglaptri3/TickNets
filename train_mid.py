@@ -1,4 +1,4 @@
-"""Train TickNet baselines, L or C and evaluate the held-out Mid test once."""
+"""Train TickNet baselines or L and evaluate the held-out Mid test once."""
 from __future__ import annotations
 
 import argparse

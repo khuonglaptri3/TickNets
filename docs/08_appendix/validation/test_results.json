@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-16",
+  "scope": "Midterm-only cleanup and documentation restructure",
+  "test_suite": {
+    "command": "python -m pytest tests -q --tb=short -p no:cacheprovider --basetemp=runs/pytest_midterm_restructure",
+    "passed": 201,
+    "subtests_passed": 92,
+    "setup_errors": 1,
+    "duration_seconds": 462.29,
+    "setup_error": "OneDrive WinError 5 while renaming a temporary fixture data directory"
+  },
+  "targeted_retry": {
+    "test": "tests/test_mid_pipeline.py::test_training_writes_epoch_log_checkpoint_and_final_test_metrics[l]",
+    "temporary_directory": "Fresh directory under LOCALAPPDATA/Temp, outside OneDrive",
+    "passed": 1,
+    "duration_seconds": 22.2
+  },
+  "all_collected_tests_passed_across_runs": true,
+  "total_tests_passed": 202,
+  "relocated_evidence_checksum_matches": 262,
+  "checkpoint_entrypoints_byte_identical": true,
+  "broken_local_markdown_links": 0,
+  "git_diff_check_passed": true
+}

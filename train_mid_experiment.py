@@ -19,18 +19,14 @@ from models.mid_data import seed_everything
 from models.mid_experiment_data import build_experiment_loaders
 from models.mid_models import MODEL_REVISIONS, build_mid_model
 from models.model_profile import profile_model
-from models.model_l_from_final import (
-    ARCHITECTURE_REVISION as L_FROM_FINAL_REVISION,
-    build_model_l_from_final,
+from models.ticknet_l_midterm10 import (
+    ARCHITECTURE_REVISION as MIDTERM10_REVISION,
+    build_ticknet_l_midterm10,
 )
 from models.ticknet_l_stage4 import ARCHITECTURE_REVISION as STAGE4_REVISION, build_ticknet_l_stage4
-from models.mid_mixup import mix_batch as mixup_batch
-from models.mid_cutmix import mix_batch as cutmix_batch
-
-MIXING_METHODS = {"mixup": mixup_batch, "cutmix": cutmix_batch}
 EXPERIMENT_MODELS = {
     "l_stage4": (build_ticknet_l_stage4, STAGE4_REVISION),
-    "l_from_final": (build_model_l_from_final, L_FROM_FINAL_REVISION),
+    "l_midterm10": (build_ticknet_l_midterm10, MIDTERM10_REVISION),
 }
 TRAINER_REVISION = "mid-experiment-v2"
 
@@ -67,9 +63,6 @@ def parse_args(argv=None):
     parser.add_argument("--threads", type=int, default=2)
     parser.add_argument("--no-augment", action="store_true")
     parser.add_argument("--full-train", action="store_true")
-    parser.add_argument("--mixing", choices=("none", *MIXING_METHODS), default="none")
-    parser.add_argument("--mixing-alpha", type=float, default=0.2)
-    parser.add_argument("--mixing-probability", type=float, default=1.0)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--resume", type=Path)
     parser.add_argument("--stop-after-epoch", type=int)
@@ -120,13 +113,10 @@ def parse_args(argv=None):
         parser.error("epochs, batch-size, threads must be positive; workers nonnegative")
     if not 0 < args.val_fraction < 1:
         parser.error("val-fraction must be between 0 and 1")
-    if not all(math.isfinite(v) for v in (args.learning_rate, args.momentum, args.weight_decay,
-                                         args.mixing_alpha, args.mixing_probability)):
+    if not all(math.isfinite(v) for v in (args.learning_rate, args.momentum, args.weight_decay)):
         parser.error("recipe values must be finite")
     if args.learning_rate <= 0 or args.momentum < 0 or args.weight_decay < 0:
         parser.error("Invalid SGD recipe")
-    if args.mixing_alpha <= 0 or not 0 <= args.mixing_probability <= 1:
-        parser.error("Invalid mixing alpha/probability")
     if args.resume and args.evaluate:
         parser.error("resume and evaluate are separate modes")
     if args.stop_after_epoch is not None and not 1 <= args.stop_after_epoch <= args.epochs:
@@ -134,27 +124,24 @@ def parse_args(argv=None):
     return args
 
 
-def run_epoch(model, loader, criterion, device, optimizer=None, *, mix_fn=None, alpha=0.2, probability=1.0):
+def run_epoch(model, loader, criterion, device, optimizer=None):
     training = optimizer is not None
     model.train(training)
     loss_sum, correct, count = 0.0, 0.0, 0
     with torch.set_grad_enabled(training):
         for images, labels in loader:
             images, labels = images.to(device), labels.to(device)
-            labels_b, lam = labels, 1.0
-            if training and mix_fn is not None and torch.rand(()).item() < probability:
-                images, labels, labels_b, lam = mix_fn(images, labels, alpha)
             if training:
                 optimizer.zero_grad(set_to_none=True)
             logits = model(images)
-            loss = lam * criterion(logits, labels) + (1 - lam) * criterion(logits, labels_b)
+            loss = criterion(logits, labels)
             if not torch.isfinite(loss):
                 raise FloatingPointError("Non-finite loss; experiment aborted")
             if training:
                 loss.backward()
                 optimizer.step()
             predictions = logits.argmax(1)
-            correct += lam * (predictions == labels).sum().item() + (1 - lam) * (predictions == labels_b).sum().item()
+            correct += (predictions == labels).sum().item()
             loss_sum += loss.item() * labels.numel()
             count += labels.numel()
     if not count:
@@ -251,7 +238,7 @@ def main(argv=None):
                   python_version=platform.python_version(), torch_version=str(torch.__version__),
                   torchvision_version=str(torchvision.__version__), optimizer="SGD", scheduler="CosineAnnealingLR",
                   test_policy="Explicit --evaluate only; never choose settings/checkpoints using test",
-                  train_top1_definition="lambda-weighted accuracy against paired labels when mixing; hard-label otherwise",
+                  train_top1_definition="Accuracy against original integer class labels",
                   complexity={k: v for k, v in complexity.items() if k != "layers"})
     source_root = Path(__file__).resolve().parent
     config["source_hashes"] = {
@@ -330,8 +317,7 @@ def main(argv=None):
             writer.writeheader()
         for epoch in range(start, stop + 1):
             lr = optimizer.param_groups[0]["lr"]
-            training = run_epoch(model, train, training_criterion(args), device, optimizer,
-                                 mix_fn=MIXING_METHODS.get(args.mixing), alpha=args.mixing_alpha, probability=args.mixing_probability)
+            training = run_epoch(model, train, training_criterion(args), device, optimizer)
             validation = run_epoch(model, val, torch.nn.CrossEntropyLoss(), device) if val is not None else None
             improved = validation is not None and (best is None or (validation["top1"], -validation["loss"]) > (best["top1"], -best["loss"]))
             if improved:

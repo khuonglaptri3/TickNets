@@ -1,6 +1,19 @@
+# Python caches and test artifacts
 __pycache__/
 *.py[cod]
 .pytest_cache/
+/tests/
+
+# Generated datasets; keep the compressed archives and metadata
 data.building-*/
+/data/Mid32/
+/data/Mid224/
+
+# Local runs and workspace tools
 runs/
 .superpowers/
+
+# Legacy scripts and weights outside the Midterm scope
+/TickNet_Places365.py
+/writeLogAcc.py
+/checkpoints/StanfordDogs/

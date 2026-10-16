@@ -1,0 +1,189 @@
+{
+  "scope": "Remove Model C implementation and all displayed candidate results from Midterm",
+  "started_at_utc": "2026-10-16T16:59:19.288735+00:00",
+  "status": "completed and validated",
+  "removed_files": [
+    {
+      "path": "models/ticknet_c.py",
+      "sha256": "3b888aab0e940d6f9077aeb969b0c6e0db6dcf3b1f910e28c522f4ce68a47647",
+      "bytes": 1209
+    },
+    {
+      "path": "tests/test_ticknet_c.py",
+      "sha256": "780f0c8db4152ee2569de81a6e4b8dfad88006a01a87bc5da182f880e6a42799",
+      "bytes": 2156
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_c.architecture.json",
+      "sha256": "151ca685d50567d98111e95816abdc9ed737380a035c5fc37974247c76b648b2",
+      "bytes": 4453
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_c.html",
+      "sha256": "d637d33f1444afbb02e84f8386029a1fb752a9a7c2c340dd860c26a215e5715c",
+      "bytes": 826055
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_c.visual-check.1440x900.dark.png",
+      "sha256": "a0d493c39fbc0787af20fb9eab146d3c58ab6907aac17dcb3273e7dfb4737746",
+      "bytes": 154551
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_c.visual-check.1440x900.light.png",
+      "sha256": "c90d673b3544bc6db0e548e0724e7f429014c60ecfc8bc3fc71d1100ab3a5cc4",
+      "bytes": 169181
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_c.visual-check.2048x1320.dark.png",
+      "sha256": "a4265412712c509e122e30030314ed68d1ea86befc250d5bddea6ff162ac35e0",
+      "bytes": 182697
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_c.visual-check.2048x1320.light.png",
+      "sha256": "cfb94e9042b203c63aa48c73cc927141f9ebded8412b26474562598f52841d7a",
+      "bytes": 203276
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_c.visual-check.html",
+      "sha256": "e669e57e4b20a7669d4bcd5f162dfb14af47844d55177f03630e8f5f174a801f",
+      "bytes": 1930
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_c.visual-check.json",
+      "sha256": "e85de22becb7d92b35cadaea80a2dcaf77000c157ba155aa804c0ee5f04d10c9",
+      "bytes": 17637
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_comparison.architecture.json",
+      "sha256": "e5d9a289975137adb70a2507bf974c0700a132368920cf2029856d6c347c4e90",
+      "bytes": 3807
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_comparison.html",
+      "sha256": "617d3cf1337404e1675a3c752ea01356c90c3011449affad849f8e0d25bbd505",
+      "bytes": 821468
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_comparison.visual-check.1440x900.dark.png",
+      "sha256": "cfd61fde3c02f80e75eda0cf45f9dc6a4ee72f43bf485f12fbcebf753b0c8ede",
+      "bytes": 141626
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_comparison.visual-check.1440x900.light.png",
+      "sha256": "b0bed8950b90f8db7fbd5dce37659f2fe564c7e123913d7ee1ba3331940790dc",
+      "bytes": 154771
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_comparison.visual-check.2048x1320.dark.png",
+      "sha256": "d8db3e8d286290ef3c4ed3ec90039493d13f2685ef90ff3e84c5ebe0c4cc91ac",
+      "bytes": 177883
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_comparison.visual-check.2048x1320.light.png",
+      "sha256": "67b52bcda47fd73d3669ce9901bdaf116d64ef4d9734212a715c5b2d186c03fa",
+      "bytes": 197547
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_comparison.visual-check.html",
+      "sha256": "e0228a2d87c4d6196a807c03f97cf671eb759aa48f40541a73c3ebdeeea68b58",
+      "bytes": 1984
+    },
+    {
+      "path": "docs/03_model/architectures/ticknet_comparison.visual-check.json",
+      "sha256": "268bc8d84f88a686e419381eff4fd8fffa94f719db95d568904061dc5fff2cca",
+      "bytes": 17709
+    },
+    {
+      "path": "models/__pycache__/ticknet_c.cpython-311.pyc",
+      "sha256": "cc464819b4eba743ba36c48a19a066bcf33aea0c481f4a4a70d3e6fb76788867",
+      "bytes": 1532
+    },
+    {
+      "path": "tests/__pycache__/test_ticknet_c.cpython-311-pytest-9.1.1.pyc",
+      "sha256": "edfa70804164fa06b7907839253878779c530d15b41bba8f486ab01373bbd60a",
+      "bytes": 17417
+    }
+  ],
+  "derived_artifacts_before_filtering": [
+    {
+      "path": "docs/05_results/Model_Basic/comparisons/reported_metrics.csv",
+      "sha256": "d17321762fec495e930f566ca89c630595f43ba6ea031274193e8b3f2790bbb3",
+      "sha256_after_filtering": "bf4750858c2519c38f4ba59362616e704725565a3b93ad51218da0d41769b7db"
+    },
+    {
+      "path": "docs/05_results/Model_Basic/comparisons/split_provenance.csv",
+      "sha256": "2f60c622077e2a516ec01d7440586ddbbf4650fb8e2042f5bc30cb2e792be9bb",
+      "sha256_after_filtering": "431f3bff408b54bcf8d3ce40371cfff1799ec4ea0a32befacff10cfcb30db079"
+    },
+    {
+      "path": "docs/05_results/model_comparison/reported_metrics.csv",
+      "sha256": "d17321762fec495e930f566ca89c630595f43ba6ea031274193e8b3f2790bbb3",
+      "sha256_after_filtering": "bf4750858c2519c38f4ba59362616e704725565a3b93ad51218da0d41769b7db"
+    },
+    {
+      "path": "docs/05_results/model_comparison/split_provenance.csv",
+      "sha256": "2f60c622077e2a516ec01d7440586ddbbf4650fb8e2042f5bc30cb2e792be9bb",
+      "sha256_after_filtering": "431f3bff408b54bcf8d3ce40371cfff1799ec4ea0a32befacff10cfcb30db079"
+    },
+    {
+      "path": "docs/05_results/Model_L/comparisons/reported_metrics.csv",
+      "sha256": "d17321762fec495e930f566ca89c630595f43ba6ea031274193e8b3f2790bbb3",
+      "sha256_after_filtering": "bf4750858c2519c38f4ba59362616e704725565a3b93ad51218da0d41769b7db"
+    },
+    {
+      "path": "docs/05_results/Model_L/comparisons/split_provenance.csv",
+      "sha256": "2f60c622077e2a516ec01d7440586ddbbf4650fb8e2042f5bc30cb2e792be9bb",
+      "sha256_after_filtering": "431f3bff408b54bcf8d3ce40371cfff1799ec4ea0a32befacff10cfcb30db079"
+    },
+    {
+      "path": "docs/03_model/model_profiles.json",
+      "sha256": "628cd1a8d66a5cb9098dc2ef30190a777222ee5df416875ea3428773227f94fc",
+      "sha256_after_filtering": "2b69702df86ca56ed783bbd20796ef7c53682e9e0e5925b958d9359b5db9d108"
+    },
+    {
+      "path": "docs/05_results/audit_20261001/verification.json",
+      "sha256": "5c622e8619d3f3316eb9f34df92511e592e2f132e8138d05dc56e641b030f6dd",
+      "sha256_after_filtering": "fc083c2c511b6958682be89a63f6534b203980a4f8f94d48a96b2d0e33ab05eb"
+    },
+    {
+      "path": "docs/05_results/Model_L/method_soundness_and_verification/verification.json",
+      "sha256": "5c622e8619d3f3316eb9f34df92511e592e2f132e8138d05dc56e641b030f6dd",
+      "sha256_after_filtering": "fc083c2c511b6958682be89a63f6534b203980a4f8f94d48a96b2d0e33ab05eb"
+    },
+    {
+      "path": "docs/05_results/Model_Basic/verification_and_predictions/verification.json",
+      "sha256": "5c622e8619d3f3316eb9f34df92511e592e2f132e8138d05dc56e641b030f6dd",
+      "sha256_after_filtering": "fc083c2c511b6958682be89a63f6534b203980a4f8f94d48a96b2d0e33ab05eb"
+    }
+  ],
+  "protected_files": [
+    {
+      "path": "checkpoint32.py",
+      "sha256": "370d5c1dfd14a68cd72e18a54a4331089e6cfb14028a64392031bc1b203b8005"
+    },
+    {
+      "path": "checkpoint224.py",
+      "sha256": "0e301c08de67ccad1ed5c7a6d68ea42b7a0a8c9da6f1feff622b7ca054e53d38"
+    },
+    {
+      "path": "checkpoints/l_mid32_lr015/best_val.pt",
+      "sha256": "c6d116d5d66bbded9de745e4f97ea38601049da42ce3fb8c2f6bb2f101105c42"
+    },
+    {
+      "path": "checkpoints/l_mid224_smoothing010/best_val.pt",
+      "sha256": "7f648504064e442e4974943fd0ea70dce2ebe3a3caf7f9d4e41c054e815b4907"
+    }
+  ],
+  "historical_metadata_policy": "Original checkpoint configs and historical source-hash inventories are retained verbatim; they can name retired sources. Filtered comparison tables and audit summaries retain the original values for Basic and L.",
+  "completed_at_utc": "2026-10-16T17:02:17.635554+00:00",
+  "validation": {
+    "tests_passed": 43,
+    "checkpoint_results": "docs/08_appendix/validation/model_cleanup_checkpoint_results.json",
+    "historical_result_models": [
+      "basic",
+      "l"
+    ],
+    "historical_result_rows": 4,
+    "all_local_markdown_file_links_valid": true
+  }
+}

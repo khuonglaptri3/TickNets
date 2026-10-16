@@ -1,0 +1,29 @@
+{
+  "checked_at_utc": "2026-10-16T17:18:19.506225+00:00",
+  "initial_dataset_directory": [
+    "Mid224.tar.xz",
+    "Mid32.tar.xz"
+  ],
+  "results": [
+    {
+      "entrypoint": "checkpoint32.py",
+      "variant": "Mid32",
+      "started_without_extracted_data": true,
+      "top1": 97.2,
+      "correct": 243,
+      "samples": 250,
+      "batch_size": 16,
+      "archive_sha256": "4d580c65af29e257bb3722350beda580aacc513f04c6c0aaa73c1ddc9be0cbe9"
+    },
+    {
+      "entrypoint": "checkpoint224.py",
+      "variant": "Mid224",
+      "started_without_extracted_data": true,
+      "top1": 99.2,
+      "correct": 248,
+      "samples": 250,
+      "batch_size": 16,
+      "archive_sha256": "75a26273c967db9d291734762f7bc31089b74873ed8dfd75e3f7a519044426a1"
+    }
+  ]
+}

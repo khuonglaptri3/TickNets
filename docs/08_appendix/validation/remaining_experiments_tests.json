@@ -1,0 +1,20 @@
+{
+  "checked_at_utc": "2026-10-16T16:52:49.138112+00:00",
+  "scope": "Retained Midterm experiment trainer, recipes and checkpoint evaluation after experiment cleanup",
+  "command": "python -m pytest tests/test_mid_experiment_training.py tests/test_mid_experiment_recovery.py tests/test_mid_smoothing.py tests/test_ticknet_l_stage4.py tests/test_ticknet_l_midterm10.py -q -p no:cacheprovider --basetemp <fresh-local-temp> --junitxml docs/08_appendix/validation/remaining_experiments_tests.xml",
+  "exit_code": 0,
+  "tests": 84,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "passed": 84,
+  "duration_seconds": 412.834,
+  "checks": {
+    "report_rebuilt_from_saved_verified_predictions": true,
+    "retained_comparison_configurations": 6,
+    "selected_entrypoints_and_weight_hashes_unchanged": true,
+    "retained_original_evidence_hashes_verified": 234,
+    "each_selected_checkpoint_has_200_logged_epochs": true,
+    "all_local_markdown_file_links_valid": true
+  }
+}
