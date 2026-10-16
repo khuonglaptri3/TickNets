@@ -59,6 +59,10 @@ All experiments adhered to a strict, leak-free protocol: 25,000 images, stratifi
 
 ![Master Experiments Comparison](figures/fig1_all_experiments_comparison.png)
 
+![All Techniques Training Curves Mid224](figures/fig6_all_techniques_training_curves_mid224.png)
+
+![All Techniques Training Curves Mid32](figures/fig7_all_techniques_training_curves_mid32.png)
+
 ![Efficiency Pareto](figures/fig5_efficiency_pareto.png)
 
 ---
