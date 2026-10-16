@@ -47,14 +47,19 @@ All experiments adhered to a strict, leak-free protocol: 25,000 images, stratifi
 
 | Model Configuration | Parameters | GFLOPs (Mid32 / Mid224) | Val Top-1 (Mid32) | Val Top-1 (Mid224) | Test Top-1 (Mid32) | Test Top-1 (Mid224) | Test Macro F1 (Mid32 / Mid224) | Status / Decision |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **TickNet-Basic Baseline** | 1,062,596 | 0.1584 / 0.9882 | — | — | 92.40% | 94.80% | 0.9234 / 0.9481 | Original backbone reference |
 | **TickNet-L Baseline** | 1,096,260 | 0.1578 / 0.7968 | 90.40% | 93.88% | 92.40% | 96.80% | 0.9230 / 0.9679 | Benchmark reference |
 | **Exp 1: Smoothing 0.05** | 1,096,260 | 0.1578 / 0.7968 | 90.64% | 93.44% | 92.80% | 98.00% | 0.9277 / 0.9800 | Robust accuracy gain |
 | **Exp 1: Smoothing 0.10** | 1,096,260 | 0.1578 / 0.7968 | 90.72% | 93.64% | 94.40% | **99.20%** | 0.9436 / **0.9920** | **Selected for Mid224** |
 | **Exp 1: LR 0.05** | 1,096,260 | 0.1578 / 0.7968 | 90.56% | 93.32% | 95.60% | 96.00% | 0.9556 / 0.9602 | Slower convergence |
 | **Exp 1: LR 0.15** | 1,096,260 | 0.1578 / 0.7968 | **91.04%** | 93.84% | **97.20%** | 96.80% | **0.9720** / 0.9680 | **Selected for Mid32** |
 | **Exp 2: Stage 4 Depth 3** | 1,236,030 | 0.1742 / 0.8470 | 90.12% | 94.12% | 93.60% | 96.40% | 0.9355 / 0.9639 | **Rejected** (inconsistent, heavy) |
-| **Exp 3: MixUp ($\alpha=0.2$)** | 1,096,260 | 0.1578 / 0.7968 | **91.28%** | 94.36% | — | — | — | Strong continuous regularizer |
-| **Exp 4: CutMix ($\alpha=1.0$)** | 1,096,260 | 0.1578 / 0.7968 | 91.04% | **94.80%** | — | — | — | Best validation Top-1 on Mid224 |
+| **Exp 3: MixUp ($\alpha=0.2$)** | 1,096,260 | 0.1578 / 0.7968 | **91.28%** | 94.36% | 95.60% | 97.20% | 0.9556 / 0.9720 | Strong continuous regularizer |
+| **Exp 4: CutMix ($\alpha=1.0$)** | 1,096,260 | 0.1578 / 0.7968 | 91.04% | **94.80%** | 93.20% | 97.60% | 0.9314 / 0.9760 | Best validation Top-1 on Mid224 |
+
+![Master Experiments Comparison](figures/fig1_all_experiments_comparison.png)
+
+![Efficiency Pareto](figures/fig5_efficiency_pareto.png)
 
 ---
 
@@ -67,8 +72,18 @@ The ablation expanding Stage 4 from 2 to 3 blocks ([`models/ticknet_l_stage4.py`
 
 ---
 
-## 5. Verification & Checkpoint Integrity
+## 5. Visual Analysis & Verification of the 2 Winning Checkpoints
 
+### 5.1 200-Epoch Learning Curves (Accuracy & Loss)
+![Winning Checkpoints Learning Curves](figures/fig2_winning_checkpoints_curves.png)
+
+### 5.2 Confusion Matrices on Held-Out Test Set (250 Images)
+![Winning Checkpoints Confusion Matrices](figures/fig3_winning_confusion_matrices.png)
+
+### 5.3 Per-Class Precision, Recall & F1-Score Breakdown
+![Per-Class Metrics](figures/fig4_per_class_metrics.png)
+
+### 5.4 Checkpoint Directory Structure
 Both winning checkpoints are preserved with their configuration records and validation splits:
 
 ```
