@@ -1,0 +1,110 @@
+{
+  "checked_at_utc": "2026-10-18T17:04:04.160568+00:00",
+  "results": {
+    "CIFAR10": {
+      "top1": 96.04,
+      "macro_f1": 0.9603546578799644,
+      "loss": 0.17253833486338793,
+      "samples": 10000,
+      "correct": 9604,
+      "device": "cuda:0",
+      "device_name": "NVIDIA GeForce RTX 2050",
+      "batch_size": 16,
+      "torch_version": "2.13.0+cu126",
+      "checkpoint_sha256": "b95051a69dbf1f415ceab9f87b0b6012d15c3e51ac198df22ca25d665b7ae8b7",
+      "test_data_sha256": "a81d9365cb942868c6891af433572e6913a77824dfd3471f28311145618484eb",
+      "matches_report": true,
+      "target_or_prediction_differences": 0,
+      "confusion_matrix_bytes_identical": true
+    },
+    "CIFAR100": {
+      "top1": 81.23,
+      "macro_f1": 0.8121418967903747,
+      "loss": 0.7004143174972168,
+      "samples": 10000,
+      "correct": 8123,
+      "device": "cuda:0",
+      "device_name": "NVIDIA GeForce RTX 2050",
+      "batch_size": 16,
+      "torch_version": "2.13.0+cu126",
+      "checkpoint_sha256": "bc68bdcb2749a7ddb22b1ff0ac4377e5d8c62f735ac171ab43b6979bd4ce5338",
+      "test_data_sha256": "5bb47b33dbb643e23afd56c44bd8fe1c67fc37aac41c64106b64a99766e104e7",
+      "matches_report": true,
+      "target_or_prediction_differences": 0,
+      "confusion_matrix_bytes_identical": true
+    }
+  },
+  "evaluation_source_sha256": {
+    "checkpoint10.py": "3b17f781963e695894481488324f8b4848aa3dca06213ac2a5059ad8be22c2ca",
+    "checkpoint100.py": "9079ee5c0f2303cf192e70e3923f45b81c4397373405d17edee27f08fe7432de",
+    "models/checkpoint_utils.py": "cad83fa03997f08842fb82191aed0e8fc85b4c8aeef43a096fc2f677cb601db0",
+    "models/cifar_checkpoint.py": "009825250fa91ea32308c712d6d9d3bcf19be597131035045b4a2b5312e63f58",
+    "models/model_profile.py": "c246b5bbedb237202f6d97dde5a9fa06438d200ccf30570f250dafceebb14057",
+    "models/ticknet_l.py": "18113ed1a8e2e79a278d583815584cb8a656cae2be75b48d1bf27e7d7261d2e1",
+    "author/models/common.py": "32167c61dd55f9b75a644766e093ddb765412ade646006236843203ebc5655e7"
+  },
+  "original_archived_artifacts_unchanged": 36,
+  "executed_notebooks_unchanged": 4,
+  "kaggle_notebooks": {
+    "Phase13_CIFAR100_TickNetL_LargeV2_CutMix_A10.ipynb": {
+      "embedded_zip_sha256": "8dacef3c11b4bec31b83d3385610e8ba4d3fbc3c7a8fd171887a387bf55acdc4",
+      "source_files": 24,
+      "training_hashes_match": true,
+      "standalone_bootstrap_passed": true,
+      "external_source_zip_required": false
+    },
+    "Phase14_CIFAR10_TickNetL_LargeV2_14Blocks.ipynb": {
+      "embedded_zip_sha256": "69ad25326188513d3b1b4928015f7be48ef0deb294b128ddf7d44796fa4f1c69",
+      "source_files": 24,
+      "training_hashes_match": true,
+      "standalone_bootstrap_passed": true,
+      "external_source_zip_required": false
+    },
+    "Phase17_CIFAR10_TickNetL_LargeV2_14Blocks_Adam.ipynb": {
+      "embedded_zip_sha256": "976c9eded41b4f4034f6a88d1a770649ce331e8621a070f4eec7e4412b568eb7",
+      "source_files": 30,
+      "training_hashes_match": true,
+      "standalone_bootstrap_passed": true,
+      "external_source_zip_required": false
+    },
+    "Phase18_CIFAR100_TickNetL_LargeV2_14Blocks_Adam.ipynb": {
+      "embedded_zip_sha256": "976c9eded41b4f4034f6a88d1a770649ce331e8621a070f4eec7e4412b568eb7",
+      "source_files": 30,
+      "training_hashes_match": true,
+      "standalone_bootstrap_passed": true,
+      "external_source_zip_required": false
+    }
+  },
+  "author_source": {
+    "original_import_commit": "cfbd3a3fe663158918e30934271e80f1949efe94",
+    "files_preserved_unchanged": 10
+  },
+  "data_note": "Test-only UofT mirror; pixels, labels and order match checkpoint fingerprints. The torchvision archive download was not exercised.",
+  "isolated_verification_steps": [
+    {
+      "step": "kaggle_Phase13_CIFAR100_TickNetL_LargeV2_CutMix_A10",
+      "exit_code": 0
+    },
+    {
+      "step": "kaggle_Phase14_CIFAR10_TickNetL_LargeV2_14Blocks",
+      "exit_code": 0
+    },
+    {
+      "step": "kaggle_Phase17_CIFAR10_TickNetL_LargeV2_14Blocks_Adam",
+      "exit_code": 0
+    },
+    {
+      "step": "kaggle_Phase18_CIFAR100_TickNetL_LargeV2_14Blocks_Adam",
+      "exit_code": 0
+    },
+    {
+      "step": "all_four_models_on_gpu",
+      "exit_code": 0
+    },
+    {
+      "step": "fresh_gpu_inference",
+      "exit_code": 0
+    }
+  ],
+  "external_training_code_required": false
+}

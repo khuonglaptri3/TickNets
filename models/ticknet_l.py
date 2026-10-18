@@ -22,7 +22,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .common import Classifier, ConvBlock, conv1x1_block, conv3x3_block, get_activation
+from author.models.common import Classifier, ConvBlock, conv1x1_block, conv3x3_block, get_activation
 
 
 STEM_CHANNELS = 32
@@ -31,7 +31,7 @@ STEM_CHANNELS = 32
 STAGE_CHANNELS = (160, 128, 256, 512, 768)
 STAGE_DEPTHS = (1, 2, 5, 5, 1)
 HEAD_CHANNELS = 1024
-ARCHITECTURE_REVISION = "ticknet-l-v1"
+ARCHITECTURE_REVISION = "ticknet-l-large-v2"
 
 
 class Flatten(nn.Module):
@@ -212,12 +212,10 @@ class TickNetL(nn.Module):
         layers["stage1"] = nn.Sequential(OrderedDict([
             # Block 1 (in=32, hidden=32, out=160, stride=1)
             ("unit1", CompressedPDPBlock(
-                pw1= nn.Sequential(
-                    ConvBlock(
-                        in_channels=32, out_channels=32,
-                        kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
-                        bias=False, use_bn=False, activation=None,
-                    ),
+                pw1=ConvBlock(
+                    in_channels=32, out_channels=32,
+                    kernel_size=1, stride=1, padding=0, dilation=1, groups=1,
+                    bias=False, use_bn=False, activation=None,
                 ),
                 dw=MixedDepthwise(
                     channels=32, stride=1,

@@ -1,12 +1,27 @@
+# Local environments, caches and generated results
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .env
 .venv/
 .uv-cache/
-data.building-*/
-runs/
 .superpowers/
-data/cifar-10*
-data/cifar-100*
-data/*.tar.gz
+/runs/
+
+# Downloaded datasets
+/data/*
+!/data/README.md
+
+# Development files and external training tools are not part of the submission
+/tests/
+/.github/
+/.vscode/
+/configs/
+/scripts/
+/checkpoints/
+/train_cifar*.py
+/download_cifar.py
+/checkmodel*.py
+/polish_cifar.py
+/writeLogAcc.py
+/requirements-dev.txt
